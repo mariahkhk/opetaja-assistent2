@@ -183,6 +183,22 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     }
     const notif = document.createElement('span')
     notif.id = 'last-lesson-inline-notification'
+    let animationCss = ''
+    if (isLastLessonToday) {
+      animationCss = 'animation: oa2-strobe 2s ease-in-out infinite;'
+      // Inject keyframes if not already present
+      if (!document.getElementById('oa2-strobe-keyframes')) {
+        const style = document.createElement('style')
+        style.id = 'oa2-strobe-keyframes'
+        style.textContent = `
+          @keyframes oa2-strobe {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+          }
+        `
+        document.head.appendChild(style)
+      }
+    }
     notif.style.cssText = `
       display: inline-block;
       margin-left: 16px;
@@ -194,6 +210,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       font-weight: bold;
       color: #212529;
       vertical-align: middle;
+      ${animationCss}
     `
     notif.textContent = bannerMessage
     // Prefer inserting to the left of the label wrapper if present so the badge appears before the subject name
