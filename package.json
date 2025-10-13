@@ -32,6 +32,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "sharp": "^0.34.1"
   }
 }

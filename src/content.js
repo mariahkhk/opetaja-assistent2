@@ -45,6 +45,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ status: 'error', message: error.message })
       })
     return true // Keep the message channel open for async responses
+  } else if (message.action === 'findTeachers') {
+    Logger.debug('Received findTeachers request')
+    handleFindTeachers()
+      .then(teachers => {
+        Logger.debug('Teachers found:', teachers)
+        sendResponse({ success: true, teachers: teachers })
+      })
+      .catch(error => {
+        Logger.error('Error finding teachers:', error)
+        sendResponse({ success: false, error: error.message })
+      })
+    return true // Keep the message channel open for async responses
   }
   return true // Keep the message channel open for async responses
 })
@@ -154,6 +166,71 @@ async function handleGetFutureSubjects(comparisonDate) {
     return futureEvents
   } catch (error) {
     Logger.error('Error in handleGetFutureSubjects:', error)
+    throw error
+  }
+}
+
+/**
+ * Handle finding all teachers with their IDs
+ * @returns {Promise<Array>} Array of teacher objects with name and id
+ */
+async function handleFindTeachers() {
+  try {
+    // Import the API service
+    const { api } = await import('./core/BaseFeature.js')
+    const apiService = api.tahvel
+
+    if (!apiService) {
+      throw new Error('API teenus pole saadaval')
+    }
+
+    // Get user info to get school ID
+    const userInfo = await apiService.get(
+      '/user',
+      {},
+      {
+        cache: true,
+        cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    )
+
+    if (!userInfo || !userInfo.school) {
+      throw new Error('Kasutaja pole sisse logitud või kool pole saadaval')
+    }
+
+    const schoolId = userInfo.school.id
+
+    if (!schoolId) {
+      throw new Error('Kooli ID pole saadaval')
+    }
+
+    // Get all active teachers in the school
+    const teachersData = await apiService.get(
+      `/teachers?isActive=true&lang=ET&page=0&size=1000`,
+      {},
+      {
+        cache: true,
+        cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
+      }
+    )
+
+    if (!teachersData || !teachersData.content) {
+      throw new Error('Õpetajate andmed pole saadaval')
+    }
+
+    // Filter teachers by school and map to simple object
+    const schoolTeachers = teachersData.content
+      .filter(teacher => teacher.school && teacher.school.id === schoolId)
+      .map(teacher => ({
+        id: teacher.id,
+        name: teacher.name
+      }))
+
+    Logger.debug(`Found ${schoolTeachers.length} teachers in school ${schoolId}`)
+
+    return schoolTeachers
+  } catch (error) {
+    Logger.error('Error in handleFindTeachers:', error)
     throw error
   }
 }

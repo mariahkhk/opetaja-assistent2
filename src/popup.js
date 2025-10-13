@@ -60,6 +60,8 @@ function initPopup() {
   const showFutureSubjectsButton = document.getElementById('show-future-subjects')
   const subjectsContainer = document.getElementById('subjects-container')
   const comparisonDateInput = document.getElementById('comparison-date')
+  const findTeachersButton = document.getElementById('find-teachers')
+  const teachersContainer = document.getElementById('teachers-container')
 
   // Check if all elements are found
   if (!debugModeCheckbox) throw new Error('Debug mode checkbox not found')
@@ -75,6 +77,8 @@ function initPopup() {
   if (!showFutureSubjectsButton) throw new Error('Show future subjects button not found')
   if (!subjectsContainer) throw new Error('Subjects container not found')
   if (!comparisonDateInput) throw new Error('Comparison date input not found')
+  if (!findTeachersButton) throw new Error('Find teachers button not found')
+  if (!teachersContainer) throw new Error('Teachers container not found')
 
   // Set version from manifest
   try {
@@ -210,6 +214,16 @@ function initPopup() {
     } catch (error) {
       console.error('Error showing future subjects:', error)
       showError('Failed to show future subjects: ' + error.message)
+    }
+  })
+
+  // Add event listeners for teachers
+  findTeachersButton.addEventListener('click', function() {
+    try {
+      findTeachers()
+    } catch (error) {
+      console.error('Error finding teachers:', error)
+      showError('Failed to find teachers: ' + error.message)
     }
   })
 
@@ -612,6 +626,104 @@ function displaySubjects(subjects, comparisonDate) {
   }
 
   subjectsContent.innerHTML = html
+}
+
+/**
+ * Find and display all teachers with their IDs
+ */
+function findTeachers() {
+  const teachersContainer = document.getElementById('teachers-container')
+  const teachersLoading = document.getElementById('teachers-loading')
+  const teachersContent = document.getElementById('teachers-content')
+
+  if (!teachersContainer || !teachersLoading || !teachersContent) {
+    console.error('Teachers container elements not found')
+    return
+  }
+
+  // Show container and loading state
+  teachersContainer.style.display = 'block'
+  teachersLoading.style.display = 'block'
+  teachersContent.style.display = 'none'
+
+  // Send message to content script to get teachers
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs[0]) {
+      showError('No active tab found')
+      return
+    }
+
+    const isValidTahvelPage = tabs[0].url.includes('tahvel.edu.ee') || tabs[0].url.includes('tahvel.eenet.ee')
+
+    if (!isValidTahvelPage) {
+      showError('Palun mine Tahvli lehele, et kasutada seda funktsiooni')
+      teachersContainer.style.display = 'none'
+      return
+    }
+
+    chrome.tabs
+      .sendMessage(tabs[0].id, {
+        action: 'findTeachers'
+      })
+      .then(response => {
+        if (response && response.success) {
+          displayTeachers(response.teachers)
+        } else {
+          showError(response ? response.error : 'Failed to get teachers')
+          teachersContainer.style.display = 'none'
+        }
+      })
+      .catch(error => {
+        console.error('Error sending message:', error)
+        showError('Failed to communicate with content script: ' + error.message)
+        teachersContainer.style.display = 'none'
+      })
+  })
+}
+
+/**
+ * Display teachers in the teachers container
+ * @param {Array} teachers - Array of teacher objects
+ */
+function displayTeachers(teachers) {
+  const teachersLoading = document.getElementById('teachers-loading')
+  const teachersContent = document.getElementById('teachers-content')
+
+  if (!teachersLoading || !teachersContent) return
+
+  teachersLoading.style.display = 'none'
+  teachersContent.style.display = 'block'
+
+  if (!teachers || teachers.length === 0) {
+    teachersContent.innerHTML = '<div>Õpetajaid ei leitud</div>'
+    return
+  }
+
+  // Sort teachers by name
+  teachers.sort((a, b) => a.name.localeCompare(b.name))
+
+  // Create HTML for teachers
+  let html = '<div style="margin-bottom: 8px; font-weight: bold;">Leitud õpetajad:</div>'
+
+  teachers.forEach(teacher => {
+    html += `
+      <div style="
+        margin-bottom: 6px; 
+        padding: 6px 8px; 
+        border: 1px solid #ddd;
+        border-radius: 4px; 
+        background-color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+      ">
+        <div style="font-weight: bold; margin-bottom: 2px;">${teacher.name}</div>
+        <div style="font-size: 11px; color: #666;">
+          ID: ${teacher.id}
+        </div>
+      </div>
+    `
+  })
+
+  teachersContent.innerHTML = html
 }
 
 /**
