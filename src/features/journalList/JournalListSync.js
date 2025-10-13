@@ -1518,13 +1518,6 @@ class JournalListSyncFeature extends BaseFeature {
         return
       }
 
-      // Log the request data
-      Logger.debug('Sending request to Kriit API:', JSON.stringify(journalData))
-
-      // Store Tahvel data for banner to access current lesson values
-      if (!window.journalListSync) window.journalListSync = {}
-      window.journalListSync.tahvelData = journalData
-
       // Check if we have a Kriit API token
       if (!this.api.kriit.authToken) {
         Logger.error('No Kriit API token set')
@@ -1534,9 +1527,55 @@ class JournalListSyncFeature extends BaseFeature {
         return
       }
 
+      // Fetch inactive students to send to Kriit
+      Logger.debug('🔍 Fetching inactive students for Kriit')
+      let inactiveStudentsArray = []
       try {
+        const inactiveStudentsCache = await this.getInactiveStudentsCache()
+
+        Logger.debug(`📦 Cache structure: ${JSON.stringify({
+          hasCache: !!inactiveStudentsCache,
+          hasByPersonalCode: !!(inactiveStudentsCache && inactiveStudentsCache.byPersonalCode),
+          personalCodeCount: inactiveStudentsCache && inactiveStudentsCache.byPersonalCode
+            ? Object.keys(inactiveStudentsCache.byPersonalCode).length
+            : 0
+        })}`)
+
+        // Convert the cache to an array format suitable for Kriit
+        if (inactiveStudentsCache && inactiveStudentsCache.byPersonalCode) {
+          for (const personalCode in inactiveStudentsCache.byPersonalCode) {
+            const student = inactiveStudentsCache.byPersonalCode[personalCode]
+            inactiveStudentsArray.push({
+              personalCode: student.personalCode,
+              name: student.name,
+              status: student.status
+            })
+          }
+        }
+
+        Logger.debug(`✅ Including ${inactiveStudentsArray.length} inactive students in payload for Kriit`)
+      } catch (error) {
+        Logger.warning(`❌ Failed to fetch inactive students: ${error.message}`)
+        Logger.error(error)
+        inactiveStudentsArray = []
+      }
+
+      // Store Tahvel data for banner to access current lesson values
+      if (!window.journalListSync) window.journalListSync = {}
+      window.journalListSync.tahvelData = journalData
+
+      try {
+        // Prepare payload with both journals and inactive students
+        const payload = {
+          journals: journalData,
+          inactiveStudents: inactiveStudentsArray
+        }
+
+        // Log the request data
+        Logger.debug('Sending request to Kriit API:', JSON.stringify(payload))
+
         // Compute a stable hash of the payload and skip calling Kriit if unchanged since last successful call
-        const payloadHash = await computePayloadHash(journalData)
+        const payloadHash = await computePayloadHash(payload)
         try {
           const ONE_DAY = 24 * 60 * 60 * 1000
           const lastHash = await cacheService.get('journalList_lastPayloadHash', ONE_DAY)
@@ -1549,7 +1588,7 @@ class JournalListSyncFeature extends BaseFeature {
         }
 
         // Make the actual API call
-        const response = await this.api.kriit.post('/subjects/getDifferences', journalData)
+        const response = await this.api.kriit.post('/subjects/getDifferences', payload)
         // Ensure runtime container exists
         if (!window.journalListSync) window.journalListSync = {}
 
@@ -2637,6 +2676,139 @@ class JournalListSyncFeature extends BaseFeature {
         cacheExpiration: 24 * 60 * 60 * 1000
       }
     )
+  }
+
+  /**
+   * Fetch students with inactive statuses (academic leave, graduated, exmatriculated)
+   * This is useful for finding students who have been removed from journals
+   * @returns {Promise<Object>} Map of personal codes to student data
+   */
+  async fetchInactiveStudents() {
+    try {
+      Logger.debug('📡 Fetching inactive students from Tahvel API')
+
+      // Build maps indexed by both personal code and student ID for quick lookup
+      const inactiveStudentsMap = {
+        byPersonalCode: {},
+        byStudentId: {}
+      }
+
+      // The API limits page size to 2000, so we need to paginate through all results
+      let page = 0
+      let hasMorePages = true
+
+      // Fetch all pages until we reach the end
+      while (hasMorePages) {
+        Logger.debug(`📄 Fetching page ${page} of inactive students`)
+
+        // Fetch students with OPPURSTAATUS_A (academic leave), OPPURSTAATUS_L (graduated), OPPURSTAATUS_K (exmatriculated)
+        const response = await this.api.tahvel.get(
+          '/students',
+          {
+            lang: 'ET',
+            page: page,
+            showMyStudentGroups: false,
+            size: 2000, // Maximum page size allowed by API
+            sort: 'person.lastname,person.firstname,asc',
+            status: ['OPPURSTAATUS_K', 'OPPURSTAATUS_L', 'OPPURSTAATUS_A']
+          },
+          {
+            cacheExpiration: 24 * 60 * 60 * 1000 // Cache for 24 hours
+          }
+        )
+
+        if (!response || !response.content || !Array.isArray(response.content)) {
+          Logger.warning('⚠️ Invalid response from inactive students API')
+          Logger.debug(`Response structure: ${JSON.stringify(Object.keys(response || {}))}`)
+          break
+        }
+
+        // Log total info on first page
+        if (page === 0 && response.totalElements) {
+          Logger.debug(`📊 Total inactive students reported by API: ${response.totalElements}`)
+        }
+
+        const studentsInPage = response.content.length
+        Logger.debug(`📋 Processing ${studentsInPage} students from page ${page}`)
+
+        // If we got no students, we've reached the end
+        if (studentsInPage === 0) {
+          hasMorePages = false
+          break
+        }
+
+        // Process students from this page
+        for (const student of response.content) {
+          if (student.idcode) {
+            const isActive = student.status === 'OPPURSTAATUS_O'
+            const isDeleted = student.status === 'OPPURSTAATUS_K'
+            const isGraduated = student.status === 'OPPURSTAATUS_L'
+
+            const studentData = {
+              personalCode: student.idcode,
+              name: student.fullname || `${student.firstname} ${student.lastname}`,
+              isActive: isActive,
+              isDeleted: isDeleted,
+              isGraduated: isGraduated,
+              studentId: student.id,
+              status: student.status
+            }
+
+            // Index by personal code
+            inactiveStudentsMap.byPersonalCode[student.idcode] = studentData
+
+            // Index by student ID
+            if (student.id) {
+              inactiveStudentsMap.byStudentId[student.id] = studentData
+            }
+          } else {
+            Logger.debug(`⚠️ Skipping student without idcode: ${JSON.stringify(student)}`)
+          }
+        }
+
+        // If this page had fewer students than requested, we've reached the end
+        if (studentsInPage < 2000) {
+          hasMorePages = false
+        } else {
+          page++
+        }
+      }
+
+      const fetchedCount = Object.keys(inactiveStudentsMap.byPersonalCode).length
+      Logger.debug(`✅ Fetched ${fetchedCount} inactive students from ${page + 1} page(s) (indexed by personal code and student ID)`)
+
+      return inactiveStudentsMap
+    } catch (error) {
+      Logger.error(`❌ Error fetching inactive students: ${error.message}`)
+      return { byPersonalCode: {}, byStudentId: {} }
+    }
+  }
+
+  /**
+   * Get or fetch the inactive students cache
+   * Uses CacheService to cache the inactive students data for 24 hours
+   * @returns {Promise<Object>} Object with byPersonalCode and byStudentId maps
+   */
+  async getInactiveStudentsCache() {
+    const cacheKey = 'inactive_students_all'
+
+    const result = await cacheService.getOrFetch(
+      cacheKey,
+      () => this.fetchInactiveStudents(),
+      24 * 60 * 60 * 1000 // 24 hours
+    )
+
+    // Ensure we always return a valid structure
+    if (!result || typeof result !== 'object') {
+      return { byPersonalCode: {}, byStudentId: {} }
+    }
+
+    // Handle old format (before this update) or error cases
+    if (!result.byPersonalCode && !result.byStudentId) {
+      return { byPersonalCode: {}, byStudentId: {} }
+    }
+
+    return result
   }
 
   /**
