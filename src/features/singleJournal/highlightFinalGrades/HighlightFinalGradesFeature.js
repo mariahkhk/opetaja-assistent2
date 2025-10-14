@@ -11,6 +11,8 @@ class HighlightFinalGradesFeature extends BaseFeature {
     this._debounceTimeout = null
     this._docObserverTable = null
     this._tableRetryTimeout = null
+    this._tableRetryCount = 0
+    this._bannerObserver = null
   }
 
   injectFinalGradeCSS() {
@@ -211,6 +213,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
 
   onActivate() {
     if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] onActivate called')
+    this._tableRetryCount = 0
     setTimeout(() => {
       if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] Calling run() after timeout')
       void this.run()
@@ -258,18 +261,20 @@ class HighlightFinalGradesFeature extends BaseFeature {
     const table = this._findJournalTable()
     if (!table) {
       if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] Journal table not found, skipping highlight')
-      if (!this._tableRetryTimeout) {
+      // Only retry up to 40 times (10 seconds total) and check if feature is still active
+      if (!this._tableRetryTimeout && this._tableRetryCount < 40 && this.isActive) {
+        this._tableRetryCount++
         this._tableRetryTimeout = setTimeout(() => {
           this._tableRetryTimeout = null
           void this.run()
         }, 250)
+      } else if (this._tableRetryCount >= 40) {
+        if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] Max retry count reached, giving up')
       }
       return
     }
-    if (this._tableRetryTimeout) {
-      clearTimeout(this._tableRetryTimeout)
-      this._tableRetryTimeout = null
-    }
+    // Reset retry count when table is found
+    this._tableRetryCount = 0
     // If observer is not set or table changed, re-setup observer
     if (!this._docObserver || this._docObserverTable !== table) {
       this._setupTableObserver()
@@ -328,18 +333,19 @@ class HighlightFinalGradesFeature extends BaseFeature {
     // to API. This prevents premature highlighting (yellow) on initial page load.
     if (!finalLessonDate) {
       const banner = document.getElementById('last-lesson-inline-notification')
-      if (!banner) {
+      if (!banner && !this._bannerObserver) {
         // Observe document body for banner insertion and re-run highlighting when it appears
-        const docObserver = new MutationObserver((mutations, obs) => {
+        this._bannerObserver = new MutationObserver((mutations, obs) => {
           const b = document.getElementById('last-lesson-inline-notification')
           if (b) {
             if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] Detected last-lesson banner insertion, re-running highlight')
             obs.disconnect()
+            this._bannerObserver = null
             // Re-run highlighting asynchronously to allow DOM settle
             setTimeout(() => void this.run(), 50)
           }
         })
-        docObserver.observe(document.body, { childList: true, subtree: true })
+        this._bannerObserver.observe(document.body, { childList: true, subtree: true })
       }
     }
 
@@ -507,6 +513,10 @@ class HighlightFinalGradesFeature extends BaseFeature {
       this._docObserver.disconnect()
       this._docObserver = null
     }
+    if (this._bannerObserver) {
+      this._bannerObserver.disconnect()
+      this._bannerObserver = null
+    }
     if (this._debounceTimeout) {
       clearTimeout(this._debounceTimeout)
       this._debounceTimeout = null
@@ -515,6 +525,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
       clearTimeout(this._tableRetryTimeout)
       this._tableRetryTimeout = null
     }
+    this._tableRetryCount = 0
     this.removeFinalGradeBanner()
   }
 }
