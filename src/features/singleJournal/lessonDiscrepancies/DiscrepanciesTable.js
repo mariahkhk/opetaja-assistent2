@@ -33,13 +33,15 @@ export class DiscrepanciesTable {
    * @param {Function} options.calculateDuplicateIndex - Function to calculate duplicate index
    * @param {Function} options.findDuplicateMatches - Function to find duplicate matches
    * @param {Function} options.addDiscrepancyButtonListeners - Function to add button listeners
+   * @param {Function} options.shouldContinue - Function to check if operation should continue
    */
-  constructor({ api, extractJournalId, calculateDuplicateIndex, findDuplicateMatches, addDiscrepancyButtonListeners }) {
+  constructor({ api, extractJournalId, calculateDuplicateIndex, findDuplicateMatches, addDiscrepancyButtonListeners, shouldContinue }) {
     this.api = api
     this.extractJournalId = extractJournalId
     this.calculateDuplicateIndex = calculateDuplicateIndex
     this.findDuplicateMatches = findDuplicateMatches
     this.addDiscrepancyButtonListeners = addDiscrepancyButtonListeners
+    this.shouldContinue = shouldContinue
     this.tableCreated = false
     this.currentJournalId = null
     this.name = 'DiscrepanciesTable'
@@ -199,6 +201,12 @@ export class DiscrepanciesTable {
   // eslint-disable-next-line no-unused-vars
   insertUnifiedTable(discrepancies, capacityProblems, independentWorkMessages, missingGradesMessage) {
     try {
+      // Verify we should still continue before inserting
+      if (this.shouldContinue && !this.shouldContinue()) {
+        Logger.info(`[${this.name}] Operation cancelled - feature deactivated or URL changed`)
+        return false
+      }
+
       document.querySelector('[data-discrepancies-table]')?.remove()
       document.querySelector('[data-capacity-problems-table]')?.remove()
       const insertionPoint = this.#findInsertionPoint()

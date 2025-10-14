@@ -63,12 +63,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       extractJournalId: () => this.#extractJournalId(),
       calculateDuplicateIndex: discrepancy => this.#calculateDuplicateIndex(discrepancy),
       findDuplicateMatches: (entryId, date) => this.#findDuplicateMatches(entryId, date),
-      addDiscrepancyButtonListeners: () => this.#addDiscrepancyButtonListeners()
+      addDiscrepancyButtonListeners: () => this.#addDiscrepancyButtonListeners(),
+      shouldContinue: () => this.isActive && this.shouldActivate(window.location.href)
     })
   }
 
   async activate() {
     // CSS injection is now handled by the table class
+    this.isActive = true
     this.reset()
     await this.#clearStaleCache()
     await this.#delay(1000)
@@ -78,6 +80,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   onDeactivate() {
+    this.isActive = false
     this.#cleanupMonitoring()
     this.reset()
     styleService.removeCSS('lesson-discrepancies-styles')
@@ -200,6 +203,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       const discrepancies = await this.#findLessonDiscrepancies(journalData, timetableData)
       const capacityProblems = await this.#getCapacityTypeProblems(journalData)
+
+      // Verify we're still on the correct page before inserting the table
+      if (!this.isActive || !this.shouldActivate(window.location.href)) {
+        Logger.info(`[${this.name}] Feature deactivated or URL changed, skipping table insertion`)
+        this.#refreshInProgress = false
+        return
+      }
 
       // Use the table class to create the table
       const success = await this.table.createTable({
