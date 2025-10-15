@@ -20,7 +20,12 @@ class DifferenceRenderer {
     for (const subjectName in groupedDiffs) {
       const subjectContainer = this.createSubjectContainer(container, subjectName)
       groupedDiffs[subjectName].forEach(diff => {
-        const row = this.createRow(subjectContainer)
+        const row = this.createRow(subjectContainer, {
+          journalId: diff.journalId,
+          assignmentId: diff.assignmentId,
+          type: diff.type,
+          studentPersonalCode: diff.studentPersonalCode
+        })
         const badges = domService.createAndInsertElement('div', { classList: ['badges'] }, '', row)
         // Use a special class for new assignments for styling
         if (diff.type === 'new') {
@@ -115,7 +120,9 @@ class DifferenceRenderer {
           assignmentName: oldName,
           studentName: '',
           oldValue: oldName,
-          newValue: newName
+          newValue: newName,
+          journalId: subject.subjectExternalId,
+          assignmentId: nameDiff.assignmentExternalId
         })
       })
     })
@@ -161,7 +168,10 @@ class DifferenceRenderer {
               assignmentName: assignmentName,
               studentName: result.studentName,
               oldValue: tahvelGrade || 'puudub',
-              newValue: kriitGrade || 'puudub'
+              newValue: kriitGrade || 'puudub',
+              journalId: subject.subjectExternalId,
+              assignmentId: assignment.assignmentExternalId,
+              studentPersonalCode: result.studentPersonalCode
             })
           }
         })
@@ -187,7 +197,9 @@ class DifferenceRenderer {
         assignmentName: assignmentName,
         studentName: '',
         oldValue: formatDate(normalize(diff.Tahvel)) || 'puudub',
-        newValue: formatDate(normalize(diff.kriit)) || 'puudub'
+        newValue: formatDate(normalize(diff.kriit)) || 'puudub',
+        journalId: diff.subjectExternalId,
+        assignmentId: diff.assignmentExternalId
       })
     })
 
@@ -210,7 +222,9 @@ class DifferenceRenderer {
         assignmentName: assignmentName,
         studentName: '',
         oldValue: formatDate(normalize(diff.Tahvel)) || 'puudub',
-        newValue: formatDate(normalize(diff.kriit)) || 'puudub'
+        newValue: formatDate(normalize(diff.kriit)) || 'puudub',
+        journalId: diff.subjectExternalId,
+        assignmentId: diff.assignmentExternalId
       })
     })
 
@@ -249,7 +263,9 @@ class DifferenceRenderer {
         assignmentName: assignmentName,
         studentName: '',
         oldValue: currentLessons,
-        newValue: `${diff.kriitHours} tundi`
+        newValue: `${diff.kriitHours} tundi`,
+        journalId: diff.subjectExternalId,
+        assignmentId: diff.assignmentExternalId
       })
     })
 
@@ -341,7 +357,8 @@ class DifferenceRenderer {
             entryDate: entryFormatted,
             dueDate: dueFormatted,
             createdAssignmentId: a.createdAssignmentId || null,
-            assignmentExternalId: a.assignmentExternalId || null
+            assignmentExternalId: a.assignmentExternalId || null,
+            journalId: subjectExternalId
           })
         })
       }
@@ -359,8 +376,27 @@ class DifferenceRenderer {
     return subjectContainer
   }
 
-  createRow(container) {
-    return domService.createAndInsertElement('div', { classList: ['change-item'] }, '', container)
+  createRow(container, rowIdentifier = {}) {
+    const row = domService.createAndInsertElement('div', { classList: ['change-item'] }, '', container)
+
+    // Add data attributes for row identification
+    if (rowIdentifier.journalId) row.dataset.journalId = rowIdentifier.journalId
+    if (rowIdentifier.assignmentId) row.dataset.assignmentId = rowIdentifier.assignmentId
+    if (rowIdentifier.type) row.dataset.diffType = rowIdentifier.type
+    if (rowIdentifier.studentPersonalCode) row.dataset.studentPersonalCode = rowIdentifier.studentPersonalCode
+
+    // Add status indicator element (initially hidden)
+    const statusIndicator = domService.createAndInsertElement(
+      'span',
+      {
+        classList: ['sync-status-indicator'],
+        style: 'margin-left: 8px; font-size: 1.2em; display: none;'
+      },
+      '',
+      row
+    )
+
+    return row
   }
 
   createBadge(row, text, className) {
@@ -682,6 +718,42 @@ export class JournalSyncBannerService {
     bannerService.currentBanner = scopedContainer
 
     Logger.debug('Differences banner created and displayed')
+  }
+
+  /**
+   * Update sync status for a specific difference item
+   * @param {string} journalId - Journal/subject external ID
+   * @param {string} assignmentId - Assignment external ID
+   * @param {string} type - Difference type (name, grade, duedate, entrydate, hours, new)
+   * @param {boolean} success - Whether the sync was successful
+   * @param {string|null} studentPersonalCode - Student personal code (for grade changes)
+   */
+  updateItemSyncStatus(journalId, assignmentId, type, success, studentPersonalCode = null) {
+    try {
+      // Find all matching rows
+      const selector = `.ta-sync-banner-container .change-item[data-journal-id="${journalId}"][data-assignment-id="${assignmentId}"][data-diff-type="${type}"]`
+      const rows = document.querySelectorAll(selector)
+
+      rows.forEach(row => {
+        // For grade changes, also match student personal code
+        if (type === 'grade' && studentPersonalCode) {
+          const rowStudentCode = row.dataset.studentPersonalCode
+          if (rowStudentCode !== studentPersonalCode) {
+            return // Skip this row if student doesn't match
+          }
+        }
+
+        // Find the status indicator in this row
+        const statusIndicator = row.querySelector('.sync-status-indicator')
+        if (statusIndicator) {
+          statusIndicator.textContent = success ? '\u2705' : '\u274c' // ✅ or ❌
+          statusIndicator.style.display = 'inline-block'
+          statusIndicator.title = success ? 'Sünkroniseeritud' : 'Sünkroniseerimine ebaõnnestus'
+        }
+      })
+    } catch (err) {
+      Logger.warning(`Failed to update sync status for ${journalId}/${assignmentId}/${type}:`, err)
+    }
   }
 
   /**

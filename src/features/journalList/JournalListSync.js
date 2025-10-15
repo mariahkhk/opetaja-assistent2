@@ -3311,8 +3311,24 @@ class JournalListSyncFeature extends BaseFeature {
           await this.api.tahvel.put(`/journals/${journalId}/journalEntry/${assignmentId}`, updatedPayload, { cache: false })
 
           Logger.info(`✅ Updated assignment "${diff.assignmentName}" lessons to ${diff.kriitHours} hours`)
+
+          // Update UI status indicator for success
+          try {
+            const { journalSyncBannerService } = await import('./JournalSyncBanner.js')
+            journalSyncBannerService.updateItemSyncStatus(journalId, assignmentId, 'hours', true)
+          } catch (uiErr) {
+            Logger.warning(`Failed to update UI status indicator for hours: ${uiErr.message}`)
+          }
         } catch (error) {
           Logger.error(`❌ Failed to update assignment ${diff.assignmentExternalId} hours:`, error)
+
+          // Update UI status indicator for failure
+          try {
+            const { journalSyncBannerService } = await import('./JournalSyncBanner.js')
+            journalSyncBannerService.updateItemSyncStatus(diff.subjectExternalId, diff.assignmentExternalId, 'hours', false)
+          } catch (uiErr) {
+            Logger.warning(`Failed to update UI status indicator for failed hours: ${uiErr.message}`)
+          }
         }
       }
     } catch (error) {
@@ -3937,6 +3953,32 @@ class JournalListSyncFeature extends BaseFeature {
                 Logger.debug(`✅ Student grade updates successful: ${studentsToUpdate.length} students in ${batch.journalId}/${batch.assignmentId}`)
               }
 
+              // Update UI status indicators in real-time
+              try {
+                const { journalSyncBannerService } = await import('./JournalSyncBanner.js')
+
+                // Update assignment-level changes
+                if (batch.nameEt) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'name', true)
+                }
+                if (batch.homeworkDuedate) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'duedate', true)
+                }
+                if (batch.entryDate) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'entrydate', true)
+                }
+
+                // Update grade changes
+                for (const s of studentsToUpdate) {
+                  const studentCode = s.studentPersonalCode ? String(s.studentPersonalCode) : null
+                  if (studentCode) {
+                    journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'grade', true, studentCode)
+                  }
+                }
+              } catch (err) {
+                Logger.warning(`Failed to update UI status indicators: ${err.message}`)
+              }
+
               // Update in-memory differences: clear assignment-level diffs and update per-student currentGrade
               try {
                 if (Array.isArray(this.differences)) {
@@ -3999,6 +4041,32 @@ class JournalListSyncFeature extends BaseFeature {
             } catch (err) {
               Logger.error(`Failed to PUT assignment ${batch.assignmentId} in journal ${batch.journalId}: ${err.message}`)
               failedSyncs.push({ journalId: batch.journalId, assignmentId: batch.assignmentId, error: err.message })
+
+              // Update UI status indicators to show failure
+              try {
+                const { journalSyncBannerService } = await import('./JournalSyncBanner.js')
+
+                // Mark assignment-level changes as failed
+                if (batch.nameEt) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'name', false)
+                }
+                if (batch.homeworkDuedate) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'duedate', false)
+                }
+                if (batch.entryDate) {
+                  journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'entrydate', false)
+                }
+
+                // Mark grade changes as failed
+                for (const s of studentsToUpdate) {
+                  const studentCode = s.studentPersonalCode ? String(s.studentPersonalCode) : null
+                  if (studentCode) {
+                    journalSyncBannerService.updateItemSyncStatus(batch.journalId, batch.assignmentId, 'grade', false, studentCode)
+                  }
+                }
+              } catch (updateErr) {
+                Logger.warning(`Failed to update failure UI status indicators: ${updateErr.message}`)
+              }
             }
 
             // Update progress UI per assignment
@@ -4021,6 +4089,22 @@ class JournalListSyncFeature extends BaseFeature {
         const assignmentLevelUpdates = successfulSyncs.filter(s => s.assignmentLevelUpdated).length
         const skippedUpdates = successfulSyncs.filter(s => s.skipped).length
 
+        // Count specific types of changes from batches
+        let nameCount = 0
+        let duedateCount = 0
+        let entrydateCount = 0
+        for (const batch of batches) {
+          if (successfulSyncs.some(s => s.journalId === batch.journalId && s.assignmentId === batch.assignmentId)) {
+            if (batch.nameEt) nameCount++
+            if (batch.homeworkDuedate) duedateCount++
+            if (batch.entryDate) entrydateCount++
+          }
+        }
+
+        // Count hours changes from the assignment hours differences
+        const assignmentHoursDiffs = this.extractAssignmentHoursDifferences()
+        const hoursCount = assignmentHoursDiffs?.length || 0
+
         // Show success or partial messages
         this.isLoading = false
         if (failedSyncs.length === 0) {
@@ -4031,10 +4115,24 @@ class JournalListSyncFeature extends BaseFeature {
             if (actualUpdates > 0) {
               parts.push(`${actualUpdates} hinnet`)
             }
-            if (assignmentLevelUpdates > 0) {
-              parts.push(`${assignmentLevelUpdates} ülesande andmeid (nimi/kuupäevad)`)
+            if (nameCount > 0) {
+              parts.push(`${nameCount} ülesande nimetust`)
             }
-            successMessage = `Edukalt sünkroniseeritud ${parts.join(' ja ')} Kriidist Tahvlisse.`
+            if (duedateCount > 0) {
+              parts.push(`${duedateCount} tähtaega`)
+            }
+            if (entrydateCount > 0) {
+              parts.push(`${entrydateCount} sissekande kuupäeva`)
+            }
+            if (hoursCount > 0) {
+              parts.push(`${hoursCount} ülesande tundide arvu`)
+            }
+
+            if (parts.length > 0) {
+              successMessage = `Edukalt sünkroniseeritud ${parts.join(', ')} Kriidist Tahvlisse.`
+            } else {
+              successMessage = `Edukalt sünkroniseeritud Kriidist Tahvlisse.`
+            }
 
             if (skippedUpdates > 0) successMessage += ` ${skippedUpdates} kirjet olid juba õiged.`
             successMessage += ` Andmed värskendatakse automaatselt mõne sekundi pärast...`

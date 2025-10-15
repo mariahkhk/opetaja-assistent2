@@ -78,6 +78,40 @@ describe('DifferenceRenderer', () => {
       expect(result.tagName).toBe('DIV')
       expect(result.classList.contains('change-item')).toBe(true)
     })
+
+    test('should add data attributes when rowIdentifier provided', () => {
+      const rowIdentifier = {
+        journalId: 'j123',
+        assignmentId: 'a456',
+        type: 'grade',
+        studentPersonalCode: '12345678901'
+      }
+      const result = differenceRenderer.createRow(container, rowIdentifier)
+      expect(result.dataset.journalId).toBe('j123')
+      expect(result.dataset.assignmentId).toBe('a456')
+      expect(result.dataset.diffType).toBe('grade')
+      expect(result.dataset.studentPersonalCode).toBe('12345678901')
+    })
+
+    test('should add status indicator element', () => {
+      const result = differenceRenderer.createRow(container)
+      const indicator = result.querySelector('.sync-status-indicator')
+      expect(indicator).toBeDefined()
+      expect(indicator.tagName).toBe('SPAN')
+      expect(indicator.style.display).toBe('none')
+    })
+
+    test('should handle partial rowIdentifier', () => {
+      const rowIdentifier = {
+        journalId: 'j123',
+        type: 'name'
+      }
+      const result = differenceRenderer.createRow(container, rowIdentifier)
+      expect(result.dataset.journalId).toBe('j123')
+      expect(result.dataset.diffType).toBe('name')
+      expect(result.dataset.assignmentId).toBeUndefined()
+      expect(result.dataset.studentPersonalCode).toBeUndefined()
+    })
   })
 
   describe('createBadge', () => {
@@ -96,6 +130,7 @@ describe('DifferenceRenderer', () => {
       const assignmentNameDiffs = [
         {
           subjectName: 'Math',
+          subjectExternalId: 's1',
           nameDiffs: [{ assignmentExternalId: 'a1', Tahvel: 'Old Name', kriit: 'New Name' }]
         }
       ]
@@ -105,6 +140,8 @@ describe('DifferenceRenderer', () => {
       expect(result.Math[0].type).toBe('name')
       expect(result.Math[0].oldValue).toBe('Old Name')
       expect(result.Math[0].newValue).toBe('New Name')
+      expect(result.Math[0].journalId).toBe('s1')
+      expect(result.Math[0].assignmentId).toBe('a1')
     })
 
     test('should handle object assignmentName with kriit property', () => {
@@ -122,11 +159,12 @@ describe('DifferenceRenderer', () => {
       const gradeDiffs = [
         {
           subjectName: 'Physics',
+          subjectExternalId: 's2',
           assignments: [
             {
               assignmentExternalId: 'a1',
               assignmentName: 'Test',
-              results: [{ studentName: 'John', currentGrade: '4', grade: '5' }]
+              results: [{ studentName: 'John', studentPersonalCode: '39001010001', currentGrade: '4', grade: '5' }]
             }
           ]
         }
@@ -137,6 +175,9 @@ describe('DifferenceRenderer', () => {
       expect(result.Physics[0].studentName).toBe('John')
       expect(result.Physics[0].oldValue).toBe('4')
       expect(result.Physics[0].newValue).toBe('5')
+      expect(result.Physics[0].journalId).toBe('s2')
+      expect(result.Physics[0].assignmentId).toBe('a1')
+      expect(result.Physics[0].studentPersonalCode).toBe('39001010001')
     })
 
     test('should skip grades that match', () => {
@@ -377,6 +418,144 @@ describe('JournalSyncBannerService', () => {
       service.stylesLoaded = false
       service.loadSyncStyles()
       expect(service.stylesLoaded).toBe(true)
+    })
+  })
+
+  describe('updateItemSyncStatus', () => {
+    let dom
+    let container
+
+    beforeEach(() => {
+      dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+      global.window = dom.window
+      global.document = dom.window.document
+
+      // Create a banner container with some test rows
+      container = document.createElement('div')
+      container.classList.add('ta-sync-banner-container')
+      document.body.appendChild(container)
+    })
+
+    test('should update status indicator for successful sync', () => {
+      const row = document.createElement('div')
+      row.classList.add('change-item')
+      row.dataset.journalId = 'j123'
+      row.dataset.assignmentId = 'a456'
+      row.dataset.diffType = 'name'
+
+      const indicator = document.createElement('span')
+      indicator.classList.add('sync-status-indicator')
+      indicator.style.display = 'none'
+      row.appendChild(indicator)
+      container.appendChild(row)
+
+      service.updateItemSyncStatus('j123', 'a456', 'name', true)
+
+      expect(indicator.textContent).toBe('✅')
+      expect(indicator.style.display).toBe('inline-block')
+      expect(indicator.title).toBe('Sünkroniseeritud')
+    })
+
+    test('should update status indicator for failed sync', () => {
+      const row = document.createElement('div')
+      row.classList.add('change-item')
+      row.dataset.journalId = 'j123'
+      row.dataset.assignmentId = 'a456'
+      row.dataset.diffType = 'duedate'
+
+      const indicator = document.createElement('span')
+      indicator.classList.add('sync-status-indicator')
+      indicator.style.display = 'none'
+      row.appendChild(indicator)
+      container.appendChild(row)
+
+      service.updateItemSyncStatus('j123', 'a456', 'duedate', false)
+
+      expect(indicator.textContent).toBe('❌')
+      expect(indicator.style.display).toBe('inline-block')
+      expect(indicator.title).toBe('Sünkroniseerimine ebaõnnestus')
+    })
+
+    test('should update grade status for specific student', () => {
+      // Create row for student 1
+      const row1 = document.createElement('div')
+      row1.classList.add('change-item')
+      row1.dataset.journalId = 'j123'
+      row1.dataset.assignmentId = 'a456'
+      row1.dataset.diffType = 'grade'
+      row1.dataset.studentPersonalCode = '39001010001'
+      const indicator1 = document.createElement('span')
+      indicator1.classList.add('sync-status-indicator')
+      row1.appendChild(indicator1)
+      container.appendChild(row1)
+
+      // Create row for student 2
+      const row2 = document.createElement('div')
+      row2.classList.add('change-item')
+      row2.dataset.journalId = 'j123'
+      row2.dataset.assignmentId = 'a456'
+      row2.dataset.diffType = 'grade'
+      row2.dataset.studentPersonalCode = '39002020002'
+      const indicator2 = document.createElement('span')
+      indicator2.classList.add('sync-status-indicator')
+      row2.appendChild(indicator2)
+      container.appendChild(row2)
+
+      // Update only student 1
+      service.updateItemSyncStatus('j123', 'a456', 'grade', true, '39001010001')
+
+      expect(indicator1.textContent).toBe('✅')
+      expect(indicator2.textContent).toBe('') // Should not be updated
+    })
+
+    test('should update multiple rows with same identifier', () => {
+      // Create two rows with same identifiers
+      const row1 = document.createElement('div')
+      row1.classList.add('change-item')
+      row1.dataset.journalId = 'j123'
+      row1.dataset.assignmentId = 'a456'
+      row1.dataset.diffType = 'entrydate'
+      const indicator1 = document.createElement('span')
+      indicator1.classList.add('sync-status-indicator')
+      row1.appendChild(indicator1)
+      container.appendChild(row1)
+
+      const row2 = document.createElement('div')
+      row2.classList.add('change-item')
+      row2.dataset.journalId = 'j123'
+      row2.dataset.assignmentId = 'a456'
+      row2.dataset.diffType = 'entrydate'
+      const indicator2 = document.createElement('span')
+      indicator2.classList.add('sync-status-indicator')
+      row2.appendChild(indicator2)
+      container.appendChild(row2)
+
+      service.updateItemSyncStatus('j123', 'a456', 'entrydate', true)
+
+      expect(indicator1.textContent).toBe('✅')
+      expect(indicator2.textContent).toBe('✅')
+    })
+
+    test('should handle missing status indicator gracefully', () => {
+      const row = document.createElement('div')
+      row.classList.add('change-item')
+      row.dataset.journalId = 'j123'
+      row.dataset.assignmentId = 'a456'
+      row.dataset.diffType = 'hours'
+      // No indicator added
+      container.appendChild(row)
+
+      // Should not throw
+      expect(() => {
+        service.updateItemSyncStatus('j123', 'a456', 'hours', true)
+      }).not.toThrow()
+    })
+
+    test('should handle non-existent rows gracefully', () => {
+      // Should not throw when no matching rows
+      expect(() => {
+        service.updateItemSyncStatus('nonexistent', 'fake', 'name', true)
+      }).not.toThrow()
     })
   })
 
