@@ -99,7 +99,7 @@ describe('DifferenceRenderer', () => {
           nameDiffs: [{ assignmentExternalId: 'a1', Tahvel: 'Old Name', kriit: 'New Name' }]
         }
       ]
-      const result = differenceRenderer.collectAndGroupDifferences(assignmentNameDiffs, [], [], [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences(assignmentNameDiffs, [], [], [], [], [], {})
       expect(result.Math).toBeDefined()
       expect(result.Math.length).toBe(1)
       expect(result.Math[0].type).toBe('name')
@@ -114,7 +114,7 @@ describe('DifferenceRenderer', () => {
           nameDiffs: [{ assignmentExternalId: 'a1', Tahvel: { kriit: 'Kriit Name', Tahvel: 'Tahvel Name' }, kriit: 'New' }]
         }
       ]
-      const result = differenceRenderer.collectAndGroupDifferences(assignmentNameDiffs, [], [], [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences(assignmentNameDiffs, [], [], [], [], [], {})
       expect(result.Math[0].oldValue).toBe('Kriit Name')
     })
 
@@ -131,7 +131,7 @@ describe('DifferenceRenderer', () => {
           ]
         }
       ]
-      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], [], {})
       expect(result.Physics).toBeDefined()
       expect(result.Physics[0].type).toBe('grade')
       expect(result.Physics[0].studentName).toBe('John')
@@ -152,13 +152,13 @@ describe('DifferenceRenderer', () => {
           ]
         }
       ]
-      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], [], {})
       expect(result.Math).toBeUndefined()
     })
 
     test('should format due date differences', () => {
       const dueDateDiffs = [{ subjectName: 'Math', assignmentName: 'HW1', Tahvel: '2024-01-15', kriit: '2024-01-20', assignmentExternalId: 'a1' }]
-      const result = differenceRenderer.collectAndGroupDifferences([], [], dueDateDiffs, [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences([], [], dueDateDiffs, [], [], [], {})
       expect(result.Math[0].type).toBe('duedate')
       expect(result.Math[0].oldValue).toBe('15.01.2024')
       expect(result.Math[0].newValue).toBe('20.01.2024')
@@ -166,7 +166,7 @@ describe('DifferenceRenderer', () => {
 
     test('should format entry date differences', () => {
       const entryDateDiffs = [{ subjectName: 'Science', assignmentName: 'Lab', Tahvel: '2024-02-10', kriit: '2024-02-11', assignmentExternalId: 'a1' }]
-      const result = differenceRenderer.collectAndGroupDifferences([], [], [], entryDateDiffs, [], {})
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], entryDateDiffs, [], [], {})
       expect(result.Science[0].type).toBe('entrydate')
       expect(result.Science[0].oldValue).toBe('10.02.2024')
       expect(result.Science[0].newValue).toBe('11.02.2024')
@@ -182,10 +182,112 @@ describe('DifferenceRenderer', () => {
         ]
       }
       const assignmentHoursDiffs = [{ subjectName: 'Math', assignmentName: 'HW', subjectExternalId: 's1', assignmentExternalId: 'a1', kriitHours: 3 }]
-      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], assignmentHoursDiffs, {})
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], assignmentHoursDiffs, [], {})
       expect(result.Math[0].type).toBe('hours')
       expect(result.Math[0].oldValue).toBe('2 tundi')
       expect(result.Math[0].newValue).toBe('3 tundi')
+    })
+
+    test('should handle entry type differences with code mapping', () => {
+      const entryTypeDiffs = [
+        {
+          subjectName: 'Programming',
+          assignmentName: 'Homework 1',
+          Tahvel: 'SISSEKANNE_I',
+          kriit: 'SISSEKANNE_P',
+          assignmentExternalId: 'a1'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], entryTypeDiffs, {})
+      expect(result.Programming).toBeDefined()
+      expect(result.Programming[0].type).toBe('entrytype')
+      expect(result.Programming[0].typeName).toBe('Sissekande tüüp')
+      expect(result.Programming[0].oldValue).toBe('Iseseisev töö')
+      expect(result.Programming[0].newValue).toBe('Praktiline töö')
+    })
+
+    test('should handle entry type difference from independent work to graded work', () => {
+      const entryTypeDiffs = [
+        {
+          subjectName: 'Math',
+          assignmentName: 'Test 1',
+          Tahvel: 'SISSEKANNE_I',
+          kriit: 'SISSEKANNE_H',
+          assignmentExternalId: 'a2'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], entryTypeDiffs, {})
+      expect(result.Math[0].oldValue).toBe('Iseseisev töö')
+      expect(result.Math[0].newValue).toBe('Hindeline töö')
+    })
+
+    test('should handle entry type difference from lesson to practical work', () => {
+      const entryTypeDiffs = [
+        {
+          subjectName: 'Science',
+          assignmentName: 'Lab Work',
+          Tahvel: 'SISSEKANNE_L',
+          kriit: 'SISSEKANNE_P',
+          assignmentExternalId: 'a3'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], entryTypeDiffs, {})
+      expect(result.Science[0].oldValue).toBe('Tund')
+      expect(result.Science[0].newValue).toBe('Praktiline töö')
+    })
+
+    test('should handle null entry type as puudub', () => {
+      const entryTypeDiffs = [
+        {
+          subjectName: 'History',
+          assignmentName: 'Essay',
+          Tahvel: null,
+          kriit: 'SISSEKANNE_I',
+          assignmentExternalId: 'a4'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], entryTypeDiffs, {})
+      expect(result.History[0].oldValue).toBe('puudub')
+      expect(result.History[0].newValue).toBe('Iseseisev töö')
+    })
+
+    test('should handle unknown entry type codes by showing the code', () => {
+      const entryTypeDiffs = [
+        {
+          subjectName: 'Art',
+          assignmentName: 'Project',
+          Tahvel: 'SISSEKANNE_UNKNOWN',
+          kriit: 'SISSEKANNE_P',
+          assignmentExternalId: 'a5'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], entryTypeDiffs, {})
+      expect(result.Art[0].oldValue).toBe('SISSEKANNE_UNKNOWN')
+      expect(result.Art[0].newValue).toBe('Praktiline töö')
+    })
+
+    test('should use updated assignment name for entry type differences', () => {
+      const assignmentNameDiffs = [
+        {
+          subjectName: 'Math',
+          nameDiffs: [{ assignmentExternalId: 'a1', Tahvel: 'Old Name', kriit: 'New Name' }]
+        }
+      ]
+      const entryTypeDiffs = [
+        {
+          subjectName: 'Math',
+          assignmentName: 'Old Name',
+          Tahvel: 'SISSEKANNE_I',
+          kriit: 'SISSEKANNE_P',
+          assignmentExternalId: 'a1'
+        }
+      ]
+      const result = differenceRenderer.collectAndGroupDifferences(assignmentNameDiffs, [], [], [], [], entryTypeDiffs, {})
+      // Should have both name and entry type differences
+      expect(result.Math.length).toBe(2)
+      // Entry type diff should use the new name
+      const entryTypeDiff = result.Math.find(d => d.type === 'entrytype')
+      expect(entryTypeDiff.assignmentName).toBe('New Name')
     })
 
     test('should handle new assignments', () => {
@@ -195,7 +297,7 @@ describe('DifferenceRenderer', () => {
       global.window.journalListSync = {
         differences: [{ subjectExternalId: 'sub1', subjectName: 'Math' }]
       }
-      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], newAssignments)
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], [], newAssignments)
       expect(result.Math[0].type).toBe('new')
       expect(result.Math[0].assignmentName).toBe('New Task')
       expect(result.Math[0].entryDate).toBe('01.01.2024')
@@ -206,7 +308,7 @@ describe('DifferenceRenderer', () => {
       const newAssignments = {
         unknown: [{ assignmentName: 'Task' }]
       }
-      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], newAssignments)
+      const result = differenceRenderer.collectAndGroupDifferences([], [], [], [], [], [], newAssignments)
       expect(result['Päevik unknown']).toBeDefined()
     })
 
@@ -223,7 +325,7 @@ describe('DifferenceRenderer', () => {
           ]
         }
       ]
-      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], {})
+      const result = differenceRenderer.collectAndGroupDifferences([], gradeDiffs, [], [], [], [], {})
       expect(result.Math[0].oldValue).toBe('puudub')
       expect(result.Math[0].newValue).toBe('5')
     })

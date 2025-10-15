@@ -4,7 +4,7 @@ import { bannerService } from '../../services/BannerService.js'
 import Logger from '../../services/Logger.js'
 
 class DifferenceRenderer {
-  render(container, assignmentNameDiffs, gradeDiffs, dueDateDiffs, entryDateDiffs, assignmentHoursDiffs, newAssignments) {
+  render(container, assignmentNameDiffs, gradeDiffs, dueDateDiffs, entryDateDiffs, assignmentHoursDiffs, entryTypeDiffs, newAssignments) {
     // Only render on journal list page, never on edit page - accept modern variants
     if (!(window.location && window.location.hash && window.location.hash.indexOf('journals') !== -1)) return
     const groupedDiffs = this.collectAndGroupDifferences(
@@ -13,6 +13,7 @@ class DifferenceRenderer {
       dueDateDiffs,
       entryDateDiffs,
       assignmentHoursDiffs,
+      entryTypeDiffs,
       newAssignments
     )
 
@@ -63,7 +64,7 @@ class DifferenceRenderer {
     }
   }
 
-  collectAndGroupDifferences(assignmentNameDiffs, gradeDiffs, dueDateDiffs, entryDateDiffs, assignmentHoursDiffs, newAssignments) {
+  collectAndGroupDifferences(assignmentNameDiffs, gradeDiffs, dueDateDiffs, entryDateDiffs, assignmentHoursDiffs, entryTypeDiffs, newAssignments) {
     const grouped = {}
     // Improved normalization: extract string from object, fallback to JSON if needed
     const normalize = val => {
@@ -249,6 +250,41 @@ class DifferenceRenderer {
         studentName: '',
         oldValue: currentLessons,
         newValue: `${diff.kriitHours} tundi`
+      })
+    })
+
+    // Helper to convert entry type codes to readable names
+    const getEntryTypeName = code => {
+      if (!code) return 'puudub'
+      const entryTypeMap = {
+        SISSEKANNE_I: 'Iseseisev töö',
+        SISSEKANNE_P: 'Praktiline töö',
+        SISSEKANNE_H: 'Hindeline töö',
+        SISSEKANNE_L: 'Tund',
+        SISSEKANNE_O: 'Õpitulemused'
+      }
+      return entryTypeMap[code] || code
+    }
+
+    // Entry Type Diffs
+    ;(entryTypeDiffs || []).forEach(diff => {
+      let assignmentName = getNewNameIfChanged(diff.assignmentExternalId)
+      if (!assignmentName)
+        assignmentName = getAssignmentName(
+          diff.assignmentExternalId,
+          typeof diff.assignmentName === 'object' && diff.assignmentName !== null
+            ? diff.assignmentName.kriit || diff.assignmentName.Tahvel
+            : diff.assignmentName
+        )
+      if (!assignmentName) assignmentName = diff.assignmentName
+      assignmentName = normalize(assignmentName) || '—'
+      addDiff(diff.subjectName || '', {
+        type: 'entrytype',
+        typeName: 'Sissekande tüüp',
+        assignmentName: assignmentName,
+        studentName: '',
+        oldValue: getEntryTypeName(diff.Tahvel),
+        newValue: getEntryTypeName(diff.kriit)
       })
     })
 

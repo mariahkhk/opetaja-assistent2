@@ -358,9 +358,13 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
   /**
    * Get Tahvel entry type based on assignment data
    */
-  getEntryTypeFromAssignment(_assignment) {
-    // Default to independent work (Iseseisev töö)
-    // This matches the example in postentry.txt
+  getEntryTypeFromAssignment(assignment) {
+    // Check if Kriit provided an entry type
+    if (assignment && assignment.assignmentEntryType) {
+      return assignment.assignmentEntryType
+    }
+
+    // Default to independent work (Iseseisev töö) if not specified
     return 'SISSEKANNE_I'
   }
 
@@ -394,12 +398,23 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
         Logger.warning(`Could not fetch journal info for ${journalId} to populate teacher: ${err.message}`)
       }
 
+      // Get entry type and set capacity types accordingly
+      const entryType = this.getEntryTypeFromAssignment(assignment)
+      let journalEntryCapacityTypes = []
+      if (entryType === 'SISSEKANNE_I') {
+        journalEntryCapacityTypes = ['MAHT_i']
+      } else if (entryType === 'SISSEKANNE_H') {
+        journalEntryCapacityTypes = ['MAHT_h']
+      } else if (entryType === 'SISSEKANNE_P') {
+        journalEntryCapacityTypes = []
+      }
+
       const payload = {
         // Keep `startLessonNr` present for Tahvel; always send null here (simplified)
         startLessonNr: null,
         // If Kriit provided lesson info, pass lessons through; otherwise leave null
         lessons: typeof assignment.lessons !== 'undefined' && assignment.lessons !== null ? Number(assignment.lessons) : null,
-        entryType: this.getEntryTypeFromAssignment(assignment),
+        entryType: entryType,
         nameEt: assignment.assignmentName,
         studyPeriodEvent: null,
         entryDate: this.formatDateForTahvel(assignment.assignmentEntryDate),
@@ -407,7 +422,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
         homeworkDuedate: this.formatDateForTahvel(assignment.assignmentDueAt),
         journalOmoduleTheme: null,
         journalEntryStudents: [],
-        journalEntryCapacityTypes: ['MAHT_i'], // Independent work capacity type
+        journalEntryCapacityTypes: journalEntryCapacityTypes,
         journalEntryTeachers: journalEntryTeachers
       }
 

@@ -109,6 +109,11 @@
   color: #f57f17;
 }
 
+.ta-sync-banner-container .badge-entrytype {
+  background-color: #ffe0db;
+  color: #d84315;
+}
+
 /* New assignment badge */
 .ta-sync-banner-container .badge-new {
   background-color: #e0f7fa;

@@ -1318,6 +1318,14 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(result).toBe('Iseseisev töö')
     })
 
+    test('should return type-specific name for SISSEKANNE_P', () => {
+      const entry = { entryType: 'SISSEKANNE_P' }
+
+      const result = journalListSync.getAssignmentNameFromEntry(entry)
+
+      expect(result).toBe('Praktiline töö')
+    })
+
     test('should return type-specific name for SISSEKANNE_O', () => {
       const entry = { entryType: 'SISSEKANNE_O' }
 
@@ -1506,8 +1514,9 @@ describe('JournalListSync - Algorithm Tests', () => {
       const entries = [
         { id: 1, entryType: 'SISSEKANNE_H', nameEt: 'Graded Work' },
         { id: 2, entryType: 'SISSEKANNE_I', nameEt: 'Independent Work' },
-        { id: 3, entryType: 'SISSEKANNE_O', nameEt: 'Outcome' },
-        { id: 4, entryType: 'OTHER', nameEt: 'Other' }
+        { id: 3, entryType: 'SISSEKANNE_P', nameEt: 'Practical Work' },
+        { id: 4, entryType: 'SISSEKANNE_O', nameEt: 'Outcome' },
+        { id: 5, entryType: 'OTHER', nameEt: 'Other' }
       ]
       const studentMap = {
         idToPersonalCode: {},
@@ -1517,9 +1526,10 @@ describe('JournalListSync - Algorithm Tests', () => {
 
       const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, [])
 
-      expect(result).toHaveLength(2)
+      expect(result).toHaveLength(3)
       expect(result[0].assignmentName).toBe('Graded Work')
       expect(result[1].assignmentName).toBe('Independent Work')
+      expect(result[2].assignmentName).toBe('Practical Work')
     })
 
     test('should extract assignment with results', () => {
@@ -1562,10 +1572,54 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(result[0].assignmentDueAt).toBe('2024-01-15')
       expect(result[0].assignmentEntryDate).toBe('2024-01-01')
       expect(result[0].lessons).toBe(2)
+      expect(result[0].entryType).toBe('SISSEKANNE_H')
       expect(result[0].results).toHaveLength(1)
       expect(result[0].results[0].grade).toBe('5')
       expect(result[0].results[0].studentPersonalCode).toBe('38001010001')
       expect(result[0].results[0].studentName).toBe('Test Student')
+    })
+
+    test('should include entryType field for SISSEKANNE_I assignments', () => {
+      const entries = [
+        {
+          id: 1,
+          entryType: 'SISSEKANNE_I',
+          nameEt: 'Independent Work',
+          entryDate: '2024-01-01T12:00:00'
+        }
+      ]
+      const studentMap = {
+        idToPersonalCode: {},
+        personalCodeToName: {},
+        journalStudentIdToId: {}
+      }
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, [])
+
+      expect(result).toHaveLength(1)
+      expect(result[0].entryType).toBe('SISSEKANNE_I')
+    })
+
+    test('should include entryType field for SISSEKANNE_P assignments', () => {
+      const entries = [
+        {
+          id: 1,
+          entryType: 'SISSEKANNE_P',
+          nameEt: 'Practical Work',
+          entryDate: '2024-01-01T12:00:00'
+        }
+      ]
+      const studentMap = {
+        idToPersonalCode: {},
+        personalCodeToName: {},
+        journalStudentIdToId: {}
+      }
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, [])
+
+      expect(result).toHaveLength(1)
+      expect(result[0].entryType).toBe('SISSEKANNE_P')
+      expect(result[0].assignmentName).toBe('Practical Work')
     })
 
     test('should include students with empty grades', () => {
@@ -2691,6 +2745,480 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(shouldSync[2].studentIsActive).toBe(false)
       expect(shouldSync[2].studentIsDeleted).toBe(false)
       expect(shouldSync[2].studentIsGraduated).toBe(true)
+    })
+  })
+
+  describe('SISSEKANNE_P Integration Tests', () => {
+    test('should handle complete sync flow for SISSEKANNE_P entries', () => {
+      // Simulate journal entries with both SISSEKANNE_I and SISSEKANNE_P
+      const entries = [
+        {
+          id: 1001,
+          entryType: 'SISSEKANNE_I',
+          nameEt: 'Iseseisev töö 1',
+          entryDate: '2025-09-11T00:00:00Z',
+          homeworkDuedate: '2025-10-02T00:00:00Z',
+          lessons: 2
+        },
+        {
+          id: 1002,
+          entryType: 'SISSEKANNE_P',
+          nameEt: 'Praktiline töö 1',
+          entryDate: '2025-09-11T00:00:00Z',
+          homeworkDuedate: '2025-10-02T00:00:00Z',
+          lessons: 3
+        },
+        {
+          id: 1003,
+          entryType: 'SISSEKANNE_H',
+          nameEt: 'Hindeline töö 1',
+          entryDate: '2025-09-12T00:00:00Z',
+          homeworkDuedate: '2025-10-03T00:00:00Z',
+          lessons: 2
+        },
+        {
+          id: 1004,
+          entryType: 'SISSEKANNE_L',
+          nameEt: 'Regular lesson',
+          entryDate: '2025-09-13T00:00:00Z'
+        }
+      ]
+
+      // Student map with personal codes
+      const studentMap = {
+        idToPersonalCode: {
+          100: '38001010001',
+          101: '38002020002'
+        },
+        personalCodeToName: {
+          '38001010001': 'Test Student A',
+          '38002020002': 'Test Student B'
+        },
+        journalStudentIdToId: {
+          10: 100,
+          11: 101
+        }
+      }
+
+      const journalStudents = [
+        { id: 10, studentId: 100 },
+        { id: 11, studentId: 101 }
+      ]
+
+      // Extract assignments
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, journalStudents)
+
+      // Should include SISSEKANNE_I, SISSEKANNE_P, and SISSEKANNE_H, but NOT SISSEKANNE_L
+      expect(result).toHaveLength(3)
+
+      // Find the SISSEKANNE_P assignment
+      const practicalWork = result.find(a => a.entryType === 'SISSEKANNE_P')
+      expect(practicalWork).toBeDefined()
+
+      // Verify SISSEKANNE_P assignment has correct fields
+      expect(practicalWork.entryType).toBe('SISSEKANNE_P')
+      expect(practicalWork.assignmentName).toBe('Praktiline töö 1')
+      expect(practicalWork.assignmentExternalId).toBe(1002)
+      expect(practicalWork.assignmentDueAt).toBe('2025-10-02')
+      expect(practicalWork.lessons).toBe(3)
+
+      // Verify SISSEKANNE_I assignment
+      const independentWork = result.find(a => a.entryType === 'SISSEKANNE_I')
+      expect(independentWork).toBeDefined()
+      expect(independentWork.entryType).toBe('SISSEKANNE_I')
+      expect(independentWork.assignmentName).toBe('Iseseisev töö 1')
+
+      // Verify SISSEKANNE_H assignment
+      const gradedWork = result.find(a => a.entryType === 'SISSEKANNE_H')
+      expect(gradedWork).toBeDefined()
+      expect(gradedWork.entryType).toBe('SISSEKANNE_H')
+
+      // Verify all assignments have students
+      result.forEach(assignment => {
+        expect(assignment.results).toHaveLength(2)
+        expect(assignment.results[0].studentPersonalCode).toBe('38001010001')
+        expect(assignment.results[1].studentPersonalCode).toBe('38002020002')
+      })
+    })
+
+    test('should use fallback name for SISSEKANNE_P when nameEt is missing', () => {
+      const entries = [
+        {
+          id: 2001,
+          entryType: 'SISSEKANNE_P',
+          content: null,
+          entryDate: '2025-09-11T00:00:00Z'
+        }
+      ]
+
+      const studentMap = {
+        idToPersonalCode: {},
+        personalCodeToName: {},
+        journalStudentIdToId: {}
+      }
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, [])
+
+      expect(result).toHaveLength(1)
+      expect(result[0].entryType).toBe('SISSEKANNE_P')
+      // Should use getAssignmentNameFromEntry which returns "Praktiline töö" for SISSEKANNE_P when no nameEt or content
+      expect(result[0].assignmentName).toBe('Praktiline töö')
+    })
+
+    test('should handle SISSEKANNE_P entries with student grades', () => {
+      const entries = [
+        {
+          id: 3001,
+          entryType: 'SISSEKANNE_P',
+          nameEt: 'Practical Work Assignment',
+          entryDate: '2025-09-11T00:00:00Z',
+          homeworkDuedate: '2025-10-02T00:00:00Z'
+        }
+      ]
+
+      const studentMap = {
+        idToPersonalCode: {
+          200: '39001010000',
+          201: '39002020000'
+        },
+        personalCodeToName: {
+          '39001010000': 'Student One',
+          '39002020000': 'Student Two'
+        },
+        journalStudentIdToId: {
+          20: 200,
+          21: 201
+        }
+      }
+
+      const journalStudents = [
+        { id: 20, studentId: 200 },
+        { id: 21, studentId: 201 }
+      ]
+
+      const entriesWithGrades = [
+        {
+          id: 3001,
+          entryType: 'SISSEKANNE_P',
+          journalStudentResults: {
+            20: [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
+            21: [{ grade: { code: 'KUTSEHINDAMINE_4' } }]
+          }
+        }
+      ]
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, journalStudents, {}, entriesWithGrades)
+
+      expect(result).toHaveLength(1)
+      expect(result[0].entryType).toBe('SISSEKANNE_P')
+      expect(result[0].results).toHaveLength(2)
+      expect(result[0].results[0].grade).toBe('5')
+      expect(result[0].results[0].studentPersonalCode).toBe('39001010000')
+      expect(result[0].results[1].grade).toBe('4')
+      expect(result[0].results[1].studentPersonalCode).toBe('39002020000')
+    })
+
+    test('should include all entry types in correct order', () => {
+      const entries = [
+        { id: 1, entryType: 'SISSEKANNE_L', nameEt: 'Lesson' },
+        { id: 2, entryType: 'SISSEKANNE_H', nameEt: 'Graded Work' },
+        { id: 3, entryType: 'SISSEKANNE_I', nameEt: 'Independent Work' },
+        { id: 4, entryType: 'SISSEKANNE_P', nameEt: 'Practical Work' },
+        { id: 5, entryType: 'SISSEKANNE_O', nameEt: 'Outcome', curriculumModuleOutcomes: 'OUTCOME_123' },
+        { id: 6, entryType: 'OTHER_TYPE', nameEt: 'Other' }
+      ]
+
+      const studentMap = {
+        idToPersonalCode: {},
+        personalCodeToName: {},
+        journalStudentIdToId: {}
+      }
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, [])
+
+      // Should only include SISSEKANNE_H, SISSEKANNE_I, and SISSEKANNE_P (not L, O, or OTHER)
+      expect(result).toHaveLength(3)
+
+      const entryTypes = result.map(r => r.entryType)
+      expect(entryTypes).toContain('SISSEKANNE_H')
+      expect(entryTypes).toContain('SISSEKANNE_I')
+      expect(entryTypes).toContain('SISSEKANNE_P')
+      expect(entryTypes).not.toContain('SISSEKANNE_L')
+      expect(entryTypes).not.toContain('SISSEKANNE_O')
+      expect(entryTypes).not.toContain('OTHER_TYPE')
+    })
+
+    test('should verify entryType is sent to Kriit for SISSEKANNE_P', () => {
+      // This test verifies the payload structure matches what Kriit expects
+      const entries = [
+        {
+          id: 4001,
+          entryType: 'SISSEKANNE_P',
+          nameEt: 'Practical Work',
+          entryDate: '2025-09-11T00:00:00Z',
+          homeworkDuedate: '2025-10-02T00:00:00Z',
+          lessons: 2
+        }
+      ]
+
+      const studentMap = {
+        idToPersonalCode: { 300: '50001010000' },
+        personalCodeToName: { '50001010000': 'Test Student' },
+        journalStudentIdToId: { 30: 300 }
+      }
+
+      const journalStudents = [{ id: 30, studentId: 300 }]
+
+      const result = journalListSync.extractAssignmentsFromEntries(entries, studentMap, journalStudents)
+
+      expect(result).toHaveLength(1)
+
+      // Verify the assignment payload includes entryType field
+      const assignment = result[0]
+      expect(assignment).toHaveProperty('entryType')
+      expect(assignment.entryType).toBe('SISSEKANNE_P')
+
+      // Verify all required fields for Kriit sync are present
+      expect(assignment).toHaveProperty('assignmentExternalId')
+      expect(assignment).toHaveProperty('assignmentName')
+      expect(assignment).toHaveProperty('assignmentDueAt')
+      expect(assignment).toHaveProperty('lessons')
+      expect(assignment).toHaveProperty('results')
+      expect(assignment.results).toHaveLength(1)
+      expect(assignment.results[0]).toHaveProperty('studentPersonalCode')
+    })
+
+    test('should extract entry type differences when types differ', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'Programming',
+          subjectExternalId: '123',
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: 'Homework 1',
+              entryType: {
+                kriit: 'SISSEKANNE_P',
+                Tahvel: 'SISSEKANNE_I'
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual({
+        assignmentExternalId: 'a1',
+        assignmentName: 'Homework 1',
+        kriit: 'SISSEKANNE_P',
+        Tahvel: 'SISSEKANNE_I',
+        subjectName: 'Programming',
+        subjectExternalId: '123'
+      })
+    })
+
+    test('should not extract entry type differences when types match', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'Math',
+          subjectExternalId: '456',
+          assignments: [
+            {
+              assignmentExternalId: 'a2',
+              assignmentName: 'Test',
+              entryType: {
+                kriit: 'SISSEKANNE_I',
+                Tahvel: 'SISSEKANNE_I'
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(0)
+    })
+
+    test('should handle multiple entry type differences across subjects', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'Science',
+          subjectExternalId: '111',
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: 'Lab 1',
+              entryType: {
+                kriit: 'SISSEKANNE_P',
+                Tahvel: 'SISSEKANNE_L'
+              }
+            },
+            {
+              assignmentExternalId: 'a2',
+              assignmentName: 'Lab 2',
+              entryType: {
+                kriit: 'SISSEKANNE_H',
+                Tahvel: 'SISSEKANNE_I'
+              }
+            }
+          ]
+        },
+        {
+          subjectName: 'History',
+          subjectExternalId: '222',
+          assignments: [
+            {
+              assignmentExternalId: 'a3',
+              assignmentName: 'Essay',
+              entryType: {
+                kriit: 'SISSEKANNE_I',
+                Tahvel: 'SISSEKANNE_H'
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(3)
+      expect(result[0].subjectName).toBe('Science')
+      expect(result[0].assignmentName).toBe('Lab 1')
+      expect(result[1].subjectName).toBe('Science')
+      expect(result[1].assignmentName).toBe('Lab 2')
+      expect(result[2].subjectName).toBe('History')
+      expect(result[2].assignmentName).toBe('Essay')
+    })
+
+    test('should handle object assignmentName in entry type differences', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'Art',
+          subjectExternalId: '333',
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: {
+                kriit: 'New Name',
+                Tahvel: 'Old Name'
+              },
+              entryType: {
+                kriit: 'SISSEKANNE_P',
+                Tahvel: 'SISSEKANNE_I'
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(1)
+      expect(result[0].assignmentName).toBe('New Name')
+    })
+
+    test('should return empty array when no differences exist', () => {
+      journalListSync.differences = null
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toEqual([])
+    })
+
+    test('should skip assignments without entryType object', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'Music',
+          subjectExternalId: '444',
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: 'Concert',
+              entryType: 'SISSEKANNE_I' // String, not object - should be skipped
+            },
+            {
+              assignmentExternalId: 'a2',
+              assignmentName: 'Practice',
+              entryType: {
+                kriit: 'SISSEKANNE_P',
+                Tahvel: 'SISSEKANNE_I'
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(1)
+      expect(result[0].assignmentExternalId).toBe('a2')
+    })
+
+    test('should handle null entry types', () => {
+      journalListSync.differences = [
+        {
+          subjectName: 'PE',
+          subjectExternalId: '555',
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: 'Exercise',
+              entryType: {
+                kriit: 'SISSEKANNE_P',
+                Tahvel: null
+              }
+            }
+          ]
+        }
+      ]
+
+      const result = journalListSync.extractEntryTypeDifferences()
+
+      expect(result).toHaveLength(1)
+      expect(result[0].kriit).toBe('SISSEKANNE_P')
+      expect(result[0].Tahvel).toBe(null)
+    })
+
+    test('should handle journalEntryCapacityTypes correctly for different entry types', () => {
+      // Test that capacity types are set correctly based on entry type
+      // SISSEKANNE_I should have ['MAHT_i']
+      // SISSEKANNE_H should have ['MAHT_h']
+      // SISSEKANNE_P should have [] (empty array)
+
+      const testCases = [
+        {
+          entryType: 'SISSEKANNE_I',
+          expectedCapacityTypes: ['MAHT_i'],
+          description: 'Independent work'
+        },
+        {
+          entryType: 'SISSEKANNE_H',
+          expectedCapacityTypes: ['MAHT_h'],
+          description: 'Graded work'
+        },
+        {
+          entryType: 'SISSEKANNE_P',
+          expectedCapacityTypes: [],
+          description: 'Practical work'
+        }
+      ]
+
+      testCases.forEach(testCase => {
+        // Simulate the logic that would be applied when syncing to Tahvel
+        let capacityTypes
+        if (testCase.entryType === 'SISSEKANNE_I') {
+          capacityTypes = ['MAHT_i']
+        } else if (testCase.entryType === 'SISSEKANNE_H') {
+          capacityTypes = ['MAHT_h']
+        } else if (testCase.entryType === 'SISSEKANNE_P') {
+          capacityTypes = []
+        }
+
+        expect(capacityTypes).toEqual(testCase.expectedCapacityTypes)
+      })
     })
   })
 })

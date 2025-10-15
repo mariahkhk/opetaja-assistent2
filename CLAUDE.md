@@ -225,7 +225,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `journalId` | Journal identifier | `123` |
 | `schoolId` | School identifier | `9` |
 | `teacherId` | Teacher identifier | `456` |
-| `entryType` | Journal entry type | `SISSEKANNE_I` (independent work), `SISSEKANNE_L` (lesson) |
+| `entryType` | Journal entry type | `SISSEKANNE_I` (independent work), `SISSEKANNE_P` (practical work), `SISSEKANNE_L` (lesson) |
 | `comparisonDate` | Date for comparisons (YYYY-MM-DD) | `2024-11-07` |
 
 ### Service Access Patterns
@@ -517,6 +517,7 @@ describe('MyFeature', () => {
 | String | Meaning | Context |
 |--------|---------|---------|
 | `SISSEKANNE_I` | Independent work entry | Journal entry type |
+| `SISSEKANNE_P` | Practical work entry | Journal entry type |
 | `SISSEKANNE_L` | Lesson entry | Journal entry type |
 | `✨` | Extension log prefix | Logger service |
 | `oa2-` | CSS class prefix | All injected elements |
