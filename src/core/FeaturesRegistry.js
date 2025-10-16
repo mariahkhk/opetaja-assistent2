@@ -63,6 +63,16 @@ export async function loadFeatures() {
 
   // Load non-Kriit features here (they should always be loaded)
 
+  // Load timetable discrepancy detection feature with button (always enabled)
+  try {
+    const TimetableDiscrepancyDetectionFeature = (await import('../features/header/TimetableDiscrepancyDetectionFeature.js')).default
+    const timetableDiscrepancyDetectionFeature = new TimetableDiscrepancyDetectionFeature()
+    allAvailableFeatures.header.push(timetableDiscrepancyDetectionFeature)
+    Logger.debug('Feature "TimetableDiscrepancyDetectionFeature" created')
+  } catch (error) {
+    Logger.error('Error loading TimetableDiscrepancyDetectionFeature:', error)
+  }
+
   // Load lesson count warning feature (always enabled)
   try {
     const LessonCountWarningFeature = (await import('../features/journalList/lessonCountWarning/LessonCountWarningFeature.js')).default
