@@ -21,6 +21,7 @@ export async function loadFeatures() {
 
   // Define all available features - load them conditionally
   const allAvailableFeatures = {
+    header: [],
     journalList: [],
     singleJournal: [] // TODO: Add features when implemented
   }
@@ -43,6 +44,16 @@ export async function loadFeatures() {
       Logger.debug('Feature "tahvelNewAssignmentSync" created')
     } catch (error) {
       Logger.error('Error loading tahvelNewAssignmentSync feature:', error)
+    }
+
+    // Import Header Sync Button feature
+    try {
+      const HeaderSyncButtonFeature = (await import('../features/header/HeaderSyncButtonFeature.js')).default
+      const headerSyncButtonFeature = new HeaderSyncButtonFeature()
+      allAvailableFeatures.header.push(headerSyncButtonFeature)
+      Logger.debug('Feature "HeaderSyncButtonFeature" created')
+    } catch (error) {
+      Logger.error('Error loading HeaderSyncButtonFeature:', error)
     }
 
     // TODO: Import other Kriit-dependent features when implemented
@@ -112,6 +123,7 @@ export async function loadFeatures() {
 
   // Create a copy of the features structure for returning
   const featureGroups = {
+    header: [...allAvailableFeatures.header],
     journalList: [...allAvailableFeatures.journalList],
     singleJournal: [...allAvailableFeatures.singleJournal]
   }
