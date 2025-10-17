@@ -13,6 +13,9 @@ out
 dist
 *.tgz
 
+# Auto-generated files
+src/version.js
+
 # code coverage
 coverage
 *.lcov

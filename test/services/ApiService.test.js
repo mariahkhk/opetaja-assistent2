@@ -30,10 +30,31 @@ describe('ApiService', () => {
     })
 
     global.fetch = fetchMock
+
+    // Mock chrome.storage for CacheService (callback-based)
+    global.chrome = {
+      storage: {
+        local: {
+          get: mock((keys, callback) => {
+            // Return empty cache (no cached items)
+            callback({})
+          }),
+          set: mock((items, callback) => {
+            if (callback) callback()
+          })
+        }
+      },
+      runtime: {
+        sendMessage: mock((message, callback) => {
+          callback({ status: 'success', data: {} })
+        })
+      }
+    }
   })
 
   afterEach(() => {
     global.fetch = undefined
+    global.chrome = undefined
   })
 
   describe('Constructor', () => {

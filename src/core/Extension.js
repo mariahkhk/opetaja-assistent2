@@ -5,6 +5,7 @@
 import { navigationService } from '../services/NavigationService.js'
 import { loadFeatures } from './FeaturesRegistry.js'
 import Logger from '../services/Logger.js'
+import versionCheckService from '../services/VersionCheckService.js'
 
 // Main extension controller
 const tahvelExtension = {
@@ -14,6 +15,13 @@ const tahvelExtension = {
   // Initialize the extension
   async init() {
     Logger.success('Initializing Õpetaja Assistent 2...')
+
+    // Check version first - if outdated, show modal and stop initialization
+    const isOutdated = await versionCheckService.checkAndNotify()
+    if (isOutdated) {
+      Logger.warning('Extension is outdated - initialization stopped')
+      return
+    }
 
     // Add visual indicator to show the extension is active
     this.addVisualIndicator()

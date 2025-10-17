@@ -10,7 +10,7 @@
 
 import fs from 'fs'
 import path from 'path'
-import { spawn } from 'child_process'
+import { spawn, execSync } from 'child_process'
 import sharp from 'sharp'
 
 // Check if building for production
@@ -50,13 +50,16 @@ async function build() {
     // Step 1: Clean dist directory
     await cleanDist()
 
-    // Step 2: Bundle JavaScript
+    // Step 2: Create version file (must be before bundling so it can be imported)
+    await createVersionFile()
+
+    // Step 3: Bundle JavaScript
     await bundleJavaScript()
 
-    // Step 3: Convert icons
+    // Step 4: Convert icons
     await convertIcons()
 
-    // Step 4: Copy static assets
+    // Step 5: Copy static assets
     await copyStaticAssets()
 
     console.log('✅ Build completed successfully!')
@@ -169,6 +172,41 @@ async function copyStaticAssets() {
   const lessonTimesDestPath = path.join(lessonTimesDestDir, 'VIKKLessonTimes.json')
   fs.copyFileSync(lessonTimesSourcePath, lessonTimesDestPath)
   console.log('  Copied VIKKLessonTimes.json')
+}
+
+// Create version file with git commit ID
+async function createVersionFile() {
+  console.log('🔖 Creating version file...')
+
+  try {
+    // Get git commit ID
+    const commitId = execSync('git rev-parse HEAD').toString().trim()
+    const shortCommitId = commitId.substring(0, 7)
+
+    // Create version object
+    const version = {
+      commitId: commitId,
+      shortCommitId: shortCommitId,
+      buildDate: new Date().toISOString()
+    }
+
+    // Write to dist directory
+    const versionPath = path.join(CONFIG.distDir, 'version.json')
+    fs.writeFileSync(versionPath, JSON.stringify(version, null, 2))
+
+    console.log(`  Created version.json (commit: ${shortCommitId})`)
+
+    // Also create a JavaScript file that exports the version
+    const versionJsPath = path.join(CONFIG.srcDir, 'version.js')
+    const versionJsContent = `// Auto-generated during build - do not edit
+export const VERSION = ${JSON.stringify(version, null, 2)}
+`
+    fs.writeFileSync(versionJsPath, versionJsContent)
+    console.log(`  Created version.js`)
+  } catch (error) {
+    console.error('Error creating version file:', error)
+    throw error
+  }
 }
 
 // Run the build process
