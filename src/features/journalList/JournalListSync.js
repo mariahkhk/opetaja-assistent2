@@ -888,17 +888,30 @@ class JournalListSyncFeature extends BaseFeature {
             Logger.warning(`Could not get lesson dates for journal ${id}:`, error)
           }
 
-          // Extract planned hours for MAHT_i (independent work) capacity
-          let plannedHours = null
+          // Extract capacity hours for MAHT_i (independent work) and MAHT_p (practical work)
+          let capacityHours = []
           try {
             if (journalInfo.lessonHours && Array.isArray(journalInfo.lessonHours.capacityHours)) {
-              const mahtICapacity = journalInfo.lessonHours.capacityHours.find(c => c.capacity === 'MAHT_i')
-              if (mahtICapacity && typeof mahtICapacity.plannedHours === 'number') {
-                plannedHours = mahtICapacity.plannedHours
-              }
+              // Extract MAHT_i and MAHT_p capacities
+              const relevantCapacities = journalInfo.lessonHours.capacityHours.filter(
+                c => c.capacity === 'MAHT_i' || c.capacity === 'MAHT_p'
+              )
+
+              capacityHours = relevantCapacities.map(c => ({
+                capacity: c.capacity,
+                plannedHours: c.plannedHours,
+                usedHours: c.usedHours
+              }))
             }
           } catch (error) {
-            Logger.warning(`Could not extract planned hours for journal ${id}:`, error)
+            Logger.warning(`Could not extract capacity hours for journal ${id}:`, error)
+          }
+
+          // Keep plannedHours for backward compatibility (MAHT_i only)
+          let plannedHours = null
+          const mahtICapacity = capacityHours.find(c => c.capacity === 'MAHT_i')
+          if (mahtICapacity) {
+            plannedHours = mahtICapacity.plannedHours
           }
 
           // Try to fetch journal theme content (if any) so it can be sent to Kriit
@@ -999,6 +1012,7 @@ class JournalListSyncFeature extends BaseFeature {
               nextLessonDate,
               lastLessonDate,
               plannedHours,
+              capacityHours,
               journalTheme
             }
           }
@@ -1048,6 +1062,7 @@ class JournalListSyncFeature extends BaseFeature {
               lastLessonDate,
               lastLessonDateIsApproximate,
               plannedHours,
+              capacityHours,
               journalTheme
             })
           }
