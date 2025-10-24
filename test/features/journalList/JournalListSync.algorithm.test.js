@@ -3186,7 +3186,7 @@ describe('JournalListSync - Algorithm Tests', () => {
       // Test that capacity types are set correctly based on entry type
       // SISSEKANNE_I should have ['MAHT_i']
       // SISSEKANNE_H should have ['MAHT_h']
-      // SISSEKANNE_P should have [] (empty array)
+      // SISSEKANNE_P should have ['MAHT_p']
 
       const testCases = [
         {
@@ -3201,7 +3201,7 @@ describe('JournalListSync - Algorithm Tests', () => {
         },
         {
           entryType: 'SISSEKANNE_P',
-          expectedCapacityTypes: [],
+          expectedCapacityTypes: ['MAHT_p'],
           description: 'Practical work'
         }
       ]
@@ -3214,7 +3214,7 @@ describe('JournalListSync - Algorithm Tests', () => {
         } else if (testCase.entryType === 'SISSEKANNE_H') {
           capacityTypes = ['MAHT_h']
         } else if (testCase.entryType === 'SISSEKANNE_P') {
-          capacityTypes = []
+          capacityTypes = ['MAHT_p']
         }
 
         expect(capacityTypes).toEqual(testCase.expectedCapacityTypes)

@@ -406,7 +406,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
       } else if (entryType === 'SISSEKANNE_H') {
         journalEntryCapacityTypes = ['MAHT_h']
       } else if (entryType === 'SISSEKANNE_P') {
-        journalEntryCapacityTypes = []
+        journalEntryCapacityTypes = ['MAHT_p']
       }
 
       const payload = {

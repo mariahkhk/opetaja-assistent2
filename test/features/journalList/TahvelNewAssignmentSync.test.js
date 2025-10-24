@@ -132,8 +132,8 @@ describe('TahvelNewAssignmentSync - Entry Type Support', () => {
       const callArgs = feature.api.tahvel.post.mock.calls[0]
       const payload = callArgs[1]
 
-      // Verify capacity types is empty array for SISSEKANNE_P
-      expect(payload.journalEntryCapacityTypes).toEqual([])
+      // Verify capacity types is ['MAHT_p'] for SISSEKANNE_P
+      expect(payload.journalEntryCapacityTypes).toEqual(['MAHT_p'])
       expect(payload.entryType).toBe('SISSEKANNE_P')
     })
 
@@ -264,7 +264,7 @@ describe('TahvelNewAssignmentSync - Entry Type Support', () => {
 
       expect(payload.homework).toBe('Link ülesandele: https://kriit.vikk.ee/assignments/50?group=IS25')
       expect(payload.entryType).toBe('SISSEKANNE_P')
-      expect(payload.journalEntryCapacityTypes).toEqual([])
+      expect(payload.journalEntryCapacityTypes).toEqual(['MAHT_p'])
     })
 
     test('should combine instructions and link in homework text', async () => {
@@ -444,7 +444,7 @@ describe('TahvelNewAssignmentSync - Entry Type Support', () => {
 
       // Verify the payload matches Kriit's expectations for SISSEKANNE_P
       expect(payload.entryType).toBe('SISSEKANNE_P')
-      expect(payload.journalEntryCapacityTypes).toEqual([])
+      expect(payload.journalEntryCapacityTypes).toEqual(['MAHT_p'])
       expect(payload.nameEt).toBe('test4')
       expect(payload.homework).toBe('Link ülesandele: https://kriit.vikk.ee/assignments/50?group=IS25')
     })
