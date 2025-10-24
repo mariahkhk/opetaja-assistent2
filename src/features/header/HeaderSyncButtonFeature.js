@@ -135,6 +135,13 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
       display: none;
       transition: background-color 0.3s ease;
       cursor: pointer;
+      width: auto;
+      min-width: fit-content;
+      height: auto;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border: none;
+      outline: none;
     `
 
     // Button text

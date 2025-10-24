@@ -224,6 +224,31 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
       const button = document.getElementById('oa2-timetable-discrepancy-header-button')
       expect(button.getAttribute('aria-label')).toBe('Päevikutes on sissekandmata tunnid')
     })
+
+    it('should have width auto to prevent small box appearance', () => {
+      const button = document.getElementById('oa2-timetable-discrepancy-header-button')
+      expect(button.style.width).toBe('auto')
+    })
+
+    it('should have min-width fit-content for proper sizing', () => {
+      const button = document.getElementById('oa2-timetable-discrepancy-header-button')
+      expect(button.style.minWidth).toBe('fit-content')
+    })
+
+    it('should have height auto to prevent small box appearance', () => {
+      const button = document.getElementById('oa2-timetable-discrepancy-header-button')
+      expect(button.style.height).toBe('auto')
+    })
+
+    it('should have white-space nowrap to prevent text wrapping', () => {
+      const button = document.getElementById('oa2-timetable-discrepancy-header-button')
+      expect(button.style.whiteSpace).toBe('nowrap')
+    })
+
+    it('should have flex-shrink 0 to prevent flexbox shrinking', () => {
+      const button = document.getElementById('oa2-timetable-discrepancy-header-button')
+      expect(button.style.flexShrink).toBe('0')
+    })
   })
 
   describe('onDeactivate', () => {
