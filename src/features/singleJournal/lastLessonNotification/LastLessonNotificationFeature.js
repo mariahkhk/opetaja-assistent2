@@ -53,7 +53,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       return
     }
 
-    const { timetable, journalEntries } = await this.#fetchData(journalId)
+    const { timetable, journalEntries, journalInfo } = await this.#fetchData(journalId)
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] timetable:', timetable)
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] journalEntries:', journalEntries)
 
@@ -63,10 +63,61 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       return
     }
 
+    // Determine last lesson date - check if timetable is complete or use approximate from plan
     let lastLessonDate = null
+    let isApproximate = false
+    const sortedTimetable = timetable.slice().sort((a, b) => new Date(a.date) - new Date(b.date))
+
     if (timetable.length > 0) {
-      const sortedTimetable = timetable.slice().sort((a, b) => new Date(a.date) - new Date(b.date))
-      lastLessonDate = sortedTimetable[sortedTimetable.length - 1].date
+      // Get planned MAHT_a lessons count
+      const mahtACapacity = journalInfo?.lessonHours?.capacityHours?.find(c => c.capacity === 'MAHT_a')
+      const plannedMahtALessons = mahtACapacity?.plannedHours || 0
+      const timetableLessons = timetable.length
+
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] plannedMahtALessons=${plannedMahtALessons}, timetableLessons=${timetableLessons}`)
+
+      if (plannedMahtALessons > 0 && timetableLessons >= plannedMahtALessons) {
+        // Timetable is complete - use last timetable entry (exact)
+        lastLessonDate = sortedTimetable[sortedTimetable.length - 1].date
+        isApproximate = false
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Using exact last lesson from timetable: ${lastLessonDate}`)
+      } else if (plannedMahtALessons > 0 && timetableLessons < plannedMahtALessons) {
+        // Timetable is incomplete - get approximate from lesson plan
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Timetable incomplete (${timetableLessons}/${plannedMahtALessons}), fetching from lesson plan`)
+        const teacherId = journalInfo?.journalTeachers?.[0]?.id
+        if (teacherId) {
+          const lastLessonFromPlan = await this.#getLastLessonFromPlan(journalId, teacherId)
+          if (lastLessonFromPlan) {
+            lastLessonDate = lastLessonFromPlan
+            isApproximate = true
+            if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Using approximate last lesson from plan: ${lastLessonDate}`)
+          } else {
+            // Fallback to timetable's last entry if plan lookup fails
+            lastLessonDate = sortedTimetable[sortedTimetable.length - 1].date
+            isApproximate = false
+            if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Plan lookup failed, falling back to timetable: ${lastLessonDate}`)
+          }
+        } else {
+          // No teacher ID, use timetable
+          lastLessonDate = sortedTimetable[sortedTimetable.length - 1].date
+          isApproximate = false
+        }
+      } else {
+        // No MAHT_a data, just use timetable
+        lastLessonDate = sortedTimetable[sortedTimetable.length - 1].date
+        isApproximate = false
+      }
+    } else {
+      // No timetable entries - try to get from lesson plan
+      const teacherId = journalInfo?.journalTeachers?.[0]?.id
+      if (teacherId) {
+        const lastLessonFromPlan = await this.#getLastLessonFromPlan(journalId, teacherId)
+        if (lastLessonFromPlan) {
+          lastLessonDate = lastLessonFromPlan
+          isApproximate = true
+          if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No timetable, using approximate from plan: ${lastLessonDate}`)
+        }
+      }
     }
 
     let independentWorkMessages = []
@@ -109,18 +160,23 @@ export default class LastLessonNotificationFeature extends BaseFeature {
         lessonDate.setHours(0, 0, 0, 0)
         return lessonDate < comparisonDateTime
       })
+    } else if (lastLessonDate) {
+      // If no timetable but we have approximate date, check if it's past
+      const lastDate = new Date(lastLessonDate)
+      lastDate.setHours(0, 0, 0, 0)
+      allPast = lastDate < comparisonDateTime
     }
 
     let displayDate = 'not found in timetable'
-    if (timetable.length > 0) {
+    if (lastLessonDate) {
       displayDate = lastLessonDate
     }
 
     // Always show the banner if there are journal entries
-    this._showBanner(displayDate, allPast)
+    this._showBanner(displayDate, allPast, isApproximate)
   }
 
-  _showBanner(date, allPast = false) {
+  _showBanner(date, allPast = false, isApproximate = false) {
     this._removeBanner()
     // Try the original subject span, then try the new accordion header selector and a few sensible fallbacks
     const selectors = ['.hois-collapse-header .flex-gt-md-50 span', '.accordion-header', '.hois-collapse-header span']
@@ -159,7 +215,8 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       bannerMessage = `NB! Õppetöö kirjed on olemas, kuid tunniplaani andmeid ei leitud${showComparisonDate ? ` (võrdlus kuupäevaga ${comparisonDateStr})` : ''}`
     } else {
       const verb = allPast ? 'toimus' : 'toimub'
-      bannerMessage = `Viimane tund ${verb} ${this.#formatDisplayDate(date)}${showComparisonDate ? ` (võrdlus kuupäevaga ${comparisonDateStr})` : ''}`
+      const approxText = isApproximate ? 'umbes ' : ''
+      bannerMessage = `Viimane tund ${verb} ${approxText}${this.#formatDisplayDate(date)}${showComparisonDate ? ` (võrdlus kuupäevaga ${comparisonDateStr})` : ''}`
     }
     let bgColor = '#fff3cd' // yellow default
     let borderColor = '#ffeaa7'
@@ -283,7 +340,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
 
     if (!info) {
       if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] No journal info found')
-      return { timetable: [], journalEntries: [] }
+      return { timetable: [], journalEntries: [], journalInfo: null }
     }
 
     const schoolId = info.school?.id || LastLessonNotificationFeature.SCHOOL_ID_FALLBACK
@@ -292,7 +349,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
 
     if (!teacherId) {
       if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Missing teacherId')
-      return { timetable: [], journalEntries: [] }
+      return { timetable: [], journalEntries: [], journalInfo: info }
     }
 
     // Get study year dates
@@ -322,7 +379,92 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     )
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Journal entries:', journalEntries)
 
-    return { timetable, journalEntries: journalEntries ?? [] }
+    return { timetable, journalEntries: journalEntries ?? [], journalInfo: info }
+  }
+
+  /**
+   * Get last lesson date from lesson plan (plankoormused) when timetable doesn't have all entries
+   * @param {number} journalId - Journal ID
+   * @param {number} teacherId - Teacher ID
+   * @returns {Promise<string|null>} Last lesson date in ISO format or null
+   */
+  async #getLastLessonFromPlan(journalId, teacherId) {
+    try {
+      // Get study year ID
+      const now = new Date()
+      const currentYear = now.getFullYear()
+      const currentMonth = now.getMonth()
+
+      // Determine study year (starts in September)
+      const studyYearStart = currentMonth < 8 ? currentYear - 1 : currentYear
+
+      // Study year ID appears to be based on pattern from the data: 726 for 2025-26
+      // The pattern seems to be: year - 1299 (e.g., 2025 - 1299 = 726)
+      const studyYearId = studyYearStart - 1299
+
+      const endpoint = `/lessonplans/byteacher/${teacherId}/${studyYearId}`
+
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Fetching lesson plan for journal ${journalId}, teacher ${teacherId}, studyYear ${studyYearId}`)
+
+      const planData = await this.api.tahvel.get(endpoint, {}, { cache: true, cacheExpiration: 864e5 })
+
+      if (!planData?.journals || !planData?.studyPeriods) {
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No plan data found for journal ${journalId}`)
+        return null
+      }
+
+      // Find the journal in the plan
+      const journalPlan = planData.journals.find(j => j.id === journalId)
+      if (!journalPlan?.hours?.MAHT_a) {
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No MAHT_a hours found for journal ${journalId}`)
+        return null
+      }
+
+      // Find the last week with MAHT_a hours (non-null value)
+      const mahtAWeeks = journalPlan.hours.MAHT_a
+      let lastWeekIndex = -1
+
+      for (let i = mahtAWeeks.length - 1; i >= 0; i--) {
+        if (mahtAWeeks[i] !== null) {
+          lastWeekIndex = i
+          break
+        }
+      }
+
+      if (lastWeekIndex === -1) {
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No non-null MAHT_a hours found for journal ${journalId}`)
+        return null
+      }
+
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Found last week index: ${lastWeekIndex}, hours: ${mahtAWeeks[lastWeekIndex]}`)
+
+      // Get the week number for that index
+      const weekNr = planData.weekNrs[lastWeekIndex]
+
+      if (!weekNr) {
+        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No week number found at index ${lastWeekIndex}`)
+        return null
+      }
+
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Week number: ${weekNr}`)
+
+      // Find the study period that contains this week
+      for (const period of planData.studyPeriods) {
+        const weekPosition = period.weekNrs.indexOf(weekNr)
+        if (weekPosition !== -1 && period.weekBeginningDates?.[weekPosition]) {
+          // Return the Monday of that week
+          const lastLessonDate = period.weekBeginningDates[weekPosition]
+          if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Found last lesson date: ${lastLessonDate} in period ${period.nameEt}`)
+          return lastLessonDate
+        }
+      }
+
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Week ${weekNr} not found in any study period`)
+      return null
+    } catch (error) {
+      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Could not get last lesson from plan for journal ${journalId}:`, error.message)
+      return null
+    }
   }
 
   static async refresh(api) {
