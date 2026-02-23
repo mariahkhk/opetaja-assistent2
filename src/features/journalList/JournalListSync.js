@@ -421,6 +421,14 @@ class JournalListSyncFeature extends BaseFeature {
         if (elements && elements.length > 0) {
           this.journalLinks = elements
           if (Logger.isDebugMode()) Logger.debug('[DEBUG] onActivate: journalLinks set', this.journalLinks)
+
+          // Wait for preferred banner container before showing any UI
+          if (!document.querySelector('.tahvel-form-buttons')) {
+            await bannerService.waitForBannerContainer(5000).catch(() => {
+              Logger.debug('[JournalListSync] Banner container wait timeout, proceeding anyway')
+            })
+          }
+
           this.fetchJournalData()
         } else {
           // This case should not happen anymore with the fixed observer
@@ -435,13 +443,6 @@ class JournalListSyncFeature extends BaseFeature {
         this.showMissingApiKeyBanner()
       }
 
-      // If the preferred banner container (.tahvel-form-buttons) wasn't available yet,
-      // wait for it in the background and re-render the banner in the correct location.
-      if (!document.querySelector('.tahvel-form-buttons')) {
-        bannerService.waitForBannerContainer(5000).then(() => {
-          if (this.isActive) this.updateUI()
-        })
-      }
     } catch (err) {
       Logger.error('[JournalListSync] Initialization failed:', err)
     }
