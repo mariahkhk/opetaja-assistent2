@@ -1,13 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import TimetableDiscrepancyDetectionFeature from '../../../src/features/header/TimetableDiscrepancyDetectionFeature.js'
+import { cacheService } from '../../../src/services/CacheService.js'
 
 describe('TimetableDiscrepancyDetectionFeature', () => {
   let feature
   let dom
   let mockChrome
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Setup DOM
     dom = new JSDOM(`
       <!DOCTYPE html>
@@ -25,11 +26,18 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
 
     // Mock chrome.storage
     mockChrome = {
+      runtime: { lastError: null },
       storage: {
         local: {
           get: mock((keys, callback) => {
             // Mock empty cache initially
             callback({})
+          }),
+          set: mock((items, callback) => {
+            if (callback) callback()
+          }),
+          remove: mock((keys, callback) => {
+            if (callback) callback()
           })
         },
         sync: {
@@ -45,6 +53,9 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     }
     global.chrome = mockChrome
 
+    // Clear cacheService memory cache to prevent leaks between tests
+    await cacheService.clearCache()
+
     // Clear window.timetableDiscrepancies
     delete global.window.timetableDiscrepancies
 
@@ -53,16 +64,21 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
 
     // Mock API
     feature.api = {
+      ...feature.api,
       tahvel: {
-        get: mock(async (endpoint) => {
+        get: mock(async (endpoint, params, options) => {
           if (endpoint === '/user') {
             return {
               school: { id: 9 },
               person: { id: 123 }
             }
           }
+          if (endpoint === '/journals') {
+            return { content: [], totalPages: 1 }
+          }
           return {}
-        })
+        }),
+        baseUrl: 'https://tahvel.edu.ee/hois_back'
       }
     }
   })
@@ -356,8 +372,47 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     })
   })
 
+  describe('API fallback when cache is empty', () => {
+    it('should fetch journals from API when cache returns no journals', async () => {
+      // Cache returns empty
+      mockChrome.storage.local.get = mock((keys, callback) => {
+        callback({})
+      })
+
+      // API returns journal list then journal info
+      const mockJournal = {
+        id: 101,
+        lessonHours: {
+          capacityHours: [{ capacity: 'MAHT_a', usedHours: 5 }]
+        },
+        journalTeachers: [{ id: 123 }]
+      }
+
+      feature.api.tahvel.get = mock(async (endpoint, params, options) => {
+        if (endpoint === '/user') {
+          return { school: { id: 9 }, person: { id: 123 } }
+        }
+        if (endpoint === '/journals') {
+          return { content: [{ id: 101 }], totalPages: 1 }
+        }
+        if (endpoint === '/journals/101') {
+          return mockJournal
+        }
+        return {}
+      })
+
+      await feature.onActivate()
+
+      // Should have called /journals endpoint as fallback
+      const journalsCalls = feature.api.tahvel.get.mock.calls.filter(
+        call => call[0] === '/journals'
+      )
+      expect(journalsCalls.length).toBeGreaterThan(0)
+    })
+  })
+
   describe('discrepancy detection logic', () => {
-    it('should set hasDiscrepancies to false when no journals in cache', async () => {
+    it('should set hasDiscrepancies to false when no journals in cache or API', async () => {
       mockChrome.storage.local.get = mock((keys, callback) => {
         callback({}) // Empty cache
       })

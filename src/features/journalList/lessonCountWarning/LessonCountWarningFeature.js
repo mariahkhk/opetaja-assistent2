@@ -175,9 +175,9 @@ export default class LessonCountWarningFeature extends BaseFeature {
   getDefaultStudyYear() {
     const now = new Date()
     const currentYear = now.getFullYear()
-    const isBeforeAugust = now.getMonth() < 7 // August is month 7
+    const isBeforeSeptember = now.getMonth() < 8 // September is month 8
 
-    if (isBeforeAugust) {
+    if (isBeforeSeptember) {
       return `${currentYear - 1}/${currentYear}`
     } else {
       return `${currentYear}/${currentYear + 1}`
@@ -209,7 +209,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
     // Fallback to current study year
     const now = new Date()
     const currentYear = now.getFullYear()
-    const studyYear = now.getMonth() < 7 ? currentYear - 1 : currentYear
+    const studyYear = now.getMonth() < 8 ? currentYear - 1 : currentYear
 
     return {
       from: new Date(Date.UTC(studyYear, 8, 1)).toISOString(),

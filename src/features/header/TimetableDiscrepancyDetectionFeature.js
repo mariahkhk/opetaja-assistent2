@@ -1,6 +1,7 @@
 import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
 import { cacheService } from '../../services/CacheService.js'
+import { fetchTeacherJournals } from '../../lib/fetchTeacherJournals.js'
 
 /**
  * TimetableDiscrepancyDetectionFeature
@@ -118,8 +119,12 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
    */
   async #checkForDiscrepancies() {
     try {
-      // Get all journals from cache
-      const journals = await this.#getAllJournalsFromCache()
+      // Try cache first (fast path), fall back to Tahvel API
+      let journals = await this.#getAllJournalsFromCache()
+
+      if (!journals || journals.length === 0) {
+        journals = await this.#fetchJournalsFromApi()
+      }
 
       if (!journals || journals.length === 0) {
         window.timetableDiscrepancies.hasDiscrepancies = false
@@ -177,6 +182,42 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       return journals
     } catch (error) {
       Logger.error(`[${this.name}] Error getting journals from cache:`, error)
+      return []
+    }
+  }
+
+  /**
+   * Fetch journals from Tahvel API when the cache is empty.
+   * Fetches the journal list and full journal info for each, which also
+   * populates the API cache for other features (JournalListSync, etc.).
+   * @private
+   * @returns {Promise<Array>} Array of journal objects
+   */
+  async #fetchJournalsFromApi() {
+    try {
+      const journalList = await fetchTeacherJournals(this.api)
+      if (!journalList || journalList.length === 0) return []
+
+      const journalResults = await Promise.all(
+        journalList
+          .filter(item => item.id)
+          .map(async (item) => {
+            try {
+              const journal = await this.api.tahvel.get(
+                `/journals/${item.id}`,
+                {},
+                { cacheExpiration: 30 * 24 * 60 * 60 * 1000 }
+              )
+              return (journal && journal.id) ? journal : null
+            } catch (err) {
+              Logger.debug(`[${this.name}] Could not fetch journal ${item.id}:`, err.message)
+              return null
+            }
+          })
+      )
+      return journalResults.filter(j => j !== null)
+    } catch (error) {
+      Logger.debug(`[${this.name}] Error fetching journals from API:`, error.message)
       return []
     }
   }
@@ -282,7 +323,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
   #getCurrentStudyYearRange() {
     const now = new Date()
     const currentYear = now.getFullYear()
-    const studyYear = now.getMonth() < 7 ? currentYear - 1 : currentYear
+    const studyYear = now.getMonth() < 8 ? currentYear - 1 : currentYear
 
     return {
       from: new Date(Date.UTC(studyYear, 8, 1)).toISOString(), // September 1st

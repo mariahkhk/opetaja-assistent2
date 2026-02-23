@@ -1763,11 +1763,13 @@ class JournalListSyncFeature extends BaseFeature {
           return
         }
 
-        // Persist the payload hash and differences to cache so we can skip redundant calls on refresh
+        // Persist the payload hash, differences and new assignments to cache so
+        // header buttons and page refreshes can read them without re-running the
+        // full Kriit diff pipeline.
         try {
-          // Persist payload hash and differences to cache
           await cacheService.set('journalList_lastPayloadHash', payloadHash)
           await cacheService.set('journalList_lastDifferences', this.differences)
+          await cacheService.set('journalList_lastNewAssignments', window.journalListSync.newAssignments || {})
         } catch (err) {
           Logger.warning('Failed to persist journal list cache:', err.message)
         }

@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import HeaderSyncButtonFeature from '../../../src/features/header/HeaderSyncButtonFeature.js'
+import { cacheService } from '../../../src/services/CacheService.js'
+
+// Save original cacheService.get before any parallel test file can mock it
+const originalCacheGet = cacheService.get.bind(cacheService)
 
 describe('HeaderSyncButtonFeature', () => {
   let feature
   let dom
   let mockChrome
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Restore cacheService.get in case a parallel test file replaced it with a mock
+    cacheService.get = originalCacheGet
     // Setup DOM
     dom = new JSDOM(`
       <!DOCTYPE html>
@@ -25,7 +31,19 @@ describe('HeaderSyncButtonFeature', () => {
 
     // Mock chrome.storage
     mockChrome = {
+      runtime: { lastError: null },
       storage: {
+        local: {
+          get: mock((keys, callback) => {
+            callback({})
+          }),
+          set: mock((items, callback) => {
+            if (callback) callback()
+          }),
+          remove: mock((keys, callback) => {
+            if (callback) callback()
+          })
+        },
         sync: {
           get: mock((keys, callback) => {
             callback({
@@ -39,11 +57,25 @@ describe('HeaderSyncButtonFeature', () => {
     }
     global.chrome = mockChrome
 
+    // Clear cacheService memory cache to prevent leaks between tests
+    await cacheService.clearCache()
+
     // Clear window.journalListSync
     delete global.window.journalListSync
 
     // Create feature instance
     feature = new HeaderSyncButtonFeature()
+
+    // Mock API to prevent real network calls from #fetchSyncData
+    feature.api = {
+      ...feature.api,
+      _kriitInitPromise: Promise.resolve(),
+      kriit: { enabled: false },
+      tahvel: {
+        get: mock(async () => ({})),
+        baseUrl: 'https://tahvel.edu.ee/hois_back'
+      }
+    }
   })
 
   afterEach(() => {
@@ -165,6 +197,168 @@ describe('HeaderSyncButtonFeature', () => {
         expect(button.style.display).toBe('none')
         done()
       }, 2100)
+    })
+  })
+
+  describe('fetchSyncData', () => {
+    it('should load persisted sync results from cache when Kriit is enabled', async () => {
+      // Enable Kriit and skip _kriitInitPromise yield to avoid interleaving
+      // with parallel test files that mock cacheService.get
+      feature.api.kriit.enabled = true
+      feature.api._kriitInitPromise = null
+
+      const cachedDifferences = [{ id: 1, type: 'grade' }]
+      const cachedNewAssignments = { assignment1: {} }
+
+      // Mock cacheService.get directly to return our test data.
+      // Must be set last before onActivate to minimize window for parallel
+      // test files to overwrite it.
+      cacheService.get = mock(async (key) => {
+        if (key === 'journalList_lastDifferences') return cachedDifferences
+        if (key === 'journalList_lastNewAssignments') return cachedNewAssignments
+        return null
+      })
+
+      feature.isActive = true
+      feature.onActivate()
+
+      // Wait for async #fetchSyncData to complete
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // window.journalListSync should be populated from cache
+      expect(global.window.journalListSync).toBeTruthy()
+      expect(global.window.journalListSync.differences).toEqual(cachedDifferences)
+      expect(global.window.journalListSync.newAssignments).toEqual(cachedNewAssignments)
+    })
+
+    it('should skip fetch when window.journalListSync already has data', async () => {
+      feature.api.kriit.enabled = true
+
+      // Pre-set window.journalListSync with data
+      global.window.journalListSync = {
+        differences: [{ id: 1 }],
+        newAssignments: {}
+      }
+
+      feature.isActive = true
+      feature.onActivate()
+
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // The existing window data should remain unchanged
+      expect(global.window.journalListSync.differences).toEqual([{ id: 1 }])
+    })
+
+    it('should not fetch when Kriit is disabled', async () => {
+      feature.api.kriit.enabled = false
+
+      feature.isActive = true
+      feature.onActivate()
+
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // window.journalListSync should not be set
+      expect(global.window.journalListSync).toBeUndefined()
+    })
+
+    it('should run full sync check when cache is empty', async () => {
+      feature.api.kriit.enabled = true
+      feature.api.kriit.post = mock(async () => [{ subjectName: 'Math' }])
+      feature.api._kriitInitPromise = null
+
+      // Return no cached results so it falls through to runKriitSyncCheck
+      cacheService.get = mock(async () => null)
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals') {
+          return { content: [{ id: 101, nameEt: 'Journal' }], totalPages: 1 }
+        }
+        if (endpoint === '/journals/101') {
+          return { nameEt: 'Journal', journalTeachers: [], studentGroups: [] }
+        }
+        if (endpoint === '/journals/101/journalEntry') {
+          return { content: [] }
+        }
+        if (endpoint === '/journals/101/journalEntriesByDate') {
+          return []
+        }
+        if (endpoint === '/journals/101/journalStudents') {
+          return []
+        }
+        if (endpoint === '/students') {
+          return { content: [] }
+        }
+        return {}
+      })
+
+      feature.isActive = true
+      feature.onActivate()
+
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Should have called Kriit API via runKriitSyncCheck
+      expect(feature.api.kriit.post).toHaveBeenCalledTimes(1)
+      expect(global.window.journalListSync).toBeTruthy()
+      expect(global.window.journalListSync.differences).toEqual([{ subjectName: 'Math' }])
+    })
+
+    it('should not call runKriitSyncCheck when cached results exist', async () => {
+      feature.api.kriit.enabled = true
+      feature.api.kriit.post = mock(async () => [])
+      feature.api._kriitInitPromise = null
+
+      const cachedDifferences = [{ id: 1, type: 'grade' }]
+
+      cacheService.get = mock(async (key) => {
+        if (key === 'journalList_lastDifferences') return cachedDifferences
+        return null
+      })
+
+      feature.isActive = true
+      feature.onActivate()
+
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // Kriit should NOT have been called since cache had data
+      expect(feature.api.kriit.post).not.toHaveBeenCalled()
+      expect(global.window.journalListSync.differences).toEqual(cachedDifferences)
+    })
+
+    it('should not write to window.journalListSync if deactivated during sync', async () => {
+      feature.api.kriit.enabled = true
+      feature.api._kriitInitPromise = null
+
+      // Return no cached results so it falls through to runKriitSyncCheck
+      cacheService.get = mock(async () => null)
+
+      // Make Kriit post slow so we can deactivate mid-flight
+      feature.api.kriit.post = mock(async () => {
+        await new Promise(resolve => setTimeout(resolve, 200))
+        return [{ subjectName: 'Math' }]
+      })
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals') return { content: [{ id: 101 }], totalPages: 1 }
+        if (endpoint === '/journals/101') return { nameEt: 'Journal', journalTeachers: [], studentGroups: [] }
+        if (endpoint === '/journals/101/journalEntry') return { content: [] }
+        if (endpoint === '/journals/101/journalEntriesByDate') return []
+        if (endpoint === '/journals/101/journalStudents') return []
+        if (endpoint === '/students') return { content: [] }
+        return {}
+      })
+
+      feature.isActive = true
+      feature.onActivate()
+
+      // Deactivate quickly before sync finishes
+      await new Promise(resolve => setTimeout(resolve, 50))
+      feature.isActive = false
+
+      // Wait for the sync to complete
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // window.journalListSync should NOT have been set since feature was deactivated
+      expect(global.window.journalListSync).toBeUndefined()
     })
   })
 

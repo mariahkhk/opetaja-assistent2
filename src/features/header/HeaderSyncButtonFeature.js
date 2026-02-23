@@ -1,5 +1,7 @@
 import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
+import { cacheService } from '../../services/CacheService.js'
+import { runKriitSyncCheck } from '../../lib/kriitSyncCheck.js'
 
 /**
  * HeaderSyncButtonFeature
@@ -7,6 +9,11 @@ import Logger from '../../services/Logger.js'
  * Displays an orange button in the Tahvel header bar when there are pending Kriit syncs.
  * The button appears before the language selection buttons and navigates to the journal
  * list page when clicked.
+ *
+ * On activation the feature:
+ * 1. Loads persisted Kriit sync results from cache (fast path, survives page reloads)
+ * 2. If no cached results exist, runs the full Kriit sync check pipeline via runKriitSyncCheck
+ * 3. Populates window.journalListSync so the button shows when there are pending syncs
  *
  * @extends BaseFeature
  */
@@ -42,6 +49,9 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
 
     // Start checking for pending syncs
     this.#startSyncCheck()
+
+    // Actively load sync data in the background (don't block activation)
+    this.#fetchSyncData()
   }
 
   /**
@@ -66,6 +76,60 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
     }
 
     super.onDeactivate()
+  }
+
+  /**
+   * Load persisted Kriit sync results from cache. If no cached results exist,
+   * run the full Kriit sync check pipeline so the header button can show
+   * pending syncs without the user visiting /journals first.
+   *
+   * Runs in the background — failures are silent (button just stays hidden).
+   * @private
+   */
+  async #fetchSyncData() {
+    try {
+      // If window.journalListSync already has data (e.g. user just came from /journals), skip
+      if (window.journalListSync && (
+        (window.journalListSync.differences && window.journalListSync.differences.length > 0) ||
+        (window.journalListSync.newAssignments && Object.keys(window.journalListSync.newAssignments).length > 0)
+      )) {
+        return
+      }
+
+      // Wait for Kriit settings to be loaded
+      if (this.api._kriitInitPromise) await this.api._kriitInitPromise
+      if (!this.isActive) return
+
+      // Only proceed if Kriit integration is enabled
+      if (!this.api.kriit || !this.api.kriit.enabled) return
+
+      // Fast path: try cached results first
+      const ONE_DAY = 24 * 60 * 60 * 1000
+      const [cachedDifferences, cachedNewAssignments] = await Promise.all([
+        cacheService.get('journalList_lastDifferences', ONE_DAY),
+        cacheService.get('journalList_lastNewAssignments', ONE_DAY)
+      ])
+
+      if (cachedDifferences || cachedNewAssignments) {
+        if (!window.journalListSync) window.journalListSync = {}
+        if (cachedDifferences) window.journalListSync.differences = cachedDifferences
+        if (cachedNewAssignments) window.journalListSync.newAssignments = cachedNewAssignments
+        Logger.debug('[HeaderSyncButtonFeature] Loaded persisted sync results from cache')
+        return
+      }
+
+      // No cached results — run full sync check
+      if (!this.isActive) return
+      const result = await runKriitSyncCheck(this.api)
+      if (!this.isActive) return
+      if (result) {
+        if (!window.journalListSync) window.journalListSync = {}
+        window.journalListSync.differences = result.differences
+        window.journalListSync.newAssignments = result.newAssignments
+      }
+    } catch (error) {
+      Logger.debug('[HeaderSyncButtonFeature] Background sync failed:', error.message)
+    }
   }
 
   /**
