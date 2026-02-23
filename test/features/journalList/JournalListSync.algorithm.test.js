@@ -1367,7 +1367,7 @@ describe('JournalListSync - Algorithm Tests', () => {
       const result = await journalListSync.getJournalEntries(123)
 
       expect(result).toEqual(mockEntries)
-      expect(journalListSync.api.tahvel.get).toHaveBeenCalledWith('/journals/123/journalEntry', {}, expect.objectContaining({ cache: true }))
+      expect(journalListSync.api.tahvel.get).toHaveBeenCalledWith('/journals/123/journalEntry', { size: 2000 }, expect.objectContaining({ cache: true }))
     })
 
     test('should return empty array for unexpected response format', async () => {

@@ -2419,26 +2419,25 @@ class JournalListSyncFeature extends BaseFeature {
   }
 
   /**
-   * Get journal entries from API - never cached
+   * Get journal entries from API (cached for 24 hours)
    * @param {number} journalId - Journal ID
-   * @returns {Promise<Array>} Journal entries
+   * @returns {Promise<Array|null>} Journal entries, empty array if unexpected format, null on error
    */
   async getJournalEntries(journalId) {
     try {
-      // Use caching for journal entries to avoid making this heavy request on every page refresh.
-      // Callers that need fresh data (teacher-initiated actions) should call the API directly with forceRefresh.
       const response = await this.api.tahvel.get(
         `/journals/${journalId}/journalEntry`,
-        {},
+        { size: 2000 },
         {
           cache: true,
           cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
         }
       )
 
-      // The response is paginated with a different structure than journalEntriesByDate
-      // Extract the content array which contains the actual entries
       if (response && response.content && Array.isArray(response.content)) {
+        if (response.totalElements > 2000) {
+          Logger.warning(`Journal ${journalId} has ${response.totalElements} entries, only first 2000 fetched`)
+        }
         return response.content
       }
       Logger.warning(`Unexpected response format from journalEntry endpoint: ${JSON.stringify(response)}`)
@@ -2634,8 +2633,8 @@ class JournalListSyncFeature extends BaseFeature {
         return { error: `Student with personal code ${personalCode} not found in cache` }
       }
 
-      // Get all journal students to see if this student is enrolled
-      const journalStudents = await this.getJournalStudents(journalId)
+      // Reuse journal students from the lookup above
+      const journalStudents = journalStudentsForLookup
 
       // Log the journal students response for debugging
       if (journalStudents && journalStudents.length > 0) {
@@ -2687,12 +2686,10 @@ class JournalListSyncFeature extends BaseFeature {
       }
 
       // Get all assignments for this journal
-      const journalEntries = await this.api.tahvel.get(`/journals/${journalId}/journalEntry`, {})
+      const journalEntries = await this.getJournalEntries(journalId)
 
       // Check which assignments the student is enrolled in
       const enrolledAssignments = []
-
-      // The journalEntry endpoint returns a paginated list of entries
       if (journalEntries && Array.isArray(journalEntries)) {
         Logger.debug(`Found ${journalEntries.length} entries in journal ${journalId}`)
 
