@@ -82,14 +82,8 @@ function initPopup() {
 
   // Set version from manifest
   try {
-    chrome.runtime
-      .getManifest()
-      .then(manifest => {
-        versionElement.textContent = manifest.version
-      })
-      .catch(error => {
-        console.error('Error getting manifest:', error)
-      })
+    const manifest = chrome.runtime.getManifest()
+    versionElement.textContent = manifest.version
   } catch (error) {
     console.error('Error accessing manifest:', error)
   }

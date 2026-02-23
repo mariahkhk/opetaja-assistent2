@@ -79,6 +79,13 @@ jobs:
           cd dist
           zip -r "../opetaja-assistent2-v${VERSION}.zip" .
 
+      - name: Upload zip as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-zip
+          path: "opetaja-assistent2-v${{ needs.check.outputs.version }}.zip"
+          retention-days: 1
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -86,3 +93,97 @@ jobs:
           name: "v${{ needs.check.outputs.version }}"
           generate_release_notes: true
           files: "opetaja-assistent2-v${{ needs.check.outputs.version }}.zip"
+
+  publish:
+    needs: [check, release]
+    if: needs.check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if Chrome Web Store secrets are configured
+        id: secrets_check
+        env:
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          if [ -n "$CHROME_EXTENSION_ID" ] && \
+             [ -n "$CHROME_CLIENT_ID" ] && \
+             [ -n "$CHROME_CLIENT_SECRET" ] && \
+             [ -n "$CHROME_REFRESH_TOKEN" ]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "Chrome Web Store secrets not configured, skipping publish"
+          fi
+
+      - name: Download release zip
+        if: steps.secrets_check.outputs.configured == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-zip
+
+      - name: Get access token
+        if: steps.secrets_check.outputs.configured == 'true'
+        id: token
+        env:
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+            -d "client_id=$CLIENT_ID" \
+            -d "client_secret=$CLIENT_SECRET" \
+            -d "refresh_token=$REFRESH_TOKEN" \
+            -d "grant_type=refresh_token")
+          ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.access_token')
+          if [ "$ACCESS_TOKEN" = "null" ] || [ -z "$ACCESS_TOKEN" ]; then
+            echo "::error::Failed to get access token: $RESPONSE"
+            exit 1
+          fi
+          echo "::add-mask::$ACCESS_TOKEN"
+          echo "access_token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+
+      - name: Upload to Chrome Web Store
+        if: steps.secrets_check.outputs.configured == 'true'
+        env:
+          ACCESS_TOKEN: ${{ steps.token.outputs.access_token }}
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X PUT "https://www.googleapis.com/upload/chromewebstore/v1.1/items/$EXTENSION_ID" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -T "opetaja-assistent2-v${VERSION}.zip")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "Upload response ($HTTP_CODE): $BODY"
+          UPLOAD_STATE=$(echo "$BODY" | jq -r '.uploadState')
+          if [ "$UPLOAD_STATE" != "SUCCESS" ]; then
+            echo "::error::Upload failed with state: $UPLOAD_STATE"
+            exit 1
+          fi
+
+      - name: Publish to Chrome Web Store
+        if: steps.secrets_check.outputs.configured == 'true'
+        env:
+          ACCESS_TOKEN: ${{ steps.token.outputs.access_token }}
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://www.googleapis.com/chromewebstore/v1.1/items/$EXTENSION_ID/publish" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "x-goog-api-version: 2" \
+            -H "Content-Length: 0")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          echo "Publish response ($HTTP_CODE): $BODY"
+          STATUS=$(echo "$BODY" | jq -r '.status[0]')
+          if [ "$STATUS" != "OK" ] && [ "$STATUS" != "PUBLISHED_WITH_FRICTION_WARNING" ]; then
+            echo "::error::Publish failed with status: $STATUS"
+            echo "::error::Details: $(echo "$BODY" | jq -r '.statusDetail // empty')"
+            exit 1
+          fi
+          echo "Published successfully (status: $STATUS)"
