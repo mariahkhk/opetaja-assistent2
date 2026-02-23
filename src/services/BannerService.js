@@ -162,6 +162,9 @@ export class BannerService {
       try {
         // If we haven't already created a stable insertion wrapper, create one after the preferred element
         let insertionWrapper = preferred.parentNode.querySelector('.ta-sync-banner-insertion')
+        if (insertionWrapper && !insertionWrapper.isConnected) {
+          insertionWrapper = null
+        }
         if (!insertionWrapper) {
           insertionWrapper = document.createElement('div')
           insertionWrapper.className = 'ta-sync-banner-insertion'
@@ -185,6 +188,22 @@ export class BannerService {
       return document.body
     }
     return container
+  }
+
+  /**
+   * Wait for the preferred banner container to be available in the DOM.
+   * Call this once before the first banner display to avoid race conditions
+   * with Angular rendering.
+   * @param {number} timeout - Maximum time to wait in ms (default: 5000)
+   * @returns {Promise<Element>} The banner container element
+   */
+  async waitForBannerContainer(timeout = 5000) {
+    try {
+      await domService.waitForElement('.tahvel-form-buttons', timeout)
+    } catch {
+      Logger.debug('Preferred banner container (.tahvel-form-buttons) not found within timeout, using fallback')
+    }
+    return this.getBannerContainer()
   }
 
   /**

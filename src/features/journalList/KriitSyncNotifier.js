@@ -20,6 +20,9 @@ export async function notifyKriitGradesSynced(apiService, grades) {
     return
   }
 
+  // Wait for Kriit API settings to be loaded from chrome.storage
+  if (apiService._kriitInitPromise) await apiService._kriitInitPromise
+
   // Check if Kriit integration is enabled
   if (!apiService.kriit || !apiService.kriit.enabled) {
     Logger.debug('Kriit integration is not enabled, skipping grade sync notification')

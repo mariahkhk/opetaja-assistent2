@@ -44,7 +44,11 @@ export const api = {
     defaultHeaders: {
       Accept: 'application/json'
     }
-  })
+  }),
+
+  // Promise that resolves when Kriit API settings have been loaded from chrome.storage.
+  // Features should await this before checking kriit.enabled or kriit.authToken.
+  _kriitInitPromise: null
 }
 
 export class BaseFeature {
@@ -186,38 +190,55 @@ export class BaseFeature {
       return
     }
 
+    // If already initializing/initialized, reuse the existing promise
+    if (this.api._kriitInitPromise) return
+
     // Set Kriit API base URL if not already set
     if (!this.api.kriit.baseUrl) {
-      // Try to load from storage
-      chrome.storage.sync.get(['OA_kriitApiBaseUrl', 'OA_kriitApiToken', 'OA_kriitEnabled'], result => {
-        const savedBaseUrl = result['OA_kriitApiBaseUrl']
-        const savedToken = result['OA_kriitApiToken']
-        const kriitEnabled = result['OA_kriitEnabled'] === true
+      // Try to load from storage - store promise so features can await it
+      this.api._kriitInitPromise = new Promise(resolve => {
+        chrome.storage.sync.get(['OA_kriitApiBaseUrl', 'OA_kriitApiToken', 'OA_kriitEnabled'], result => {
+          if (chrome.runtime?.lastError) {
+            Logger.error('Failed to load Kriit settings from storage:', chrome.runtime.lastError.message)
+            resolve()
+            return
+          }
 
-        // Store Kriit enabled status
-        this.api.kriit.enabled = kriitEnabled
+          const savedBaseUrl = result['OA_kriitApiBaseUrl']
+          const savedToken = result['OA_kriitApiToken']
+          const kriitEnabled = result['OA_kriitEnabled'] === true
 
-        if (!kriitEnabled) {
-          // Skip Kriit API initialization if disabled
-          return
-        }
+          // Store Kriit enabled status
+          this.api.kriit.enabled = kriitEnabled
 
-        // Set base URL from storage - no default fallback
-        if (savedBaseUrl) {
-          this.api.kriit.setBaseUrl(savedBaseUrl)
-        } else {
-          Logger.debug('No Kriit API base URL found in settings')
-        }
+          if (!kriitEnabled) {
+            // Skip Kriit API initialization if disabled
+            resolve()
+            return
+          }
 
-        // Set auth token if available
-        if (savedToken) {
-          this.api.kriit.setAuthToken(savedToken)
-        } else {
-          Logger.debug('No Kriit API token found, Kriit features will be disabled')
-        }
+          // Set base URL from storage - no default fallback
+          if (savedBaseUrl) {
+            this.api.kriit.setBaseUrl(savedBaseUrl)
+          } else {
+            Logger.debug('No Kriit API base URL found in settings')
+          }
+
+          // Set auth token if available
+          if (savedToken) {
+            this.api.kriit.setAuthToken(savedToken)
+          } else {
+            Logger.debug('No Kriit API token found, Kriit features will be disabled')
+          }
+
+          resolve()
+        })
       })
+    } else {
+      this.api._kriitInitPromise = Promise.resolve()
     }
   }
+
   /**
    * No-op for features that do not use final grade banners
    */

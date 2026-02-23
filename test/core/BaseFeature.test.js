@@ -5,6 +5,7 @@ import { JSDOM } from 'jsdom'
 describe('BaseFeature', () => {
   beforeEach(() => {
     global.chrome = {
+      runtime: { lastError: null },
       storage: {
         sync: {
           get: mock((keys, callback) => {
@@ -43,6 +44,9 @@ describe('BaseFeature', () => {
       querySelector: mock(),
       querySelectorAll: mock(() => [])
     }
+
+    // Reset shared singleton state between tests
+    api._kriitInitPromise = null
   })
 
   describe('constructor', () => {

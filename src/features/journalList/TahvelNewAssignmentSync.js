@@ -29,6 +29,10 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
   async onActivate() {
     Logger.feature(this.name, 'Tahvel New Assignment Sync feature initialized')
 
+    // Wait for Kriit API settings to be loaded from chrome.storage
+    if (this.api._kriitInitPromise) await this.api._kriitInitPromise
+    if (!this.isActive) return
+
     // Check if Kriit support is enabled
     if (!this.api.kriit.enabled) {
       Logger.debug('Kriit support is disabled - TahvelNewAssignmentSync will not be activated')

@@ -386,8 +386,7 @@ class JournalListSyncFeature extends BaseFeature {
    * Called when the feature is activated
    * @param {NodeList} elements - The found elements (journal links)
    */
-  onActivate(elements) {
-    this.isActive = true
+  async onActivate(elements) {
     // Only activate on journals page (accept variants like 'journals?…')
     const url = window.location.hash.replace(/^#\/?/, '').split('&')[0]
     if (!url.startsWith('journals')) {
@@ -400,35 +399,54 @@ class JournalListSyncFeature extends BaseFeature {
 
     if (Logger.isDebugMode()) Logger.debug('[DEBUG] onActivate: elements', elements)
 
-    // First check if Kriit support is enabled
-    if (!this.api.kriit.enabled) {
-      Logger.debug('Kriit support is disabled - JournalListSync feature will not be activated')
-      return
-    }
+    // Wait for Kriit API settings to be loaded from chrome.storage before checking.
+    // initializeKriitApi() runs in the constructor but uses an async callback,
+    // so this.api.kriit.enabled may not be set yet when onActivate fires.
+    try {
+      await (this.api._kriitInitPromise || Promise.resolve())
 
-    // Then check if we have a Kriit API token
-    if (this.api.kriit.authToken) {
-      Logger.debug('Using Kriit API token')
+      if (!this.isActive) return
 
-      // If we have journal links from the observer, store them
-      if (elements && elements.length > 0) {
-        this.journalLinks = elements
-        if (Logger.isDebugMode()) Logger.debug('[DEBUG] onActivate: journalLinks set', this.journalLinks)
-        this.fetchJournalData()
-      } else {
-        // This case should not happen anymore with the fixed observer
-        Logger.warning('No journal links found during activation, but observer reported success')
-        this.isLoading = false
-        this.error = 'No journal links found on the page. Please refresh and try again.'
-        this.updateUI()
+      // First check if Kriit support is enabled
+      if (!this.api.kriit.enabled) {
+        Logger.debug('Kriit support is disabled - JournalListSync feature will not be activated')
+        return
       }
-    } else {
-      // No token available - feature will be disabled
-      Logger.warning('No Kriit API token found - JournalListSync feature will be disabled')
-      this.showMissingApiKeyBanner()
+
+      // Then check if we have a Kriit API token
+      if (this.api.kriit.authToken) {
+        Logger.debug('Using Kriit API token')
+
+        // If we have journal links from the observer, store them
+        if (elements && elements.length > 0) {
+          this.journalLinks = elements
+          if (Logger.isDebugMode()) Logger.debug('[DEBUG] onActivate: journalLinks set', this.journalLinks)
+          this.fetchJournalData()
+        } else {
+          // This case should not happen anymore with the fixed observer
+          Logger.warning('No journal links found during activation, but observer reported success')
+          this.isLoading = false
+          this.error = 'No journal links found on the page. Please refresh and try again.'
+          this.updateUI()
+        }
+      } else {
+        // No token available - feature will be disabled
+        Logger.warning('No Kriit API token found - JournalListSync feature will be disabled')
+        this.showMissingApiKeyBanner()
+      }
+
+      // If the preferred banner container (.tahvel-form-buttons) wasn't available yet,
+      // wait for it in the background and re-render the banner in the correct location.
+      if (!document.querySelector('.tahvel-form-buttons')) {
+        bannerService.waitForBannerContainer(5000).then(() => {
+          if (this.isActive) this.updateUI()
+        })
+      }
+    } catch (err) {
+      Logger.error('[JournalListSync] Initialization failed:', err)
     }
 
-    // Set up study year selector monitoring
+    // Set up study year selector monitoring (doesn't depend on Kriit)
     this.setupStudyYearMonitoring()
   }
 

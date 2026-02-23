@@ -2221,7 +2221,7 @@ describe('JournalListSync - Algorithm Tests', () => {
   })
 
   describe('onActivate', () => {
-    test('should set isActive to true', () => {
+    test('should keep isActive true (set by BaseFeature.activate)', () => {
       global.window = {
         ...global.window,
         location: {
@@ -2232,6 +2232,8 @@ describe('JournalListSync - Algorithm Tests', () => {
 
       journalListSync.setupStudyYearMonitoring = mock(() => {})
       journalListSync.onRequiredElementsFound = mock(() => {})
+      // BaseFeature.activate() sets isActive = true before calling onActivate()
+      journalListSync.isActive = true
       const elements = [document.createElement('a')]
 
       journalListSync.onActivate(elements)
