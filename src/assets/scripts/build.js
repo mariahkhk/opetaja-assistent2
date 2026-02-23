@@ -133,10 +133,15 @@ async function convertIcons() {
 async function copyStaticAssets() {
   console.log('📋 Copying static assets...')
 
-  // Copy manifest.json
+  // Copy manifest.json and sync version from package.json
   const manifestPath = path.join(CONFIG.templatesDir, 'manifest.json')
   fs.copyFileSync(manifestPath, path.join(CONFIG.distDir, 'manifest.json'))
-  console.log('  Copied manifest.json')
+  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+  const manifestDistPath = path.join(CONFIG.distDir, 'manifest.json')
+  const manifest = JSON.parse(fs.readFileSync(manifestDistPath, 'utf8'))
+  manifest.version = pkg.version
+  fs.writeFileSync(manifestDistPath, JSON.stringify(manifest, null, 2) + '\n')
+  console.log(`  Copied manifest.json (version synced to ${pkg.version})`)
 
   // Copy popup.html
   const popupPath = path.join(CONFIG.templatesDir, 'popup.html')
