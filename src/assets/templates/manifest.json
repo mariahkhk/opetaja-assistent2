@@ -7,7 +7,7 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "permissions": ["scripting", "storage", "unlimitedStorage", "tabs", "activeTab"],
+  "permissions": ["storage", "tabs"],
   "host_permissions": ["*://*.tahvel.edu.ee/*", "*://*.tahvel.eenet.ee/*", "*://test.uustahvel.eenet.ee/*", "*://*.uustahvel.eenet.ee/*"],
   "background": {
     "service_worker": "background.js",
