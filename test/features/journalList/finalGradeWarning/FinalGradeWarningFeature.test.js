@@ -100,7 +100,11 @@ describe('FinalGradeWarningFeature', () => {
       feature.api = mockApi
     }
 
-    const threeStudents = [{ id: 1 }, { id: 2 }, { id: 3 }]
+    const threeStudents = [
+      { id: 1, status: 'OPPURSTAATUS_O' },
+      { id: 2, status: 'OPPURSTAATUS_O' },
+      { id: 3, status: 'OPPURSTAATUS_O' }
+    ]
 
     test('should return false when no outcome entries exist', async () => {
       setupMockApi(
@@ -265,6 +269,99 @@ describe('FinalGradeWarningFeature', () => {
 
       const result = await feature.hasMissingFinalGrades(123)
       expect(result).toBe(false)
+    })
+
+    test('should exclude academic break students from missing grades count', async () => {
+      // 2 active students graded, 1 student on academic break without grade
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            studentOutcomeResults: {
+              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
+              '2': [{ grade: { code: 'KUTSEHINDAMINE_4' } }]
+            }
+          }
+        ],
+        [
+          { id: 1, status: 'OPPURSTAATUS_O' },
+          { id: 2, status: 'OPPURSTAATUS_O' },
+          { id: 3, status: 'OPPURSTAATUS_A' } // Academic break
+        ]
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(false)
+    })
+
+    test('should return true when active student is missing grade even with AP students', async () => {
+      // 1 active graded, 1 active missing grade, 1 AP student
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            studentOutcomeResults: {
+              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }]
+            }
+          }
+        ],
+        [
+          { id: 1, status: 'OPPURSTAATUS_O' },
+          { id: 2, status: 'OPPURSTAATUS_O' },
+          { id: 3, status: 'OPPURSTAATUS_A' }
+        ]
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should not count grades from non-active students toward graded count', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            studentOutcomeResults: {
+              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
+              '3': [{ grade: { code: 'KUTSEHINDAMINE_4' } }] // AP student graded
+            }
+          }
+        ],
+        [
+          { id: 1, status: 'OPPURSTAATUS_O' },
+          { id: 2, status: 'OPPURSTAATUS_O' }, // Active, no grade
+          { id: 3, status: 'OPPURSTAATUS_A' }  // AP, has grade
+        ]
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true) // Student 2 is active and ungraded
+    })
+
+    test('should exclude non-active students when counting via detailed outcome fallback', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            curriculumModuleOutcomes: 456
+          }
+        ],
+        [
+          { id: 1, status: 'OPPURSTAATUS_O' },
+          { id: 2, status: 'OPPURSTAATUS_O' },
+          { id: 3, status: 'OPPURSTAATUS_A' }
+        ],
+        {
+          outcomeStudents: [
+            { studentId: 1, grade: { code: 'KUTSEHINDAMINE_5' } },
+            { studentId: 3, grade: { code: 'KUTSEHINDAMINE_4' } }
+            // Student 2 (active) missing, student 3 (AP) graded
+          ]
+        }
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
     })
 
     test('should return false on API error', async () => {

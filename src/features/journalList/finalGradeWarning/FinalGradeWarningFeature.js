@@ -225,8 +225,13 @@ export default class FinalGradeWarningFeature extends BaseFeature {
       const outcomeEntries = entries.filter(e => e.entryType === 'SISSEKANNE_O')
       if (outcomeEntries.length === 0) return false
 
-      const totalStudents = Array.isArray(journalStudents) ? journalStudents.length : 0
+      const activeStudents = Array.isArray(journalStudents)
+        ? journalStudents.filter(s => s.status === 'OPPURSTAATUS_O')
+        : []
+      const totalStudents = activeStudents.length
       if (totalStudents === 0) return false
+
+      const activeStudentIds = new Set(activeStudents.map(s => String(s.id)))
 
       for (const entry of outcomeEntries) {
         let results = entry.studentOutcomeResults
@@ -240,8 +245,9 @@ export default class FinalGradeWarningFeature extends BaseFeature {
               { cache: true, cacheExpiration: 3e5 }
             )
             if (detailed && Array.isArray(detailed.outcomeStudents)) {
-              // Count students with grades
-              const gradedCount = detailed.outcomeStudents.filter(s => s.grade).length
+              // Count only active students with grades
+              const gradedCount = detailed.outcomeStudents
+                .filter(s => activeStudentIds.has(String(s.studentId)) && s.grade).length
               if (gradedCount < totalStudents) return true
               continue
             }
@@ -256,9 +262,10 @@ export default class FinalGradeWarningFeature extends BaseFeature {
           return true
         }
 
-        // Count students with actual grades in studentOutcomeResults
+        // Count only active students with grades in studentOutcomeResults
         let gradedCount = 0
-        for (const grades of Object.values(results)) {
+        for (const [studentId, grades] of Object.entries(results)) {
+          if (!activeStudentIds.has(String(studentId))) continue
           if (grades && grades.length > 0 && grades[0].grade) {
             gradedCount++
           }
