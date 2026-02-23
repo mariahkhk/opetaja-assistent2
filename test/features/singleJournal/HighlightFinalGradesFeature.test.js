@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, mock } from 'bun:test'
 import HighlightFinalGradesFeature from '../../../src/features/singleJournal/highlightFinalGrades/HighlightFinalGradesFeature.js'
+import { getStudyYearRange } from '../../../src/lib/finalGradeWarning.js'
 
 describe('HighlightFinalGradesFeature', () => {
   let feature
@@ -78,10 +79,10 @@ describe('HighlightFinalGradesFeature', () => {
     })
   })
 
-  describe('_getStudyYearRange', () => {
+  describe('getStudyYearRange (shared utility)', () => {
     test('should calculate study year from fallback dates', () => {
       const info = {}
-      const result = feature._getStudyYearRange(info)
+      const result = getStudyYearRange(info)
 
       // Should return ISO date strings
       expect(result.from).toBeDefined()
@@ -94,15 +95,16 @@ describe('HighlightFinalGradesFeature', () => {
       const info = {
         studyYearStartDate: '2023-09-04T00:00:00Z'
       }
-      const result = feature._getStudyYearRange(info)
+      const result = getStudyYearRange(info)
       expect(result.from).toBe('2023-09-04T00:00:00Z')
     })
 
     test('should use provided studyYearEndDate if available', () => {
       const info = {
+        studyYearStartDate: '2023-09-01T00:00:00Z',
         studyYearEndDate: '2024-06-14T23:59:59Z'
       }
-      const result = feature._getStudyYearRange(info)
+      const result = getStudyYearRange(info)
       expect(result.thru).toBe('2024-06-14T23:59:59Z')
     })
   })

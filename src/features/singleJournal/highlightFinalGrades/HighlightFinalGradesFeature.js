@@ -1,6 +1,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import { styleService } from '../../../services/StyleService.js'
 import Logger from '../../../services/Logger.js'
+import { getWarningLevel, getFinalLessonDate as getFinalLessonDateShared, getStudyYearRange } from '../../../lib/finalGradeWarning.js'
 
 class HighlightFinalGradesFeature extends BaseFeature {
   constructor() {
@@ -80,14 +81,6 @@ class HighlightFinalGradesFeature extends BaseFeature {
     return null
   }
 
-  _getStudyYearRange(info) {
-    const now = new Date()
-    const studyYear = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()
-    const from = info.studyYearStartDate || new Date(Date.UTC(studyYear, 8, 1)).toISOString()
-    const thru = info.studyYearEndDate || new Date(Date.UTC(studyYear + 1, 7, 31, 23, 59, 59, 999)).toISOString()
-    return { from, thru }
-  }
-
   _getComparisonDate(finalLessonDate, lastLessonBanner) {
     const finalDate = new Date(finalLessonDate)
     finalDate.setHours(0, 0, 0, 0)
@@ -113,42 +106,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
   }
 
   async getFinalLessonDate(journalId) {
-    const info = await this.api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5 })
-    // Try to extract schoolId from curriculumVersions[0].curriculumId if available
-    let schoolId = null
-    if (info.curriculumVersions && info.curriculumVersions.length > 0) {
-      schoolId = info.curriculumVersions[0].curriculumId
-    }
-    const teacherId = info.journalTeachers?.[0]?.id
-    const { from, thru } = this._getStudyYearRange(info)
-    let timetable = []
-    if (schoolId && teacherId) {
-      const endpoint = `/timetableevents/timetableByTeacher/${schoolId}?from=${from}&lang=ET&teachers=${teacherId}&thru=${thru}`
-      try {
-        const timetableData = await this.api.tahvel.get(endpoint, {}, { cache: true, cacheExpiration: 864e5 })
-        timetable = timetableData?.timetableEvents?.filter(event => event.journalId == journalId) || []
-      } catch (e) {
-        if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] Timetable fetch failed, falling back to journal entries', e)
-      }
-    }
-    if (timetable.length > 0) {
-      const sorted = timetable.slice().sort((a, b) => new Date(a.date) - new Date(b.date))
-      return sorted[sorted.length - 1].date
-    }
-    // Fallback: use latest journal entry date, ignoring nulls
-    const journalEntries = await this.api.tahvel.get(
-      `/journals/${journalId}/journalEntriesByDate`,
-      { allStudents: true },
-      { cache: true, cacheExpiration: 6e4 }
-    )
-    if (Array.isArray(journalEntries) && journalEntries.length > 0) {
-      const validEntries = journalEntries.filter(e => e.entryDate)
-      if (validEntries.length > 0) {
-        const sorted = validEntries.slice().sort((a, b) => new Date(a.entryDate) - new Date(b.entryDate))
-        return sorted[sorted.length - 1].entryDate
-      }
-    }
-    return null
+    return getFinalLessonDateShared(journalId, this.api)
   }
 
   findColumnIndices(table) {
@@ -360,25 +318,18 @@ class HighlightFinalGradesFeature extends BaseFeature {
     }
     if (finalLessonDate) {
       const { now, finalDate } = this._getComparisonDate(finalLessonDate, lastLessonBanner)
-      const warningStart = new Date(finalDate)
-      warningStart.setDate(finalDate.getDate() - 7)
-      const warningEnd = new Date(finalDate)
-      warningEnd.setDate(finalDate.getDate() - 2)
+      const warningLevel = getWarningLevel(now, finalDate)
+      inWarningWindow = warningLevel === 'yellow'
       if (Logger.isDebugMode()) {
         Logger.info(
           '✨ [HighlightFinalGradesFeature] Today:',
           now.toISOString(),
-          'Warning window:',
-          warningStart.toISOString(),
-          '-',
-          warningEnd.toISOString(),
           'Final lesson:',
-          finalDate.toISOString()
+          finalDate.toISOString(),
+          'Warning level:',
+          warningLevel
         )
-        inWarningWindow = now >= warningStart && now <= warningEnd
         Logger.info('✨ [HighlightFinalGradesFeature] inWarningWindow:', inWarningWindow)
-      } else {
-        inWarningWindow = now >= warningStart && now <= warningEnd
       }
     }
     // Only highlight if within 7 days of the final lesson date
@@ -386,9 +337,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
       finalLessonDate &&
       (() => {
         const { now, finalDate } = this._getComparisonDate(finalLessonDate, lastLessonBanner)
-        const warningStart = new Date(finalDate)
-        warningStart.setDate(finalDate.getDate() - 7)
-        return now >= warningStart
+        return getWarningLevel(now, finalDate) !== null
       })()
 
     rows.forEach((row, rowIdx) => {

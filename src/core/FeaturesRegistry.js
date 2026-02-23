@@ -83,6 +83,16 @@ export async function loadFeatures() {
     Logger.error('Error loading LessonCountWarningFeature:', error)
   }
 
+  // Load final grade warning feature (always enabled)
+  try {
+    const FinalGradeWarningFeature = (await import('../features/journalList/finalGradeWarning/FinalGradeWarningFeature.js')).default
+    const finalGradeWarningFeature = new FinalGradeWarningFeature()
+    allAvailableFeatures.journalList.push(finalGradeWarningFeature)
+    Logger.debug('Feature "FinalGradeWarningFeature" created')
+  } catch (error) {
+    Logger.error('Error loading FinalGradeWarningFeature:', error)
+  }
+
   // Load lesson discrepancies feature (always enabled)
   try {
     const LessonDiscrepanciesFeature = (await import('../features/singleJournal/lessonDiscrepancies/LessonDiscrepanciesFeature.js')).default

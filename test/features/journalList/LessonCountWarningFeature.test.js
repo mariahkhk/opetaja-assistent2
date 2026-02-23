@@ -12,6 +12,12 @@ describe('LessonCountWarningFeature', () => {
   let consoleErrorSpy
 
   beforeEach(() => {
+    // Ensure window.location.hostname is available (other parallel tests may corrupt it)
+    global.window = {
+      ...global.window,
+      location: { ...(global.window?.location || {}), hostname: 'tahvel.edu.ee' }
+    }
+
     // Mock console methods
     consoleLogSpy = mock(() => {})
     consoleWarnSpy = mock(() => {})

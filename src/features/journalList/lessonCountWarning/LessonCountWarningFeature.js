@@ -16,24 +16,25 @@ import { cacheService } from '../../../services/CacheService.js'
 
 export default class LessonCountWarningFeature extends BaseFeature {
   constructor() {
-    // Match journal list pages
-    super('lessonCountWarning', /#\/journals/, [
-      '#tahvelTable table.tahvel-table tbody tr td:nth-child(2) a.linked-name'
-    ])
+    super('lessonCountWarning', /#\/journals/)
     this.name = 'LessonCountWarningFeature'
     this.processedJournals = new Set()
     this.studyYearObserver = null
     this.mainContentObserver = null
     this.currentStudyYear = null
     this.currentSchoolId = null
-    this.currentTeacherId = null // Add back as fallback
+    this.currentTeacherId = null
+    this._activateTimeout = null
+    this._contentChangeTimeout = null
+    this._studyYearChangeTimeout = null
+    this._isProcessing = false
   }
 
   /**
    * Activate the feature on journal list pages
    */
-  async activate() {
-    Logger.info(`✨ [${this.name}] Activating lesson count warning feature`)
+  async onActivate() {
+    if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Activating lesson count warning feature`)
 
     // Get current user info for teacher ID and school ID
     await this.getCurrentUserInfo()
@@ -48,7 +49,8 @@ export default class LessonCountWarningFeature extends BaseFeature {
     this.setupMainContentObserver()
 
     // Wait for the page to be ready, then process journals
-    setTimeout(() => {
+    this._activateTimeout = setTimeout(() => {
+      this._activateTimeout = null
       this.processJournalList().catch(error => {
         Logger.error(`[${this.name}] Error in delayed processJournalList:`, error)
       })
@@ -60,6 +62,19 @@ export default class LessonCountWarningFeature extends BaseFeature {
    */
   onDeactivate() {
     super.onDeactivate()
+
+    if (this._activateTimeout) {
+      clearTimeout(this._activateTimeout)
+      this._activateTimeout = null
+    }
+    if (this._contentChangeTimeout) {
+      clearTimeout(this._contentChangeTimeout)
+      this._contentChangeTimeout = null
+    }
+    if (this._studyYearChangeTimeout) {
+      clearTimeout(this._studyYearChangeTimeout)
+      this._studyYearChangeTimeout = null
+    }
 
     // Clean up study year observer
     if (this.studyYearObserver) {
@@ -81,8 +96,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
     this.currentStudyYear = null
     this.currentSchoolId = null
     this.currentTeacherId = null
-    this.studyYearObserver = null
-    this.mainContentObserver = null
+    this._isProcessing = false
   }
 
   /**
@@ -218,7 +232,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
         if (mutation.type === 'childList' || mutation.type === 'characterData') {
           const newStudyYear = this.getCurrentStudyYear()
           if (newStudyYear !== this.currentStudyYear) {
-            Logger.info(`✨ [${this.name}] Study year changed from ${this.currentStudyYear} to ${newStudyYear}`)
+            if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Study year changed from ${this.currentStudyYear} to ${newStudyYear}`)
             this.currentStudyYear = newStudyYear
             this.onStudyYearChange()
           }
@@ -285,7 +299,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
    * Handle the main content change (journal list updated)
    */
   onMainContentChange() {
-    Logger.info(`✨ [${this.name}] Processing main content change`) // Clear the processed journals cache
+    if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Processing main content change`)
     this.processedJournals.clear()
 
     // Remove existing warning indicators
@@ -295,7 +309,8 @@ export default class LessonCountWarningFeature extends BaseFeature {
     this.getCurrentStudyYear()
 
     // Reprocess all journals
-    setTimeout(() => {
+    this._contentChangeTimeout = setTimeout(() => {
+      this._contentChangeTimeout = null
       this.processJournalList().catch(error => {
         Logger.error(`[${this.name}] Error in onMainContentChange processJournalList:`, error)
       })
@@ -306,14 +321,15 @@ export default class LessonCountWarningFeature extends BaseFeature {
    * Handle study year change
    */
   onStudyYearChange() {
-    Logger.info(`✨ [${this.name}] Processing study year change`) // Clear the processed journals cache
+    if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Processing study year change`)
     this.processedJournals.clear()
 
     // Remove existing warning indicators
     this.removeAllWarningIndicators()
 
     // Reprocess all journals with new study year
-    setTimeout(() => {
+    this._studyYearChangeTimeout = setTimeout(() => {
+      this._studyYearChangeTimeout = null
       this.processJournalList().catch(error => {
         Logger.error(`[${this.name}] Error in onStudyYearChange processJournalList:`, error)
       })
@@ -321,25 +337,26 @@ export default class LessonCountWarningFeature extends BaseFeature {
   }
 
   /**
-   * Process all journals on the current page
+   * Process all journals on the current page in parallel batches
    */
   async processJournalList() {
+    if (this._isProcessing) return
+    this._isProcessing = true
     try {
-      // Find all journal rows
       const journalRows = this.findJournalRows()
-      Logger.info(`✨ [${this.name}] Found ${journalRows.length} journal rows`)
+      if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Found ${journalRows.length} journal rows`)
 
-      if (journalRows.length === 0) {
-        Logger.warning(`[${this.name}] No journal rows found`)
-        return
-      }
+      if (journalRows.length === 0) return
 
-      // Process each journal row
-      for (const row of journalRows) {
-        await this.processJournalRow(row)
+      const BATCH_SIZE = 5
+      for (let i = 0; i < journalRows.length; i += BATCH_SIZE) {
+        const batch = journalRows.slice(i, i + BATCH_SIZE)
+        await Promise.allSettled(batch.map(row => this.processJournalRow(row)))
       }
     } catch (error) {
       Logger.error(`[${this.name}] Error processing journal list:`, error)
+    } finally {
+      this._isProcessing = false
     }
   }
 
@@ -732,7 +749,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
       // Add indicator to wrapper
       wrapper.appendChild(indicator)
 
-      Logger.info(`✨ [${this.name}] Successfully added warning indicator for journal ${discrepancy.journalId}`)
+      if (Logger.isDebugMode()) Logger.info(`✨ [${this.name}] Successfully added warning indicator for journal ${discrepancy.journalId}`)
     } catch (error) {
       Logger.error(`[${this.name}] Error adding warning indicator:`, error)
     }
