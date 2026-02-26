@@ -6,6 +6,8 @@
 
 import Logger from '../services/Logger.js'
 
+export const SCHOOL_ID_FALLBACK = 9
+
 /**
  * Determine warning level based on proximity to final lesson date.
  * @param {Date} now - Current date (normalized to midnight)
@@ -57,14 +59,11 @@ export async function getFinalLessonDate(journalId, api, info = null) {
     info = await api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5 })
   }
 
-  let schoolId = null
-  if (info.curriculumVersions && info.curriculumVersions.length > 0) {
-    schoolId = info.curriculumVersions[0].curriculumId
-  }
+  const schoolId = info.school?.id || SCHOOL_ID_FALLBACK
   const teacherId = info.journalTeachers?.[0]?.id
   const { from, thru } = getStudyYearRange(info)
 
-  if (schoolId && teacherId) {
+  if (teacherId) {
     try {
       const endpoint = `/timetableevents/timetableByTeacher/${schoolId}?from=${from}&lang=ET&teachers=${teacherId}&thru=${thru}`
       const timetableData = await api.tahvel.get(endpoint, {}, { cache: true, cacheExpiration: 864e5 })
