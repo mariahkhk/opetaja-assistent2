@@ -1,16 +1,19 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { JSDOM } from 'jsdom'
 import { domService } from '../../src/services/DomService.js'
-import { restoreGlobalDOM } from '../setup.js'
 
 describe('DomService', () => {
   beforeEach(() => {
-    if (global.document && global.document.body) {
-      global.document.body.innerHTML = ''
-    }
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+    global.window = dom.window
+    global.document = dom.window.document
+    global.HTMLElement = dom.window.HTMLElement
+    global.MutationObserver = dom.window.MutationObserver
   })
 
   afterEach(() => {
-    restoreGlobalDOM()
+    global.document = undefined
+    global.window = undefined
   })
 
   describe('waitForElement', () => {

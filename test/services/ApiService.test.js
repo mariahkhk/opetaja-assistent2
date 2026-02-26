@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { JSDOM } from 'jsdom'
 import { ApiService } from '../../src/services/ApiService.js'
 
 describe('ApiService', () => {
@@ -6,6 +7,11 @@ describe('ApiService', () => {
   let fetchMock
 
   beforeEach(() => {
+    // Setup DOM (needed by Tahvel PUT requests that read document.cookie)
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'https://tahvel.edu.ee/' })
+    global.window = dom.window
+    global.document = dom.window.document
+
     ApiService.pendingRequests = {}
     ApiService.activeRequests = 0
     ApiService.requestQueue = []
@@ -55,6 +61,8 @@ describe('ApiService', () => {
   afterEach(() => {
     global.fetch = undefined
     global.chrome = undefined
+    global.document = undefined
+    global.window = undefined
   })
 
   describe('Constructor', () => {

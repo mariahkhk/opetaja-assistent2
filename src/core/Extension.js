@@ -16,12 +16,8 @@ const tahvelExtension = {
   async init() {
     Logger.success('Initializing Õpetaja Assistent 2...')
 
-    // Check version first - if outdated, show modal and stop initialization
-    const isOutdated = await versionCheckService.checkAndNotify()
-    if (isOutdated) {
-      Logger.warning('Extension is outdated - initialization stopped')
-      return
-    }
+    // Register listener for update notifications from background script
+    versionCheckService.listenForUpdates()
 
     // Add visual indicator to show the extension is active
     this.addVisualIndicator()

@@ -8,6 +8,49 @@ import { cacheService } from './services/CacheService.js'
 Logger.info('Background script loaded')
 console.log('📔 Background script loaded - ' + new Date().toISOString())
 
+/**
+ * Send update notification to all open Tahvel tabs
+ * @param {string|null} version - Available version string or null
+ */
+async function notifyTahvelTabsOfUpdate(version) {
+  const tabs = await chrome.tabs.query({
+    url: [
+      '*://tahvel.edu.ee/*',
+      '*://test.tahvel.eenet.ee/*',
+      '*://uustahvel.eenet.ee/*',
+      '*://test.uustahvel.eenet.ee/*'
+    ]
+  })
+
+  for (const tab of tabs) {
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'updateAvailable',
+      version
+    }).catch(() => {
+      // Tab may not have content script loaded yet, ignore
+    })
+  }
+}
+
+// Check for updates on service worker startup
+chrome.runtime.requestUpdateCheck()
+  .then(([status, details]) => {
+    if (status === 'update_available') {
+      Logger.info('Update available on startup:', details?.version)
+      notifyTahvelTabsOfUpdate(details?.version || null)
+    }
+  })
+  .catch(error => {
+    // Expected for sideloaded/dev installs
+    Logger.debug('Update check not available:', error.message)
+  })
+
+// Listen for Chrome-initiated update notifications (do NOT auto-reload)
+chrome.runtime.onUpdateAvailable.addListener(details => {
+  Logger.info('Update available via onUpdateAvailable:', details?.version)
+  notifyTahvelTabsOfUpdate(details?.version || null)
+})
+
 // Set up listener for inter-process communication
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   Logger.debug('Received message in background:', message)
