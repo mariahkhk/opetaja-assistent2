@@ -927,20 +927,30 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
       // SISSEKANNE_H: always count toward final grade
-      else if (entry.entryType === 'SISSEKANNE_H' && entry.journalStudentResults) {
-        Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
-          if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
-          if (Array.isArray(results)) {
-            results.forEach(r => {
-              if (r.grade && r.grade.code) gradesByStudent[journalStudentId].push(r.grade.code.replace('KUTSEHINDAMINE_', ''))
-            })
-          } else {
-            Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_H results is not array', { journalStudentId, results })
-          }
-        })
+      else if (entry.entryType === 'SISSEKANNE_H' && (entry.journalStudentResults || entry.journalEntryStudents)) {
+        if (entry.journalStudentResults) {
+          Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
+            if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
+            if (Array.isArray(results)) {
+              results.forEach(r => {
+                if (r.grade && r.grade.code) gradesByStudent[journalStudentId].push(r.grade.code.replace('KUTSEHINDAMINE_', ''))
+              })
+            } else {
+              Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_H results is not array', { journalStudentId, results })
+            }
+          })
+        } else if (Array.isArray(entry.journalEntryStudents)) {
+          entry.journalEntryStudents.forEach(js => {
+            if (js.grade && js.grade.code && js.journalStudent != null) {
+              const journalStudentId = String(js.journalStudent)
+              if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
+              gradesByStudent[journalStudentId].push(js.grade.code.replace('KUTSEHINDAMINE_', ''))
+            }
+          })
+        }
       }
       // SISSEKANNE_I: check for ÕVn in nameEt, including patterns like (ÕV1), (ÕV1, ÕV2)
-      else if (entry.entryType === 'SISSEKANNE_I' && entry.journalStudentResults) {
+      else if (entry.entryType === 'SISSEKANNE_I' && (entry.journalStudentResults || entry.journalEntryStudents)) {
         // Try to extract all ÕV numbers from nameEt
         let ovNums = []
         // Find all ÕV numbers in parentheses, e.g. (ÕV1), (ÕV2), (ÕV1, ÕV2)
@@ -960,39 +970,54 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
         // Remove duplicates
         ovNums = [...new Set(ovNums)]
-        Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
-          if (Array.isArray(results)) {
-            results.forEach(r => {
-              if (r.grade && r.grade.code) {
-                const grade = r.grade.code.replace('KUTSEHINDAMINE_', '')
-                // Always count toward final grade, even if ÕVn is present
-                if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
-                gradesByStudent[journalStudentId].push(grade)
-                if (ovNums.length > 0) {
-                  ovNums.forEach(ovNum => {
-                    if (!outcomeGradesByStudent[journalStudentId]) outcomeGradesByStudent[journalStudentId] = {}
-                    if (!outcomeGradesByStudent[journalStudentId][ovNum]) outcomeGradesByStudent[journalStudentId][ovNum] = []
-                    outcomeGradesByStudent[journalStudentId][ovNum].push(grade)
-                    Logger.info('✨ FinalGradesByOvFeature: Mapped SISSEKANNE_I grade to ÕV column', {
-                      journalStudentId,
-                      grade,
-                      ovNum,
-                      entryName: entry.nameEt
-                    })
-                  })
-                } else {
-                  Logger.info('✨ FinalGradesByOvFeature: SISSEKANNE_I grade not mapped to ÕV column', {
-                    journalStudentId,
-                    grade,
-                    entryName: entry.nameEt
-                  })
-                }
-              }
+
+        // Helper to collect a single student grade into gradesByStudent and outcomeGradesByStudent
+        const collectSissekanneIGrade = (journalStudentId, grade) => {
+          if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
+          gradesByStudent[journalStudentId].push(grade)
+          if (ovNums.length > 0) {
+            ovNums.forEach(ovNum => {
+              if (!outcomeGradesByStudent[journalStudentId]) outcomeGradesByStudent[journalStudentId] = {}
+              if (!outcomeGradesByStudent[journalStudentId][ovNum]) outcomeGradesByStudent[journalStudentId][ovNum] = []
+              outcomeGradesByStudent[journalStudentId][ovNum].push(grade)
+              if (Logger.isDebugMode()) Logger.debug('FinalGradesByOvFeature: Mapped SISSEKANNE_I grade to ÕV column', {
+                journalStudentId,
+                grade,
+                ovNum,
+                entryName: entry.nameEt
+              })
             })
           } else {
-            Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_I results is not array', { journalStudentId, results })
+            if (Logger.isDebugMode()) Logger.debug('FinalGradesByOvFeature: SISSEKANNE_I grade not mapped to ÕV column', {
+              journalStudentId,
+              grade,
+              entryName: entry.nameEt
+            })
           }
-        })
+        }
+
+        // Extract from journalStudentResults (map format)
+        if (entry.journalStudentResults) {
+          Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
+            if (Array.isArray(results)) {
+              results.forEach(r => {
+                if (r.grade && r.grade.code) {
+                  collectSissekanneIGrade(journalStudentId, r.grade.code.replace('KUTSEHINDAMINE_', ''))
+                }
+              })
+            } else {
+              Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_I results is not array', { journalStudentId, results })
+            }
+          })
+        }
+        // Fallback: extract from journalEntryStudents (array format)
+        else if (Array.isArray(entry.journalEntryStudents)) {
+          entry.journalEntryStudents.forEach(js => {
+            if (js.grade && js.grade.code && js.journalStudent) {
+              collectSissekanneIGrade(String(js.journalStudent), js.grade.code.replace('KUTSEHINDAMINE_', ''))
+            }
+          })
+        }
       }
     }
 
