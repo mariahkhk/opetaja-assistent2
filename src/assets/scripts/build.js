@@ -39,7 +39,7 @@ const CONFIG = {
   isProd: isProd,
 
   // Bundle options
-  bundleOptions: isProd ? ['--minify'] : []
+  bundleOptions: []
 }
 
 // Main build function
