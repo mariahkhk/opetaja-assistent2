@@ -1621,12 +1621,16 @@ class FinalGradesByOvFeature extends BaseFeature {
       // --- Highlight mismatched cells in the journal table ---
       try {
         // Locate the journal table
-        const table = document.querySelector('.layout-padding table.journalTable') || document.querySelector('table.journalTable')
+        const table = this.#findJournalTable()
         if (table) {
           // Ensure OA local CSS is available and detect column indices using local helper
           // (avoid depending on HighlightFinalGradesFeature which isn't imported here)
           injectFinalGradeCSS()
-          const { finalGradeCols, ovCols } = this.findColumnIndices(table)
+          const outcomeEntryNames = (this._lastEntries || [])
+            .filter(e => e.entryType === 'SISSEKANNE_O' && e.nameEt)
+            .map(e => e.nameEt.replace(/\s+/g, ' ').trim().toLowerCase())
+            .filter(name => name.length > 0)
+          const { finalGradeCols, ovCols } = this.findColumnIndices(table, outcomeEntryNames)
           // Map ovCols -> ovNum using results.allOvNums; fall back to sequence if lengths mismatch
           const sortedOvCols = (ovCols || []).slice().sort((a, b) => a - b)
           const ovColToNum = {}
@@ -1823,7 +1827,6 @@ class FinalGradesByOvFeature extends BaseFeature {
               if (!cell) return
               const cellToken = extractGradeToken(cell)
               const calcToken = extractGradeToken(String(student.ovGrades && student.ovGrades[ovNum] ? student.ovGrades[ovNum] : ''))
-              // (debug logs removed)
               const setTooltipOv = (current, calculated) => {
                 try {
                   cell.title = `Praegune hinne erineb arvutatud hindest\nPraegune: ${current}\nArvutatud: ${calculated}`
@@ -2099,13 +2102,17 @@ class FinalGradesByOvFeature extends BaseFeature {
   _highlightIncorrectCurrentGrades(results) {
     try {
       if (!results || !results.output || !Array.isArray(results.output)) return
-      const table = document.querySelector('.layout-padding table.journalTable') || document.querySelector('table.journalTable')
+      const table = this.#findJournalTable()
       if (!table) return
 
       // Ensure local CSS is injected for OA final-grade mismatch highlights
       injectFinalGradeCSS()
 
-      const { finalGradeCols } = this.findColumnIndices(table)
+      const outcomeEntryNames = (this._lastEntries || [])
+        .filter(e => e.entryType === 'SISSEKANNE_O' && e.nameEt)
+        .map(e => e.nameEt.replace(/\s+/g, ' ').trim().toLowerCase())
+        .filter(name => name.length > 0)
+      const { finalGradeCols } = this.findColumnIndices(table, outcomeEntryNames)
       if (!finalGradeCols || finalGradeCols.length === 0) return
 
       const extractGradeToken = input => {
@@ -2638,7 +2645,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   // Ensure that L-grade (SISSEKANNE_L) entries have proper grade selection dropdowns in journal table cells
   #ensureLGradeDropdowns() {
     try {
-      const table = document.querySelector('.layout-padding table.journalTable') || document.querySelector('table.journalTable')
+      const table = this.#findJournalTable()
       if (!table) return
 
       // Find journal entry header that contains "Lõpptulemus" or similar final result text
@@ -2958,9 +2965,25 @@ class FinalGradesByOvFeature extends BaseFeature {
     return false
   }
 
+  #findJournalTable() {
+    const selectors = [
+      '#studentTable table.tahvel-table',
+      '#studentTable table',
+      '.tahvel-table-wrapper#studentTable table',
+      '.layout-padding table.tahvel-table',
+      '.layout-padding table.journalTable',
+      'table.journalTable',
+    ]
+    for (const sel of selectors) {
+      const t = document.querySelector(sel)
+      if (t) return t
+    }
+    return null
+  }
+
   // Find column indices for final grade and ÕV columns in the journal table
   // Copied from HighlightFinalGradesFeature to avoid dependency
-  findColumnIndices(table) {
+  findColumnIndices(table, outcomeEntryNames = []) {
     const headerRows = Array.from(table.querySelectorAll('thead tr'))
     const finalGradeCols = []
     const ovCols = []
@@ -2978,6 +3001,18 @@ class FinalGradesByOvFeature extends BaseFeature {
         if (/^õv(\d+)?([ _-]?.*)?$/i.test(normalized) || normalized.includes('õpiväljund')) {
           ovMatch = true
           for (let i = 0; i < colspan; i++) ovCols.push(colIdx + i)
+        }
+        // Also match SISSEKANNE_O outcome columns by their nameEt text
+        if (!ovMatch && outcomeEntryNames.length > 0) {
+          const MIN_PREFIX_LEN = 10
+          if (outcomeEntryNames.some(name =>
+            name === normalized ||
+            (normalized.length >= MIN_PREFIX_LEN && name.startsWith(normalized)) ||
+            (name.length >= MIN_PREFIX_LEN && normalized.startsWith(name))
+          )) {
+            ovMatch = true
+            for (let i = 0; i < colspan; i++) ovCols.push(colIdx + i)
+          }
         }
         // Final grade: match 'lõpptulemus', 'lõpptulemus 1', 'lõpptulemus_2', etc.
         if (/lõpptulemus/.test(normalized)) {
