@@ -215,7 +215,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
         ),
         this.api.tahvel.get(
           `/journals/${journalId}/journalStudents`,
-          {},
+          { allStudents: true },
           { cache: true, cacheExpiration: 3e5 }
         )
       ])
@@ -231,7 +231,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
       const totalStudents = activeStudents.length
       if (totalStudents === 0) return false
 
-      const activeStudentIds = new Set(activeStudents.map(s => String(s.id)))
+      const activeStudentIds = new Set(activeStudents.map(s => String(s.studentId)))
 
       for (const entry of outcomeEntries) {
         let results = entry.studentOutcomeResults
@@ -264,9 +264,9 @@ export default class FinalGradeWarningFeature extends BaseFeature {
 
         // Count only active students with grades in studentOutcomeResults
         let gradedCount = 0
-        for (const [studentId, grades] of Object.entries(results)) {
+        for (const [studentId, outcomeResult] of Object.entries(results)) {
           if (!activeStudentIds.has(String(studentId))) continue
-          if (grades && grades.length > 0 && grades[0].grade) {
+          if (outcomeResult && outcomeResult.grade && outcomeResult.grade.code) {
             gradedCount++
           }
         }

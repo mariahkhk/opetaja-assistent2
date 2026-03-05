@@ -101,9 +101,9 @@ describe('FinalGradeWarningFeature', () => {
     }
 
     const threeStudents = [
-      { id: 1, status: 'OPPURSTAATUS_O' },
-      { id: 2, status: 'OPPURSTAATUS_O' },
-      { id: 3, status: 'OPPURSTAATUS_O' }
+      { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+      { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' },
+      { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_O' }
     ]
 
     test('should return false when no outcome entries exist', async () => {
@@ -125,9 +125,9 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
-              '2': [{ grade: { code: 'KUTSEHINDAMINE_4' } }],
-              '3': [{ grade: { code: 'KUTSEHINDAMINE_3' } }]
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+              '178420': { studentId: 178420, grade: { code: 'KUTSEHINDAMINE_4' } },
+              '178399': { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_3' } }
             }
           }
         ],
@@ -144,8 +144,8 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }]
-              // Students 2 and 3 are absent — they have no grades
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } }
+              // Students 178420 and 178399 are absent — they have no grades
             }
           }
         ],
@@ -162,28 +162,9 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
-              '2': [{ grade: null }],
-              '3': [{ grade: { code: 'KUTSEHINDAMINE_3' } }]
-            }
-          }
-        ],
-        threeStudents
-      )
-
-      const result = await feature.hasMissingFinalGrades(123)
-      expect(result).toBe(true)
-    })
-
-    test('should return true when a student has empty grades array', async () => {
-      setupMockApi(
-        [
-          {
-            entryType: 'SISSEKANNE_O',
-            studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
-              '2': [],
-              '3': [{ grade: { code: 'KUTSEHINDAMINE_3' } }]
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+              '178420': { studentId: 178420, grade: null },
+              '178399': { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_3' } }
             }
           }
         ],
@@ -221,9 +202,9 @@ describe('FinalGradeWarningFeature', () => {
         threeStudents,
         {
           outcomeStudents: [
-            { studentId: 1, grade: { code: 'KUTSEHINDAMINE_5' } },
-            { studentId: 2, grade: { code: 'KUTSEHINDAMINE_4' } }
-            // Student 3 missing
+            { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+            { studentId: 178420, grade: { code: 'KUTSEHINDAMINE_4' } }
+            // Student 178399 missing
           ]
         }
       )
@@ -243,9 +224,9 @@ describe('FinalGradeWarningFeature', () => {
         threeStudents,
         {
           outcomeStudents: [
-            { studentId: 1, grade: { code: 'KUTSEHINDAMINE_5' } },
-            { studentId: 2, grade: { code: 'KUTSEHINDAMINE_4' } },
-            { studentId: 3, grade: { code: 'KUTSEHINDAMINE_3' } }
+            { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+            { studentId: 178420, grade: { code: 'KUTSEHINDAMINE_4' } },
+            { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_3' } }
           ]
         }
       )
@@ -278,15 +259,15 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
-              '2': [{ grade: { code: 'KUTSEHINDAMINE_4' } }]
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+              '178420': { studentId: 178420, grade: { code: 'KUTSEHINDAMINE_4' } }
             }
           }
         ],
         [
-          { id: 1, status: 'OPPURSTAATUS_O' },
-          { id: 2, status: 'OPPURSTAATUS_O' },
-          { id: 3, status: 'OPPURSTAATUS_A' } // Academic break
+          { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+          { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' },
+          { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_A' } // Academic break
         ]
       )
 
@@ -301,14 +282,14 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }]
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } }
             }
           }
         ],
         [
-          { id: 1, status: 'OPPURSTAATUS_O' },
-          { id: 2, status: 'OPPURSTAATUS_O' },
-          { id: 3, status: 'OPPURSTAATUS_A' }
+          { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+          { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' },
+          { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_A' }
         ]
       )
 
@@ -322,20 +303,20 @@ describe('FinalGradeWarningFeature', () => {
           {
             entryType: 'SISSEKANNE_O',
             studentOutcomeResults: {
-              '1': [{ grade: { code: 'KUTSEHINDAMINE_5' } }],
-              '3': [{ grade: { code: 'KUTSEHINDAMINE_4' } }] // AP student graded
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+              '178399': { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_4' } } // AP student graded
             }
           }
         ],
         [
-          { id: 1, status: 'OPPURSTAATUS_O' },
-          { id: 2, status: 'OPPURSTAATUS_O' }, // Active, no grade
-          { id: 3, status: 'OPPURSTAATUS_A' }  // AP, has grade
+          { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+          { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' }, // Active, no grade
+          { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_A' }  // AP, has grade
         ]
       )
 
       const result = await feature.hasMissingFinalGrades(123)
-      expect(result).toBe(true) // Student 2 is active and ungraded
+      expect(result).toBe(true) // Student 178420 is active and ungraded
     })
 
     test('should exclude non-active students when counting via detailed outcome fallback', async () => {
@@ -347,15 +328,65 @@ describe('FinalGradeWarningFeature', () => {
           }
         ],
         [
-          { id: 1, status: 'OPPURSTAATUS_O' },
-          { id: 2, status: 'OPPURSTAATUS_O' },
-          { id: 3, status: 'OPPURSTAATUS_A' }
+          { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+          { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' },
+          { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_A' }
         ],
         {
           outcomeStudents: [
-            { studentId: 1, grade: { code: 'KUTSEHINDAMINE_5' } },
-            { studentId: 3, grade: { code: 'KUTSEHINDAMINE_4' } }
-            // Student 2 (active) missing, student 3 (AP) graded
+            { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+            { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_4' } }
+            // Student 178420 (active) missing, student 178399 (AP) graded
+          ]
+        }
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should return true when first outcome is complete but second has missing grades', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            curriculumModuleOutcomes: 55745,
+            studentOutcomeResults: {
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } },
+              '178420': { studentId: 178420, grade: { code: 'KUTSEHINDAMINE_4' } },
+              '178399': { studentId: 178399, grade: { code: 'KUTSEHINDAMINE_3' } }
+            }
+          },
+          {
+            entryType: 'SISSEKANNE_O',
+            curriculumModuleOutcomes: 55740,
+            studentOutcomeResults: {
+              '178481': { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_MA' } }
+              // 178420 and 178399 missing
+            }
+          }
+        ],
+        threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should return true when studentOutcomeResults is explicitly null with fallback', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_O',
+            studentOutcomeResults: null,
+            curriculumModuleOutcomes: 456
+          }
+        ],
+        threeStudents,
+        {
+          outcomeStudents: [
+            { studentId: 178481, grade: { code: 'KUTSEHINDAMINE_5' } }
+            // 178420 and 178399 missing
           ]
         }
       )
