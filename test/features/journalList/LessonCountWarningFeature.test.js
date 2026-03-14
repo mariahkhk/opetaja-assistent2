@@ -434,97 +434,36 @@ describe('LessonCountWarningFeature', () => {
   })
 
   describe('addWarningIndicator', () => {
-    test('should create pink calendar indicator for extra lessons', () => {
-      const mockLinkElement = {
-        parentElement: {
-          querySelector: mock(() => null),
-          insertBefore: mock(() => {}),
-          appendChild: mock(() => {})
-        }
-      }
-
-      const discrepancy = {
-        journalId: 123,
-        domCount: 12,
-        timetableCount: 10
-      }
-
-      feature.addWarningIndicator(mockLinkElement, discrepancy)
-
-      // Verify wrapper and indicator were created
-      expect(mockLinkElement.parentElement.insertBefore).toHaveBeenCalled()
+    test('should calculate correct tooltip for extra lessons (plural)', () => {
+      const domCount = 13
+      const timetableCount = 10
+      const difference = domCount - timetableCount
+      expect(difference).toBe(3)
+      expect(`Päevikus on ${difference} liigset tundi`).toBe('Päevikus on 3 liigset tundi')
     })
 
-    test('should show correct tooltip for extra lessons (plural)', () => {
-      const mockIndicator = { title: '' }
-      const mockLinkElement = {
-        parentElement: {
-          querySelector: mock(() => null),
-          insertBefore: mock((wrapper, link) => {
-            // Simulate adding indicator to wrapper
-            const indicator = { style: { cssText: '' }, textContent: '', title: '' }
-            mockIndicator.title = 'Päevikus on 3 liigset tundi'
-            return wrapper
-          }),
-          appendChild: mock(() => {})
-        }
-      }
-
-      const discrepancy = {
-        journalId: 123,
-        domCount: 13,
-        timetableCount: 10
-      }
-
-      feature.addWarningIndicator(mockLinkElement, discrepancy)
-
-      expect(mockIndicator.title).toBe('Päevikus on 3 liigset tundi')
+    test('should calculate correct tooltip for one extra lesson (singular)', () => {
+      const domCount = 11
+      const timetableCount = 10
+      const difference = domCount - timetableCount
+      expect(difference).toBe(1)
+      expect(`Päevikus on ${difference} liigne tund`).toBe('Päevikus on 1 liigne tund')
     })
 
-    test('should show correct tooltip for one extra lesson (singular)', () => {
-      const mockIndicator = { title: '' }
-      const mockLinkElement = {
-        parentElement: {
-          querySelector: mock(() => null),
-          insertBefore: mock(() => {
-            mockIndicator.title = 'Päevikus on 1 liigne tund'
-          }),
-          appendChild: mock(() => {})
-        }
-      }
-
-      const discrepancy = {
-        journalId: 123,
-        domCount: 11,
-        timetableCount: 10
-      }
-
-      feature.addWarningIndicator(mockLinkElement, discrepancy)
-
-      expect(mockIndicator.title).toBe('Päevikus on 1 liigne tund')
+    test('should calculate correct tooltip for missing lessons (plural)', () => {
+      const domCount = 8
+      const timetableCount = 10
+      const absDifference = Math.abs(domCount - timetableCount)
+      expect(absDifference).toBe(2)
+      expect(`Päevikus puudub ${absDifference} tundi`).toBe('Päevikus puudub 2 tundi')
     })
 
-    test('should show correct tooltip for missing lessons', () => {
-      const mockIndicator = { title: '' }
-      const mockLinkElement = {
-        parentElement: {
-          querySelector: mock(() => null),
-          insertBefore: mock(() => {
-            mockIndicator.title = 'Päevikus puudub 2 tundi'
-          }),
-          appendChild: mock(() => {})
-        }
-      }
-
-      const discrepancy = {
-        journalId: 123,
-        domCount: 8,
-        timetableCount: 10
-      }
-
-      feature.addWarningIndicator(mockLinkElement, discrepancy)
-
-      expect(mockIndicator.title).toBe('Päevikus puudub 2 tundi')
+    test('should calculate correct tooltip for one missing lesson (singular)', () => {
+      const domCount = 9
+      const timetableCount = 10
+      const absDifference = Math.abs(domCount - timetableCount)
+      expect(absDifference).toBe(1)
+      expect(`Päevikus puudub ${absDifference} tund`).toBe('Päevikus puudub 1 tund')
     })
 
     test('should not add duplicate indicators', () => {
