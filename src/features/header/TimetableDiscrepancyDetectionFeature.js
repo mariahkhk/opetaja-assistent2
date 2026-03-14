@@ -250,16 +250,18 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       // Count past lessons
       const pastTimetableLessons = this.#countPastLessons(timetableLessons)
 
-      // Compare
-      return pastTimetableLessons !== actualLessonCount
+      // Only flag discrepancy when journal has FEWER entries than timetable (missing entries)
+      return actualLessonCount < pastTimetableLessons
     } catch (error) {
       Logger.error(`[${this.name}] Error checking journal ${journal.id}:`, error)
       return false
     }
   }
 
+  static CONTACT_CAPACITY_TYPES = ['MAHT_a', 'MAHT_p', 'MAHT_e']
+
   /**
-   * Get lesson count from journal object (MAHT_a only)
+   * Get contact lesson count from journal object (MAHT_a + MAHT_p + MAHT_e)
    * @private
    */
   #getLessonCountFromJournal(journal) {
@@ -267,15 +269,14 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       return null
     }
 
-    // Get only MAHT_a (auditorium lessons), exclude MAHT_i (independent work)
-    const mahtA = journal.lessonHours.capacityHours.find(h => h.capacity === 'MAHT_a')
+    const contactHours = journal.lessonHours.capacityHours
+      .filter(h => TimetableDiscrepancyDetectionFeature.CONTACT_CAPACITY_TYPES.includes(h.capacity))
 
-    if (!mahtA) {
-      // Fallback to totalUsedHours
+    if (contactHours.length === 0) {
       return journal.lessonHours.totalUsedHours || 0
     }
 
-    return mahtA.usedHours || 0
+    return contactHours.reduce((sum, h) => sum + (h.usedHours || 0), 0)
   }
 
   /**

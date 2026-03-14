@@ -50,7 +50,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   #refreshPending = false
 
   static SCHOOL_ID_FALLBACK = 9
-  static JOURNAL_ENTRY_LESSON_TYPE = 'SISSEKANNE_T'
+  static JOURNAL_ENTRY_CONTACT_TYPES = ['SISSEKANNE_T', 'SISSEKANNE_P', 'SISSEKANNE_E']
+  static JOURNAL_ENTRY_DEFAULT_TYPE = 'SISSEKANNE_T'
 
   constructor() {
     super('lessonDiscrepancies', /\/journal\/\d+\/edit/)
@@ -343,7 +344,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
   #aggregateJournalEntries(entries) {
     return entries.reduce((aggregated, entry) => {
-      if (entry.entryType !== LessonDiscrepanciesFeature.JOURNAL_ENTRY_LESSON_TYPE) {
+      if (!LessonDiscrepanciesFeature.JOURNAL_ENTRY_CONTACT_TYPES.includes(entry.entryType)) {
         return aggregated
       }
 
@@ -397,7 +398,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           count: 0,
           start: Infinity
         }
-        const hasDifference = journalData.count !== timetableData.count || journalData.start !== timetableData.start
+        const hasMissingEntries = journalData.count < timetableData.count
+        const hasStartDifference = timetableData.count > 0 && journalData.count > 0 && journalData.count <= timetableData.count && journalData.start !== timetableData.start
+        const hasDifference = hasMissingEntries || hasStartDifference
 
         return hasDifference
           ? {
@@ -1010,7 +1013,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     const payload = {
       startLessonNr: Number(effectiveStart),
       lessons: Number(effectiveCount),
-      entryType: LessonDiscrepanciesFeature.JOURNAL_ENTRY_LESSON_TYPE,
+      entryType: LessonDiscrepanciesFeature.JOURNAL_ENTRY_DEFAULT_TYPE,
       nameEt: timetableData.name || this.#lastJournalData?.info?.nameEt || 'Tund',
       studyPeriodEvent: null,
       journalOmoduleTheme: null,
@@ -1261,7 +1264,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     try {
       const entryTypeField = this.#findVisibleElement(['md-select[ng-model*="entryType"]'])
       if (entryTypeField) {
-        await this.#selectMdSelectOption(entryTypeField, LessonDiscrepanciesFeature.JOURNAL_ENTRY_LESSON_TYPE)
+        await this.#selectMdSelectOption(entryTypeField, LessonDiscrepanciesFeature.JOURNAL_ENTRY_DEFAULT_TYPE)
       } else {
         Logger.warning(`[${this.name}] Entry type field not found`)
       }
