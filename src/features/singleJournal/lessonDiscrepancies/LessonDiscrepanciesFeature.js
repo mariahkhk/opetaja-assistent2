@@ -398,9 +398,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           count: 0,
           start: Infinity
         }
-        const hasMissingEntries = journalData.count < timetableData.count
-        const hasStartDifference = timetableData.count > 0 && journalData.count > 0 && journalData.count <= timetableData.count && journalData.start !== timetableData.start
-        const hasDifference = hasMissingEntries || hasStartDifference
+        const hasDifference = journalData.count !== timetableData.count || journalData.start !== timetableData.start
 
         return hasDifference
           ? {

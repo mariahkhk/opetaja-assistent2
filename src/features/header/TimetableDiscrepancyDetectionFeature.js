@@ -250,8 +250,8 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       // Count past lessons
       const pastTimetableLessons = this.#countPastLessons(timetableLessons)
 
-      // Only flag discrepancy when journal has FEWER entries than timetable (missing entries)
-      return actualLessonCount < pastTimetableLessons
+      // Flag discrepancy when journal and timetable lesson counts don't match
+      return pastTimetableLessons !== actualLessonCount
     } catch (error) {
       Logger.error(`[${this.name}] Error checking journal ${journal.id}:`, error)
       return false
