@@ -8,7 +8,6 @@
     "128": "icon128.png"
   },
   "permissions": ["storage", "tabs", "unlimitedStorage"],
-  "host_permissions": ["*://*.tahvel.edu.ee/*", "*://*.tahvel.eenet.ee/*", "*://test.uustahvel.eenet.ee/*", "*://*.uustahvel.eenet.ee/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"
