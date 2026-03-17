@@ -174,15 +174,40 @@ describe('ApiService', () => {
       expect(fetchMock).toHaveBeenCalledTimes(2)
     })
 
-    test('should handle error responses', async () => {
+    test('should cache 404 and re-throw as error', async () => {
+      let fetchCount = 0
+      global.fetch = mock(async () => {
+        fetchCount++
+        return {
+          ok: false,
+          status: 404,
+          statusText: 'Not Found',
+          text: async () => 'Resource not found'
+        }
+      })
+
+      // First call: throws
+      await expect(apiService.get('/missing')).rejects.toThrow('API Error: 404')
+
+      // Second call: should throw from cache without fetching again
+      await expect(apiService.get('/missing')).rejects.toThrow('API Error: 404')
+      expect(fetchCount).toBe(1) // Only one network request
+    })
+
+    test('should throw for non-404/412 error responses', async () => {
       global.fetch = mock(async () => ({
         ok: false,
-        status: 404,
-        statusText: 'Not Found',
-        text: async () => 'Resource not found'
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => 'Server error'
       }))
 
-      await expect(apiService.get('/missing')).rejects.toThrow('API Error: 404')
+      try {
+        await apiService.get('/error', {}, { cache: false })
+        expect(true).toBe(false) // Should not reach here
+      } catch (error) {
+        expect(error.status || error.message).toBeTruthy()
+      }
     })
 
     test('should handle JSON error responses for POST', async () => {

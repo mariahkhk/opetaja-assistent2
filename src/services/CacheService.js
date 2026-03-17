@@ -1,10 +1,18 @@
 /**
  * Cache Service - Handles caching of API requests to prevent duplicate calls
+ *
+ * Uses Cache API for persistent storage (no size limit) and in-memory cache
+ * for fast same-page access. chrome.storage.local is only used for extension
+ * settings, not for API response caching.
  */
 
 import Logger from './Logger.js'
 
+const CACHE_NAME = 'oa2-api-cache'
+const CACHE_URL_PREFIX = 'https://cache/'
 const CACHE_PREFIX = 'OA_cache_'
+const MAX_NEGATIVE_TTL = 5 * 60 * 1000 // 5 minutes
+
 const CACHE_EXPIRATION = {
   VERY_SHORT: 1000, // 1 second
   SHORT: 60 * 1000, // 1 minute
@@ -24,33 +32,116 @@ const pendingFetches = {}
 const CACHE_SIZE_WARNING = 1000000 // 1MB
 const CACHE_SIZE_LARGE = 5000000 // 5MB
 
+// --- Cache API storage helpers ---
+
+async function getCache() {
+  return await caches.open(CACHE_NAME)
+}
+
+/**
+ * Store data in Cache API with timestamp and TTL metadata.
+ * Keys use fake URLs: https://cache/{cacheKey}
+ */
+async function cacheStore(cacheKey, data, timestamp, expiration = 0) {
+  try {
+    const cache = await getCache()
+    const body = JSON.stringify(data)
+    const response = new Response(body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Cache-Timestamp': String(timestamp),
+        'X-Cache-Expiration': String(expiration)
+      }
+    })
+    await cache.put(new Request(`${CACHE_URL_PREFIX}${cacheKey}`), response)
+  } catch (error) {
+    Logger.warning(`[Cache] Error storing ${cacheKey}: ${error.message}`)
+  }
+}
+
+async function cacheRead(cacheKey) {
+  try {
+    const cache = await getCache()
+    const response = await cache.match(new Request(`${CACHE_URL_PREFIX}${cacheKey}`))
+    if (!response) return null
+    const timestamp = Number(response.headers.get('X-Cache-Timestamp'))
+    const expiration = Number(response.headers.get('X-Cache-Expiration') || '0')
+    const data = await response.json()
+    return { data, timestamp, expiration }
+  } catch (error) {
+    Logger.warning(`[Cache] Error reading ${cacheKey}: ${error.message}`)
+    return null
+  }
+}
+
+async function cacheDeleteKey(cacheKey) {
+  try {
+    const cache = await getCache()
+    await cache.delete(new Request(`${CACHE_URL_PREFIX}${cacheKey}`))
+  } catch (error) {
+    Logger.warning(`[Cache] Error deleting ${cacheKey}: ${error.message}`)
+  }
+}
+
+async function cacheGetAllKeys() {
+  try {
+    const cache = await getCache()
+    const requests = await cache.keys()
+    return requests.map(r => r.url.replace(CACHE_URL_PREFIX, ''))
+  } catch (error) {
+    Logger.warning(`[Cache] Error listing keys: ${error.message}`)
+    return []
+  }
+}
+
+async function cacheClearAll() {
+  try {
+    await caches.delete(CACHE_NAME)
+  } catch (error) {
+    Logger.warning(`[Cache] Error clearing all: ${error.message}`)
+  }
+}
+
+// --- One-time migration from chrome.storage.local ---
+
+function migrateFromChromeStorage() {
+  try {
+    chrome.storage.local.get(null, items => {
+      const oldKeys = Object.keys(items).filter(k => k.startsWith(CACHE_PREFIX))
+      if (oldKeys.length > 0) {
+        chrome.storage.local.remove(oldKeys)
+        Logger.info(`[Cache] Migrated: removed ${oldKeys.length} old chrome.storage.local entries`)
+      }
+    })
+  } catch {
+    // chrome.storage may not be available in all contexts
+  }
+}
+
+// Run migration on load
+migrateFromChromeStorage()
+
+// --- Cache Service ---
+
 const cacheService = {
   /**
    * Set arbitrary cache value (persistent storage)
    * @param {string} key
    * @param {any} data
    */
-  async set(key, data) {
+  async set(key, data, expiration = 0) {
     const cacheKey = `${CACHE_PREFIX}${key}`
-    const cacheItem = { data, timestamp: Date.now() }
+    const timestamp = Date.now()
     try {
-      // Update memory cache
-      memoryCache[cacheKey] = cacheItem
-      // Persist to storage
-      return new Promise(resolve => {
-        chrome.storage.local.set({ [cacheKey]: cacheItem }, () => resolve(true))
-      })
+      memoryCache[cacheKey] = { data, timestamp }
+      await cacheStore(cacheKey, data, timestamp, expiration)
+      return true
     } catch (error) {
       Logger.warning(`Error setting cache for ${key}: ${error.message}`)
       return false
     }
   },
 
-  /**
-   * Get raw cached value without using fetchFn
-   * @param {string} key
-   * @returns {Promise<any>} cached data or null
-   */
   /**
    * Get cached value with optional maxAge (ms). If the cached item is older
    * than maxAge, returns null.
@@ -68,29 +159,28 @@ const cacheService = {
       delete memoryCache[cacheKey]
       return null
     }
-    // Check storage
+    // Check Cache API
     try {
-      return await new Promise(resolve => {
-        chrome.storage.local.get([cacheKey], result => {
-          const item = result[cacheKey]
-          if (!item) return resolve(null)
-          const age = Date.now() - (item.timestamp || 0)
-          if (age <= maxAge) {
-            // populate memory cache
-            memoryCache[cacheKey] = { data: item.data, timestamp: item.timestamp }
-            return resolve(item.data)
-          }
-          // expired
-          return resolve(null)
-        })
-      })
+      const item = await cacheRead(cacheKey)
+      if (!item) return null
+      const age = Date.now() - (item.timestamp || 0)
+      if (age <= maxAge) {
+        memoryCache[cacheKey] = { data: item.data, timestamp: item.timestamp }
+        return item.data
+      }
+      return null
     } catch (error) {
       Logger.warning(`Error reading cache for ${key}: ${error.message}`)
       return null
     }
   },
+
   /**
-   * Get data from cache or fetch it if not available
+   * Get data from cache or fetch it if not available.
+   *
+   * Negative results ({ _errorStatus }) are cached to avoid repeated requests
+   * but re-thrown on retrieval so consumers' catch blocks still work.
+   *
    * @param {string} key - Cache key
    * @param {Function} fetchFn - Function to fetch data if not in cache
    * @param {number} expiration - Cache expiration time in milliseconds
@@ -105,27 +195,34 @@ const cacheService = {
       const cachedItem = memoryCache[cacheKey]
       const now = Date.now()
 
-      if (now - cachedItem.timestamp < expiration) {
+      // Cap expiration for negative (error) results
+      const isNegativeResult = cachedItem.data && cachedItem.data._errorStatus
+      const effectiveExpiration = isNegativeResult ? Math.min(expiration, MAX_NEGATIVE_TTL) : expiration
+
+      if (now - cachedItem.timestamp < effectiveExpiration) {
+        // Re-throw cached negative results so consumers' catch blocks work
+        if (isNegativeResult) {
+          throw new Error(`API Error: ${cachedItem.data._errorStatus}`)
+        }
         return cachedItem.data
       }
       // Memory cache expired, remove it
       delete memoryCache[cacheKey]
     }
 
-    // Try storage cache
+    // Try Cache API
     try {
-      const storageData = await new Promise(resolve => {
-        chrome.storage.local.get([cacheKey], result => {
-          resolve(result[cacheKey])
-        })
-      })
+      const storageData = await cacheRead(cacheKey)
 
       if (storageData) {
         const now = Date.now()
         const timestamp = storageData.timestamp || 0
 
-        if (now - timestamp < expiration) {
-          // Cache hit - store in memory cache too
+        // Cap expiration for negative (error) results
+        const isNegativeResult = storageData.data && storageData.data._errorStatus
+        const effectiveExpiration = isNegativeResult ? Math.min(expiration, MAX_NEGATIVE_TTL) : expiration
+
+        if (now - timestamp < effectiveExpiration) {
           if (useMemoryCache) {
             memoryCache[cacheKey] = {
               data: storageData.data,
@@ -133,11 +230,14 @@ const cacheService = {
             }
           }
 
-          // Calculate age in days for better logging
+          // Re-throw cached negative results so consumers' catch blocks work
+          if (isNegativeResult) {
+            throw new Error(`API Error: ${storageData.data._errorStatus}`)
+          }
+
           const ageInDays = (now - timestamp) / (24 * 60 * 60 * 1000)
           const ageText = ageInDays < 0.001 ? 'just now' : ageInDays < 0.04 ? `${Math.round(ageInDays * 24 * 60)} minutes` : `${ageInDays.toFixed(1)} days`
 
-          // Extract item description from key for better logging
           const itemDescription = key.includes('journalEntriesByDate')
             ? `journal entries for journal ${key.match(/journals\/(\d+)\/journalEntriesByDate/)?.[1] || 'unknown'}`
             : key.includes('journalStudents')
@@ -150,6 +250,8 @@ const cacheService = {
         }
       }
     } catch (error) {
+      // Re-throw cached negative results (API Error from above)
+      if (error.message?.startsWith('API Error:')) throw error
       Logger.warning(`Error reading cache for ${key}:`, error)
     }
 
@@ -167,45 +269,42 @@ const cacheService = {
       try {
         const data = await fetchFn()
 
-        // Store in both caches
         const timestamp = Date.now()
         const cacheItem = { data, timestamp }
 
-        // Store in memory cache
         if (useMemoryCache) {
           memoryCache[cacheKey] = cacheItem
         }
 
-        // Check the size of the data for logging purposes
+        // Log warnings for very large items
         const serializedData = JSON.stringify(cacheItem)
         const dataSize = serializedData.length
 
-        // Log warnings for very large items, but store them anyway
         if (dataSize > CACHE_SIZE_LARGE) {
           Logger.warning(`Cache item for ${key} is very large (${Math.round(dataSize / 1024)}KB).`)
         } else if (dataSize > CACHE_SIZE_WARNING) {
           Logger.debug(`Cache item for ${key} is large (${Math.round(dataSize / 1024)}KB).`)
         }
 
-        // Store full data in persistent cache - we have unlimitedStorage now
-        chrome.storage.local.set({ [cacheKey]: cacheItem })
+        // Store in Cache API with TTL metadata
+        const isNegativeResult = data && data._errorStatus
+        const effectiveExpiration = isNegativeResult ? Math.min(expiration, MAX_NEGATIVE_TTL) : expiration
+        await cacheStore(cacheKey, data, timestamp, effectiveExpiration)
+
+        // Re-throw negative results so consumers' catch blocks work
+        if (isNegativeResult) {
+          throw new Error(`API Error: ${data._errorStatus}`)
+        }
 
         return data
       } finally {
-        // Clean up pending fetch regardless of success/failure
         delete pendingFetches[cacheKey]
       }
     })()
 
     pendingFetches[cacheKey] = fetchPromise
 
-    try {
-      return await fetchPromise
-    } catch (error) {
-      // Bubble up the error after cleanup in finally above
-      throw error
-    }
-
+    return await fetchPromise
   },
 
   /**
@@ -213,30 +312,17 @@ const cacheService = {
    * @returns {Promise<number>} Number of cache entries cleared
    */
   async clearCache() {
-    // Clear memory cache
     const memoryKeysCount = Object.keys(memoryCache).length
     Object.keys(memoryCache).forEach(key => {
       delete memoryCache[key]
     })
 
-    // Clear storage cache
-    return new Promise(resolve => {
-      chrome.storage.local.get(null, items => {
-        const keysToRemove = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX))
+    const storageKeysCount = (await cacheGetAllKeys()).length
+    await cacheClearAll()
 
-        if (keysToRemove.length > 0) {
-          chrome.storage.local.remove(keysToRemove, () => {
-            if (Logger.isDebugMode()) Logger.debug(`Cleared ${keysToRemove.length} API cache entries from storage`)
-            if (Logger.isDebugMode()) Logger.debug(`Cleared ${memoryKeysCount} API cache entries from memory`)
-            resolve(keysToRemove.length + memoryKeysCount)
-          })
-        } else {
-          if (Logger.isDebugMode()) Logger.debug('No API cache entries to clear from storage')
-          if (Logger.isDebugMode()) Logger.debug(`Cleared ${memoryKeysCount} API cache entries from memory`)
-          resolve(memoryKeysCount)
-        }
-      })
-    })
+    const total = memoryKeysCount + storageKeysCount
+    if (Logger.isDebugMode()) Logger.debug(`Cleared cache (${memoryKeysCount} memory + ${storageKeysCount} storage entries)`)
+    return total
   },
 
   /**
@@ -254,24 +340,21 @@ const cacheService = {
       }
     }
 
-    // Clear storage cache
-    return new Promise(resolve => {
-      chrome.storage.local.get(null, items => {
-        const keysToRemove = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX) && this.isJournalRelatedCache(key, journalId))
+    // Clear Cache API entries
+    const allKeys = await cacheGetAllKeys()
+    let storageRemoved = 0
+    for (const key of allKeys) {
+      if (this.isJournalRelatedCache(key, journalId)) {
+        await cacheDeleteKey(key)
+        storageRemoved++
+      }
+    }
 
-        if (keysToRemove.length > 0) {
-          chrome.storage.local.remove(keysToRemove, () => {
-            if (Logger.isDebugMode()) Logger.debug(`Cleared ${keysToRemove.length} journal cache entries from storage`)
-            if (Logger.isDebugMode()) Logger.debug(`Cleared ${memoryKeysToRemove.length} journal cache entries from memory`)
-            resolve(keysToRemove.length + memoryKeysToRemove.length)
-          })
-        } else {
-          if (Logger.isDebugMode()) Logger.debug('No journal cache entries to clear from storage')
-          if (Logger.isDebugMode()) Logger.debug(`Cleared ${memoryKeysToRemove.length} journal cache entries from memory`)
-          resolve(memoryKeysToRemove.length)
-        }
-      })
-    })
+    if (Logger.isDebugMode()) {
+      Logger.debug(`Cleared ${storageRemoved} journal cache entries from Cache API`)
+      Logger.debug(`Cleared ${memoryKeysToRemove.length} journal cache entries from memory`)
+    }
+    return storageRemoved + memoryKeysToRemove.length
   },
 
   /**
@@ -281,23 +364,17 @@ const cacheService = {
    * @returns {boolean} True if the cache key is journal-related
    */
   isJournalRelatedCache(key, journalId = null) {
-    // Remove cache prefix for checking
     const cleanKey = key.replace(CACHE_PREFIX, '')
 
-    // Journal-related patterns (but exclude timetable data)
     const journalPatterns = ['journalEntriesByDate', 'journalEntry', 'journalStudents', '/journals/']
-
-    // Timetable-related patterns to exclude
     const timetablePatterns = ['timetableEvents', 'timetable', '/schools/', '/teachers/']
 
-    // Check if it's timetable-related (should not be cleared)
     for (const pattern of timetablePatterns) {
       if (cleanKey.includes(pattern)) {
         return false
       }
     }
 
-    // Check if it's journal-related
     let isJournalRelated = false
     for (const pattern of journalPatterns) {
       if (cleanKey.includes(pattern)) {
@@ -306,7 +383,6 @@ const cacheService = {
       }
     }
 
-    // If specific journal ID provided, filter by it
     if (isJournalRelated && journalId) {
       const journalIdPattern = `/journals/${journalId}/`
       return cleanKey.includes(journalIdPattern)
@@ -316,26 +392,43 @@ const cacheService = {
   },
 
   /**
+   * Evict expired entries from Cache API storage.
+   * Uses the stored TTL per entry, falling back to VERY_LONG (24h).
+   */
+  async evictExpired() {
+    const keys = await cacheGetAllKeys()
+    let evicted = 0
+    for (const key of keys) {
+      const item = await cacheRead(key)
+      if (!item) continue
+      const ttl = item.expiration || CACHE_EXPIRATION.VERY_LONG
+      if (Date.now() - item.timestamp > ttl) {
+        await cacheDeleteKey(key)
+        evicted++
+      }
+    }
+    if (evicted > 0 && Logger.isDebugMode()) {
+      Logger.debug(`[Cache] Evicted ${evicted} expired entries`)
+    }
+  },
+
+  /**
    * Get cache statistics
    * @returns {Promise<Object>} Cache statistics
    */
   async getStats() {
-    // Get memory cache stats
     const memoryStats = {
       count: Object.keys(memoryCache).length,
       size: 0,
       items: []
     }
 
-    // Calculate memory cache size
     for (const key in memoryCache) {
-      const serialized = JSON.stringify(memoryCache[key])
+      const serialized = JSON.stringify(memoryCache[key].data)
       const size = serialized.length
       memoryStats.size += size
 
-      // Get cache key without prefix
       const cacheKey = key.replace(CACHE_PREFIX, '')
-
       memoryStats.items.push({
         key: cacheKey,
         size,
@@ -343,60 +436,42 @@ const cacheService = {
       })
     }
 
-    // Get storage cache stats
-    return new Promise(resolve => {
-      chrome.storage.local.get(null, items => {
-        const storageStats = {
-          count: 0,
-          size: 0,
-          items: []
-        }
+    const storageStats = {
+      count: 0,
+      size: 0,
+      items: []
+    }
 
-        // Filter items with our cache prefix
-        const cacheKeys = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX))
+    const allKeys = await cacheGetAllKeys()
+    for (const key of allKeys) {
+      const item = await cacheRead(key)
+      if (!item) continue
+      const serialized = JSON.stringify(item.data)
+      const size = serialized.length
+      storageStats.size += size
+      storageStats.count++
 
-        storageStats.count = cacheKeys.length
+      const cacheKey = key.replace(CACHE_PREFIX, '')
+      const ageInMinutes = item.timestamp ? Math.round((Date.now() - item.timestamp) / (60 * 1000)) : 0
 
-        // Calculate total size and details
-        for (const key of cacheKeys) {
-          const serialized = JSON.stringify(items[key])
-          const size = serialized.length
-          storageStats.size += size
-
-          // Get cache key without prefix
-          const cacheKey = key.replace(CACHE_PREFIX, '')
-
-          // Get age in minutes
-          const timestamp = items[key].timestamp || 0
-          const ageInMinutes = timestamp ? Math.round((Date.now() - timestamp) / (60 * 1000)) : 0
-
-          storageStats.items.push({
-            key: cacheKey,
-            size,
-            ageInMinutes,
-            timestamp
-          })
-        }
-
-        // Sort by size (descending)
-        storageStats.items.sort((a, b) => b.size - a.size)
-
-        // Get total storage usage
-        chrome.storage.local.getBytesInUse(null, bytesInUse => {
-          resolve({
-            memory: memoryStats,
-            storage: storageStats,
-            totalBytesInUse: bytesInUse
-          })
-        })
+      storageStats.items.push({
+        key: cacheKey,
+        size,
+        ageInMinutes,
+        timestamp: item.timestamp
       })
-    })
+    }
+
+    storageStats.items.sort((a, b) => b.size - a.size)
+
+    return {
+      memory: memoryStats,
+      storage: storageStats,
+      totalBytesInUse: storageStats.size
+    }
   },
 
-  /**
-   * Cache expiration constants
-   */
   EXPIRATION: CACHE_EXPIRATION
 }
 
-export { cacheService }
+export { cacheService, CACHE_NAME }

@@ -2,7 +2,6 @@
  * Background script
  */
 import Logger from './services/Logger.js'
-import { cacheService } from './services/CacheService.js'
 
 // Use both the Logger and regular console.log for extra visibility
 Logger.info('Background script loaded')
@@ -54,23 +53,6 @@ chrome.runtime.onUpdateAvailable.addListener(details => {
 // Set up listener for inter-process communication
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   Logger.debug('Received message in background:', message)
-
-  // Handle cache statistics request
-  if (message.action === 'getCacheStats') {
-    cacheService
-      .getStats()
-      .then(stats => {
-        Logger.debug('Cache stats retrieved:', stats)
-        sendResponse({ status: 'success', stats })
-      })
-      .catch(error => {
-        Logger.error('Error getting cache stats:', error)
-        sendResponse({ status: 'error', message: error.message })
-      })
-
-    // Return true to indicate we will send a response asynchronously
-    return true
-  }
 
   // Handle Kriit API requests to bypass mixed content restrictions
   if (message.action === 'kriitApiRequest') {

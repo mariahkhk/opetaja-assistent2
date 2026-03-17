@@ -255,6 +255,11 @@ class ApiService {
           async() => {
             const response = await ApiService._throttledFetch(urlString, requestOptions)
 
+            // Cache 404 and 412 as negative results instead of throwing
+            if (response.status === 404 || response.status === 412) {
+              return { _errorStatus: response.status }
+            }
+
             if (!response.ok) {
               throw new Error(`API Error: ${response.status} ${response.statusText}`)
             }

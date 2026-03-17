@@ -1,318 +1,596 @@
-import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { cacheService } from '../../src/services/CacheService.js'
-import { restoreChromeMock } from '../setup.js'
 
 describe('CacheService', () => {
-  let chromeMocks
-
-  beforeEach(() => {
-    chromeMocks = {
-      storage: {
-        local: {
-          get: mock((keys, callback) => {
-            callback({})
-          }),
-          set: mock((items, callback) => {
-            if (callback) callback()
-          }),
-          remove: mock((keys, callback) => {
-            if (callback) callback()
-          }),
-          getBytesInUse: mock((keys, callback) => {
-            callback(0)
-          })
-        },
-        sync: {
-          get: mock((keys, callback) => {
-            callback({})
-          }),
-          set: mock((items, callback) => {
-            if (callback) callback()
-          })
-        }
-      }
-    }
-
-    global.chrome = chromeMocks
+  beforeEach(async () => {
+    if (global.caches._clear) global.caches._clear()
+    await cacheService.clearCache()
   })
 
   afterEach(async () => {
     await cacheService.clearCache()
-    restoreChromeMock()
   })
 
-  describe('set and get', () => {
-    test('should set and get cache value', async () => {
-      const testData = { name: 'test', value: 123 }
+  // --- set() ---
 
-      chromeMocks.storage.local.set = mock((items, callback) => {
-        callback()
-      })
-
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          OA_cache_testKey: {
-            data: testData,
-            timestamp: Date.now()
-          }
-        })
-      })
-
-      await cacheService.set('testKey', testData)
-      const result = await cacheService.get('testKey')
-
-      expect(result).toEqual(testData)
+  describe('set', () => {
+    test('stores a value and returns true', async () => {
+      const result = await cacheService.set('k1', { x: 1 })
+      expect(result).toBe(true)
     })
 
-    test('should return null for expired cache', async () => {
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          OA_cache_expiredKey: {
-            data: { test: 'data' },
-            timestamp: Date.now() - 10000
-          }
-        })
-      })
-
-      const result = await cacheService.get('expiredKey', 5000)
-      expect(result).toBeNull()
+    test('stored value is retrievable via get', async () => {
+      await cacheService.set('k1', { x: 1 })
+      const val = await cacheService.get('k1')
+      expect(val).toEqual({ x: 1 })
     })
 
-    test('should return null for non-existent cache', async () => {
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({})
-      })
+    test('stores strings, numbers, arrays, and nested objects', async () => {
+      await cacheService.set('str', 'hello')
+      await cacheService.set('num', 42)
+      await cacheService.set('arr', [1, 2, 3])
+      await cacheService.set('nested', { a: { b: { c: 1 } } })
 
-      const result = await cacheService.get('nonExistent')
-      expect(result).toBeNull()
+      expect(await cacheService.get('str')).toBe('hello')
+      expect(await cacheService.get('num')).toBe(42)
+      expect(await cacheService.get('arr')).toEqual([1, 2, 3])
+      expect(await cacheService.get('nested')).toEqual({ a: { b: { c: 1 } } })
+    })
+
+    test('overwrites previous value for the same key', async () => {
+      await cacheService.set('k1', 'first')
+      await cacheService.set('k1', 'second')
+      expect(await cacheService.get('k1')).toBe('second')
+    })
+
+    test('stores null and empty object', async () => {
+      await cacheService.set('nullVal', null)
+      await cacheService.set('emptyObj', {})
+      expect(await cacheService.get('nullVal')).toBeNull()
+      expect(await cacheService.get('emptyObj')).toEqual({})
     })
   })
+
+  // --- get() ---
+
+  describe('get', () => {
+    test('returns null for non-existent key', async () => {
+      expect(await cacheService.get('missing')).toBeNull()
+    })
+
+    test('returns data when within maxAge', async () => {
+      await cacheService.set('k', 'val')
+      expect(await cacheService.get('k', 60000)).toBe('val')
+    })
+
+    test('returns null when maxAge exceeded', async () => {
+      await cacheService.set('k', 'val')
+      await new Promise(r => setTimeout(r, 15))
+      expect(await cacheService.get('k', 1)).toBeNull()
+    })
+
+    test('returns data with default maxAge (Infinity)', async () => {
+      await cacheService.set('k', 'val')
+      expect(await cacheService.get('k')).toBe('val')
+    })
+
+    test('populates memory cache from Cache API on read', async () => {
+      // Store directly via Cache API (bypassing memory)
+      const cache = await caches.open('oa2-api-cache')
+      const ts = Date.now()
+      await cache.put(
+        new Request('https://cache/OA_cache_directKey'),
+        new Response(JSON.stringify('direct-value'), {
+          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(ts) }
+        })
+      )
+
+      // First get should read from Cache API and populate memory
+      const val = await cacheService.get('directKey')
+      expect(val).toBe('direct-value')
+
+      // Second get (from memory) should also work
+      const val2 = await cacheService.get('directKey')
+      expect(val2).toBe('direct-value')
+    })
+
+    test('removes expired entry from memory cache', async () => {
+      await cacheService.set('k', 'val')
+      await new Promise(r => setTimeout(r, 15))
+
+      // First call with short maxAge should return null and clean memory
+      expect(await cacheService.get('k', 1)).toBeNull()
+    })
+  })
+
+  // --- getOrFetch() ---
 
   describe('getOrFetch', () => {
-    test('should fetch data when cache is empty', async () => {
-      const testData = { id: 1, name: 'fetchTest' }
-      const fetchFn = mock(async () => testData)
+    test('calls fetchFn when cache is empty', async () => {
+      let called = 0
+      const fetchFn = async () => { called++; return { id: 1 } }
 
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({})
-      })
-
-      const result = await cacheService.getOrFetch('fetchKey1', fetchFn, cacheService.EXPIRATION.SHORT)
-
-      expect(result).toEqual(testData)
-      expect(fetchFn).toHaveBeenCalledTimes(1)
+      const result = await cacheService.getOrFetch('k', fetchFn, 60000)
+      expect(result).toEqual({ id: 1 })
+      expect(called).toBe(1)
     })
 
-    test('should use cached data when available and not expired', async () => {
-      const cachedData = { id: 1, name: 'cached' }
-      const fetchFn = mock(async () => ({ id: 2, name: 'fresh' }))
+    test('returns cached data without calling fetchFn', async () => {
+      let called = 0
+      const fetchFn1 = async () => { called++; return 'first' }
+      const fetchFn2 = async () => { called++; return 'second' }
 
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          OA_cache_cachedKey: {
-            data: cachedData,
-            timestamp: Date.now() - 1000
-          }
-        })
-      })
+      await cacheService.getOrFetch('k', fetchFn1, 60000)
+      const result = await cacheService.getOrFetch('k', fetchFn2, 60000)
 
-      const result = await cacheService.getOrFetch('cachedKey', fetchFn, cacheService.EXPIRATION.MEDIUM)
-
-      expect(result).toEqual(cachedData)
-      expect(fetchFn).not.toHaveBeenCalled()
+      expect(result).toBe('first')
+      expect(called).toBe(1)
     })
 
-    test('should fetch fresh data when cache is expired', async () => {
-      const freshData = { id: 2, name: 'fresh' }
-      const fetchFn = mock(async () => freshData)
+    test('calls fetchFn again after expiration', async () => {
+      let callCount = 0
+      const fetchFn = async () => ++callCount
 
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          OA_cache_expiredFetchKey: {
-            data: { id: 1, name: 'old' },
-            timestamp: Date.now() - 10000
-          }
-        })
-      })
+      await cacheService.getOrFetch('k', fetchFn, 1) // 1ms expiration
+      await new Promise(r => setTimeout(r, 15))
+      const result = await cacheService.getOrFetch('k', fetchFn, 1)
 
-      const result = await cacheService.getOrFetch('expiredFetchKey', fetchFn, 5000)
-
-      expect(result).toEqual(freshData)
-      expect(fetchFn).toHaveBeenCalledTimes(1)
+      expect(result).toBe(2)
+      expect(callCount).toBe(2)
     })
 
-    test('should deduplicate concurrent requests', async () => {
-      const testData = { id: 1 }
-      let fetchCount = 0
-      const fetchFn = mock(async () => {
-        fetchCount++
-        await new Promise(resolve => setTimeout(resolve, 50))
-        return testData
-      })
+    test('deduplicates concurrent identical requests', async () => {
+      let callCount = 0
+      const fetchFn = async () => {
+        callCount++
+        await new Promise(r => setTimeout(r, 30))
+        return { data: callCount }
+      }
 
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({})
-      })
-
-      const [result1, result2, result3] = await Promise.all([
-        cacheService.getOrFetch('dedupeKey', fetchFn),
-        cacheService.getOrFetch('dedupeKey', fetchFn),
-        cacheService.getOrFetch('dedupeKey', fetchFn)
+      const [r1, r2, r3] = await Promise.all([
+        cacheService.getOrFetch('dedup', fetchFn, 60000),
+        cacheService.getOrFetch('dedup', fetchFn, 60000),
+        cacheService.getOrFetch('dedup', fetchFn, 60000)
       ])
 
-      expect(result1).toEqual(testData)
-      expect(result2).toEqual(testData)
-      expect(result3).toEqual(testData)
-      expect(fetchCount).toBe(1)
+      expect(r1).toEqual({ data: 1 })
+      expect(r2).toEqual({ data: 1 })
+      expect(r3).toEqual({ data: 1 })
+      expect(callCount).toBe(1)
+    })
+
+    test('different keys fetch independently', async () => {
+      const fn1 = async () => 'a'
+      const fn2 = async () => 'b'
+
+      const [r1, r2] = await Promise.all([
+        cacheService.getOrFetch('key1', fn1, 60000),
+        cacheService.getOrFetch('key2', fn2, 60000)
+      ])
+
+      expect(r1).toBe('a')
+      expect(r2).toBe('b')
+    })
+
+    test('propagates fetchFn errors', async () => {
+      const fetchFn = async () => { throw new Error('network failure') }
+
+      try {
+        await cacheService.getOrFetch('failKey', fetchFn, 60000)
+        expect(true).toBe(false)
+      } catch (e) {
+        expect(e.message).toBe('network failure')
+      }
+    })
+
+    test('cleans up pendingFetches after error', async () => {
+      const failFn = async () => { throw new Error('fail') }
+      const successFn = async () => 'recovered'
+
+      try { await cacheService.getOrFetch('recoverKey', failFn, 60000) } catch {}
+
+      // Should be able to fetch again (not stuck on pending)
+      const result = await cacheService.getOrFetch('recoverKey', successFn, 60000)
+      expect(result).toBe('recovered')
+    })
+
+    test('persists data to Cache API (survives memory cache clear)', async () => {
+      await cacheService.getOrFetch('persist', async () => 'persisted', 60000)
+
+      // Simulate page navigation: clear only memory cache by clearing and restoring
+      // We'll read directly from Cache API to verify persistence
+      const cache = await caches.open('oa2-api-cache')
+      const response = await cache.match(new Request('https://cache/OA_cache_persist'))
+      expect(response).toBeTruthy()
+      const data = await response.json()
+      expect(data).toBe('persisted')
+    })
+
+    test('uses Cache API when memory cache is expired', async () => {
+      // First fetch with long expiration stores to both memory and Cache API
+      await cacheService.getOrFetch('memExpire', async () => 'original', 60000)
+
+      // Manually expire only the memory cache entry by manipulating timestamp
+      // We do this by clearing cache and re-storing with old timestamp in Cache API only
+      await cacheService.clearCache()
+
+      // Store directly in Cache API with recent timestamp
+      const cache = await caches.open('oa2-api-cache')
+      await cache.put(
+        new Request('https://cache/OA_cache_memExpire'),
+        new Response(JSON.stringify('from-storage'), {
+          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(Date.now()) }
+        })
+      )
+
+      let fetchCalled = false
+      const result = await cacheService.getOrFetch('memExpire', async () => { fetchCalled = true; return 'fresh' }, 60000)
+
+      expect(result).toBe('from-storage')
+      expect(fetchCalled).toBe(false)
+    })
+
+    test('respects useMemoryCache=false', async () => {
+      let callCount = 0
+      const fetchFn = async () => ++callCount
+
+      // First call with useMemoryCache=false
+      await cacheService.getOrFetch('noMem', fetchFn, 60000, false)
+
+      // Should still use Cache API storage for second call
+      const result = await cacheService.getOrFetch('noMem', fetchFn, 60000, false)
+
+      // Cache API should be hit, fetchFn should not be called again
+      expect(result).toBe(1)
+      expect(callCount).toBe(1)
+    })
+
+    test('re-throws negative results (_errorStatus) on fetch', async () => {
+      // getOrFetch should throw when fetchFn returns a negative result
+      try {
+        await cacheService.getOrFetch('neg', async () => ({ _errorStatus: 404 }), 60000)
+        expect(true).toBe(false) // Should not reach here
+      } catch (e) {
+        expect(e.message).toBe('API Error: 404')
+      }
+    })
+
+    test('re-throws negative results from cache (avoids repeated network requests)', async () => {
+      // First call caches the negative result and throws
+      try {
+        await cacheService.getOrFetch('neg2', async () => ({ _errorStatus: 412 }), 60000)
+      } catch {}
+
+      // Second call should throw from cache without calling fetchFn
+      let fetchCalled = false
+      try {
+        await cacheService.getOrFetch('neg2', async () => { fetchCalled = true; return 'fresh' }, 60000)
+        expect(true).toBe(false)
+      } catch (e) {
+        expect(e.message).toBe('API Error: 412')
+        expect(fetchCalled).toBe(false)
+      }
+    })
+
+    test('caps TTL for negative results — refetches after 5 min', async () => {
+      // First call caches the negative result
+      try {
+        await cacheService.getOrFetch('negTtl', async () => ({ _errorStatus: 404 }), 24 * 60 * 60 * 1000)
+      } catch {}
+
+      // Clear memory cache to force Cache API read
+      await cacheService.clearCache()
+
+      // Re-store with old timestamp (6 minutes ago, beyond 5-min negative TTL cap)
+      const cache = await caches.open('oa2-api-cache')
+      const oldTimestamp = Date.now() - 6 * 60 * 1000
+      await cache.put(
+        new Request('https://cache/OA_cache_negTtl'),
+        new Response(JSON.stringify({ _errorStatus: 404 }), {
+          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTimestamp), 'X-Cache-Expiration': String(5 * 60 * 1000) }
+        })
+      )
+
+      let fetchCalled = false
+      const result = await cacheService.getOrFetch('negTtl', async () => { fetchCalled = true; return 'fresh' }, 24 * 60 * 60 * 1000)
+
+      // Should have refetched because negative TTL is capped at 5 min
+      expect(fetchCalled).toBe(true)
+      expect(result).toBe('fresh')
+    })
+
+    test('does not cap TTL for normal results', async () => {
+      await cacheService.clearCache()
+
+      // Store a normal result in Cache API with timestamp 6 min ago
+      const cache = await caches.open('oa2-api-cache')
+      const oldTimestamp = Date.now() - 6 * 60 * 1000
+      await cache.put(
+        new Request('https://cache/OA_cache_normal'),
+        new Response(JSON.stringify({ id: 1 }), {
+          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTimestamp), 'X-Cache-Expiration': String(24 * 60 * 60 * 1000) }
+        })
+      )
+
+      let fetchCalled = false
+      const result = await cacheService.getOrFetch('normal', async () => { fetchCalled = true; return 'new' }, 24 * 60 * 60 * 1000)
+
+      // Should NOT refetch — 6 min < 24h expiration
+      expect(fetchCalled).toBe(false)
+      expect(result).toEqual({ id: 1 })
     })
   })
+
+  // --- clearCache() ---
 
   describe('clearCache', () => {
-    test('should clear all cache entries', async () => {
-      global.chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({
-          OA_cache_key1: { data: 'test1' },
-          OA_cache_key2: { data: 'test2' },
-          other_key: { data: 'other' }
-        })
-      })
+    test('removes all cached entries', async () => {
+      await cacheService.set('a', 1)
+      await cacheService.set('b', 2)
+      await cacheService.set('c', 3)
 
-      global.chrome.storage.local.remove.mockImplementation((keys, callback) => {
-        expect(keys).toEqual(['OA_cache_key1', 'OA_cache_key2'])
-        callback()
-      })
+      await cacheService.clearCache()
 
+      expect(await cacheService.get('a')).toBeNull()
+      expect(await cacheService.get('b')).toBeNull()
+      expect(await cacheService.get('c')).toBeNull()
+    })
+
+    test('returns total count of entries cleared (memory + storage)', async () => {
+      await cacheService.set('a', 1)
+      await cacheService.set('b', 2)
       const count = await cacheService.clearCache()
-      expect(count).toBe(2)
+      expect(count).toBe(4) // 2 memory + 2 storage
+    })
+
+    test('clears both memory and Cache API', async () => {
+      await cacheService.set('k', 'val')
+      await cacheService.clearCache()
+
+      // Verify Cache API is empty
+      const cache = await caches.open('oa2-api-cache')
+      const keys = await cache.keys()
+      expect(keys.length).toBe(0)
+    })
+
+    test('is safe to call on empty cache', async () => {
+      const count = await cacheService.clearCache()
+      expect(count).toBe(0)
     })
   })
 
-  describe('clearJournalCache', () => {
-    test('should clear only journal-related cache', async () => {
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          'OA_cache_journals/123/journalEntriesByDate': { data: 'test1' },
-          'OA_cache_journals/456/journalStudents': { data: 'test2' },
-          'OA_cache_schools/789/timetable': { data: 'test3' },
-          OA_cache_other: { data: 'test4' }
-        })
-      })
+  // --- clearJournalCache() ---
 
-      let removedKeys = []
-      chromeMocks.storage.local.remove = mock((keys, callback) => {
-        removedKeys = keys
-        callback()
-      })
+  describe('clearJournalCache', () => {
+    test('clears journal entries but keeps timetable and other data', async () => {
+      await cacheService.set('GET_/journals/123/journalEntriesByDate', 'entries')
+      await cacheService.set('GET_/journals/456/journalStudents', 'students')
+      await cacheService.set('GET_timetableEvents/school/9', 'timetable')
+      await cacheService.set('GET_/schools/9/info', 'school')
+      await cacheService.set('someOtherKey', 'other')
 
       await cacheService.clearJournalCache()
 
-      expect(removedKeys.length).toBe(2)
-      expect(removedKeys).toContain('OA_cache_journals/123/journalEntriesByDate')
-      expect(removedKeys).toContain('OA_cache_journals/456/journalStudents')
+      expect(await cacheService.get('GET_/journals/123/journalEntriesByDate')).toBeNull()
+      expect(await cacheService.get('GET_/journals/456/journalStudents')).toBeNull()
+      expect(await cacheService.get('GET_timetableEvents/school/9')).toBe('timetable')
+      expect(await cacheService.get('GET_/schools/9/info')).toBe('school')
+      expect(await cacheService.get('someOtherKey')).toBe('other')
     })
 
-    test('should clear cache for specific journal ID', async () => {
-      let removedKeys = []
-
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          'OA_cache_/journals/123/journalEntriesByDate': { data: 'test1' },
-          'OA_cache_/journals/456/journalStudents': { data: 'test2' }
-        })
-      })
-
-      chromeMocks.storage.local.remove = mock((keys, callback) => {
-        removedKeys = keys
-        callback()
-      })
-
-      global.chrome = chromeMocks
+    test('filters by specific journal ID', async () => {
+      await cacheService.set('GET_/journals/123/journalEntriesByDate', 'j123')
+      await cacheService.set('GET_/journals/456/journalEntriesByDate', 'j456')
 
       await cacheService.clearJournalCache(123)
 
-      expect(removedKeys.length).toBe(1)
-      expect(removedKeys).toContain('OA_cache_/journals/123/journalEntriesByDate')
+      expect(await cacheService.get('GET_/journals/123/journalEntriesByDate')).toBeNull()
+      expect(await cacheService.get('GET_/journals/456/journalEntriesByDate')).toBe('j456')
     })
 
-    test('should not clear timetable cache', async () => {
-      chromeMocks.storage.local.get = mock((keys, callback) => {
-        callback({
-          OA_cache_timetableEvents: { data: 'timetable' },
-          'OA_cache_journals/123/journalEntriesByDate': { data: 'journal' }
-        })
-      })
+    test('returns count of removed entries', async () => {
+      await cacheService.set('GET_/journals/1/journalEntry', 'a')
+      await cacheService.set('GET_/journals/2/journalStudents', 'b')
+      await cacheService.set('timetableData', 'keep')
 
-      let removedKeys = []
-      chromeMocks.storage.local.remove = mock((keys, callback) => {
-        removedKeys = keys
-        callback()
-      })
+      const count = await cacheService.clearJournalCache()
+      // 2 journal entries removed (memory + storage each = 4 total)
+      expect(count).toBeGreaterThanOrEqual(2)
+    })
 
-      await cacheService.clearJournalCache()
-
-      expect(removedKeys.length).toBe(1)
-      expect(removedKeys).toContain('OA_cache_journals/123/journalEntriesByDate')
-      expect(removedKeys).not.toContain('OA_cache_timetableEvents')
+    test('does not clear timetable even if key contains journal ID', async () => {
+      await cacheService.set('GET_timetableEvents/journals/123', 'tt')
+      await cacheService.clearJournalCache(123)
+      expect(await cacheService.get('GET_timetableEvents/journals/123')).toBe('tt')
     })
   })
 
+  // --- isJournalRelatedCache() ---
+
   describe('isJournalRelatedCache', () => {
-    test('should identify journal-related cache keys', () => {
-      expect(cacheService.isJournalRelatedCache('OA_cache_journals/123/journalEntriesByDate')).toBe(true)
-      expect(cacheService.isJournalRelatedCache('OA_cache_journals/123/journalStudents')).toBe(true)
-      expect(cacheService.isJournalRelatedCache('OA_cache_journals/123/journalEntry')).toBe(true)
+    test('identifies journalEntriesByDate as journal-related', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/journals/123/journalEntriesByDate')).toBe(true)
     })
 
-    test('should exclude timetable-related cache keys', () => {
+    test('identifies journalEntry as journal-related', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/journals/123/journalEntry')).toBe(true)
+    })
+
+    test('identifies journalStudents as journal-related', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/journals/123/journalStudents')).toBe(true)
+    })
+
+    test('identifies /journals/ path as journal-related', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_GET_/journals/99')).toBe(true)
+    })
+
+    test('excludes timetableEvents', () => {
       expect(cacheService.isJournalRelatedCache('OA_cache_timetableEvents')).toBe(false)
-      expect(cacheService.isJournalRelatedCache('OA_cache_schools/789/timetable')).toBe(false)
-      expect(cacheService.isJournalRelatedCache('OA_cache_teachers/456')).toBe(false)
     })
 
-    test('should filter by journal ID when provided', () => {
-      // Test with prefix (will be removed by function)
+    test('excludes timetable', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/schools/9/timetable')).toBe(false)
+    })
+
+    test('excludes /schools/ paths', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/schools/9/info')).toBe(false)
+    })
+
+    test('excludes /teachers/ paths', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_/teachers/456')).toBe(false)
+    })
+
+    test('excludes unrelated keys', () => {
+      expect(cacheService.isJournalRelatedCache('OA_cache_someRandomKey')).toBe(false)
+    })
+
+    test('filters by journalId when provided', () => {
       expect(cacheService.isJournalRelatedCache('OA_cache_/journals/123/journalEntriesByDate', 123)).toBe(true)
       expect(cacheService.isJournalRelatedCache('OA_cache_/journals/456/journalEntriesByDate', 123)).toBe(false)
     })
-  })
 
-  describe('getStats', () => {
-    test('should return cache statistics', async () => {
-      global.chrome.storage.local.get.mockImplementation((keys, callback) => {
-        callback({
-          OA_cache_key1: {
-            data: { test: 'data1' },
-            timestamp: Date.now() - 60000
-          },
-          OA_cache_key2: {
-            data: { test: 'data2' },
-            timestamp: Date.now() - 120000
-          }
-        })
-      })
-
-      global.chrome.storage.local.getBytesInUse.mockImplementation((keys, callback) => {
-        callback(1024)
-      })
-
-      const stats = await cacheService.getStats()
-
-      expect(stats).toHaveProperty('memory')
-      expect(stats).toHaveProperty('storage')
-      expect(stats).toHaveProperty('totalBytesInUse')
-      expect(stats.storage.count).toBe(2)
-      expect(stats.totalBytesInUse).toBe(1024)
+    test('timetable exclusion takes precedence over journal ID filter', () => {
+      // A key with both timetable pattern and journal pattern — timetable wins
+      expect(cacheService.isJournalRelatedCache('OA_cache_timetableEvents/journals/123/journalEntry')).toBe(false)
     })
   })
 
-  describe('EXPIRATION constants', () => {
-    test('should have correct expiration values', () => {
+  // --- evictExpired() ---
+
+  describe('evictExpired', () => {
+    test('removes entries older than 24 hours', async () => {
+      // Insert old entry directly into Cache API
+      const cache = await caches.open('oa2-api-cache')
+      const oldTs = Date.now() - 25 * 60 * 60 * 1000 // 25 hours ago
+      await cache.put(
+        new Request('https://cache/OA_cache_oldEntry'),
+        new Response(JSON.stringify('old'), {
+          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTs) }
+        })
+      )
+
+      // Insert fresh entry
+      await cacheService.set('freshEntry', 'fresh')
+
+      await cacheService.evictExpired()
+
+      // Old entry gone, fresh entry remains
+      const oldResult = await cacheService.get('oldEntry')
+      const freshResult = await cacheService.get('freshEntry')
+      expect(oldResult).toBeNull()
+      expect(freshResult).toBe('fresh')
+    })
+
+    test('keeps entries younger than 24 hours', async () => {
+      await cacheService.set('recent', 'value')
+      await cacheService.evictExpired()
+      expect(await cacheService.get('recent')).toBe('value')
+    })
+
+    test('handles empty cache', async () => {
+      // Should not throw
+      await cacheService.evictExpired()
+    })
+
+    test('evicts multiple expired entries in one call', async () => {
+      const cache = await caches.open('oa2-api-cache')
+      const oldTs = Date.now() - 25 * 60 * 60 * 1000
+
+      for (let i = 0; i < 5; i++) {
+        await cache.put(
+          new Request(`https://cache/OA_cache_old${i}`),
+          new Response(JSON.stringify(`old${i}`), {
+            headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTs) }
+          })
+        )
+      }
+      await cacheService.set('keepMe', 'fresh')
+
+      await cacheService.evictExpired()
+
+      for (let i = 0; i < 5; i++) {
+        expect(await cacheService.get(`old${i}`)).toBeNull()
+      }
+      expect(await cacheService.get('keepMe')).toBe('fresh')
+    })
+  })
+
+  // --- getStats() ---
+
+  describe('getStats', () => {
+    test('returns correct structure', async () => {
+      const stats = await cacheService.getStats()
+      expect(stats).toHaveProperty('memory')
+      expect(stats).toHaveProperty('storage')
+      expect(stats).toHaveProperty('totalBytesInUse')
+      expect(stats.memory).toHaveProperty('count')
+      expect(stats.memory).toHaveProperty('size')
+      expect(stats.memory).toHaveProperty('items')
+      expect(stats.storage).toHaveProperty('count')
+      expect(stats.storage).toHaveProperty('size')
+      expect(stats.storage).toHaveProperty('items')
+    })
+
+    test('counts entries correctly', async () => {
+      await cacheService.set('s1', { a: 1 })
+      await cacheService.set('s2', { b: 2 })
+
+      const stats = await cacheService.getStats()
+
+      expect(stats.memory.count).toBe(2)
+      expect(stats.storage.count).toBe(2)
+    })
+
+    test('calculates size for storage items', async () => {
+      await cacheService.set('sized', { big: 'data'.repeat(100) })
+
+      const stats = await cacheService.getStats()
+      expect(stats.storage.size).toBeGreaterThan(0)
+      expect(stats.totalBytesInUse).toBe(stats.storage.size)
+    })
+
+    test('items include key, size, timestamp, and ageInMinutes', async () => {
+      await cacheService.set('detailed', 'value')
+
+      const stats = await cacheService.getStats()
+      const item = stats.storage.items[0]
+
+      expect(item).toHaveProperty('key')
+      expect(item).toHaveProperty('size')
+      expect(item).toHaveProperty('timestamp')
+      expect(item).toHaveProperty('ageInMinutes')
+      expect(item.size).toBeGreaterThan(0)
+      expect(item.timestamp).toBeGreaterThan(0)
+    })
+
+    test('sorts storage items by size descending', async () => {
+      await cacheService.set('small', 'x')
+      await cacheService.set('big', 'x'.repeat(1000))
+
+      const stats = await cacheService.getStats()
+      if (stats.storage.items.length >= 2) {
+        expect(stats.storage.items[0].size).toBeGreaterThanOrEqual(stats.storage.items[1].size)
+      }
+    })
+
+    test('returns zeros for empty cache', async () => {
+      const stats = await cacheService.getStats()
+      expect(stats.memory.count).toBe(0)
+      expect(stats.storage.count).toBe(0)
+      expect(stats.totalBytesInUse).toBe(0)
+    })
+  })
+
+  // --- EXPIRATION constants ---
+
+  describe('EXPIRATION', () => {
+    test('has all expected constants', () => {
       expect(cacheService.EXPIRATION.VERY_SHORT).toBe(1000)
-      expect(cacheService.EXPIRATION.SHORT).toBe(60 * 1000)
-      expect(cacheService.EXPIRATION.MEDIUM).toBe(5 * 60 * 1000)
-      expect(cacheService.EXPIRATION.LONG).toBe(30 * 60 * 1000)
-      expect(cacheService.EXPIRATION.VERY_LONG).toBe(24 * 60 * 60 * 1000)
-      expect(cacheService.EXPIRATION.TWO_WEEKS).toBe(14 * 24 * 60 * 60 * 1000)
+      expect(cacheService.EXPIRATION.SHORT).toBe(60000)
+      expect(cacheService.EXPIRATION.MEDIUM).toBe(300000)
+      expect(cacheService.EXPIRATION.LONG).toBe(1800000)
+      expect(cacheService.EXPIRATION.VERY_LONG).toBe(86400000)
+      expect(cacheService.EXPIRATION.TWO_WEEKS).toBe(1209600000)
     })
   })
 })

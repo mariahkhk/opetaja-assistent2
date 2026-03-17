@@ -6,6 +6,7 @@ import { navigationService } from '../services/NavigationService.js'
 import { loadFeatures } from './FeaturesRegistry.js'
 import Logger from '../services/Logger.js'
 import versionCheckService from '../services/VersionCheckService.js'
+import { cacheService } from '../services/CacheService.js'
 
 // Main extension controller
 const tahvelExtension = {
@@ -147,9 +148,49 @@ const tahvelExtension = {
     })
   },
 
+  // Check if URL is the main/home page (no specific sub-route)
+  isMainPage(url) {
+    try {
+      const hash = new URL(url).hash
+      return hash === '#/' || hash === '#' || hash === '' || hash === '#/students'
+    } catch {
+      return false
+    }
+  },
+
+  // Check for role change and clear cache if needed
+  async checkRoleChange() {
+    try {
+      const { api } = await import('./BaseFeature.js')
+      const apiService = api?.tahvel
+      if (!apiService) return
+
+      const userInfo = await apiService.get('/user', {}, {
+        cache: true,
+        cacheExpiration: 60 * 1000 // 1 minute
+      })
+      if (!userInfo?.roleCode) return
+
+      const stored = await new Promise(resolve => chrome.storage.local.get('OA_currentRole', resolve))
+      if (stored.OA_currentRole && stored.OA_currentRole !== userInfo.roleCode) {
+        Logger.info(`[Extension] Role changed from ${stored.OA_currentRole} to ${userInfo.roleCode}, clearing cache`)
+        await cacheService.clearCache()
+      }
+      chrome.storage.local.set({ OA_currentRole: userInfo.roleCode })
+    } catch (e) {
+      Logger.warning('[Extension] Error checking role change:', e.message)
+    }
+  },
+
   // Handle navigation events
   handleNavigation(url) {
     Logger.debug(`Navigation detected: ${url}`)
+
+    // Evict expired cache entries when visiting main page
+    if (this.isMainPage(url)) {
+      cacheService.evictExpired().catch(e => Logger.warning('[Cache] evictExpired error:', e.message))
+      this.checkRoleChange()
+    }
 
     // Activate relevant features for current page
     this.activeFeatures.forEach(feature => {

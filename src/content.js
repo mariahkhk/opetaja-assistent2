@@ -3,6 +3,7 @@
  */
 import TahvelExtension from './core/Extension.js'
 import Logger from './services/Logger.js'
+import { cacheService } from './services/CacheService.js'
 
 const VERSION = '6'
 
@@ -25,9 +26,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true })
   } else if (message.action === 'cacheClearedFromPopup') {
     Logger.info('Cache cleared from popup')
-    // Refresh the page to reload data
-    window.location.reload()
+    cacheService.clearCache().then(() => {
+      window.location.reload()
+    }).catch(() => {
+      window.location.reload()
+    })
     sendResponse({ success: true })
+  } else if (message.action === 'getCacheStats') {
+    cacheService.getStats().then(stats => {
+      sendResponse({ status: 'success', stats })
+    }).catch(error => {
+      sendResponse({ status: 'error', message: error.message })
+    })
+    return true
   } else if (message.action === 'kriitSettingsUpdated') {
     Logger.info('Kriit API settings updated from popup')
     // Refresh the page to apply new settings
@@ -82,7 +93,7 @@ async function handleGetFutureSubjects(comparisonDate) {
       {},
       {
         cache: true,
-        cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
+        cacheExpiration: 60 * 1000 // 1 minute
       }
     )
 
@@ -190,7 +201,7 @@ async function handleFindTeachers() {
       {},
       {
         cache: true,
-        cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
+        cacheExpiration: 60 * 1000 // 1 minute
       }
     )
 

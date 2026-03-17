@@ -355,28 +355,40 @@ function loadCacheStatistics() {
 
   cacheStatsContainer.innerHTML = '<div>Laadimine...</div>'
 
-  // Send message to background script to get cache statistics
-  chrome.runtime.sendMessage({ action: 'getCacheStats' }, function(response) {
-    if (!response || !response.stats) {
-      cacheStatsContainer.innerHTML = '<div>Vahemälu statistika pole saadaval</div>'
+  // Send message to content script (Cache API lives in page origin, not extension origin)
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs[0]) {
+      cacheStatsContainer.textContent = 'Vahemälu statistika pole saadaval'
       return
     }
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'getCacheStats' }, function(response) {
+      if (!response || !response.stats) {
+        cacheStatsContainer.textContent = 'Vahemälu statistika pole saadaval'
+        return
+      }
 
-    const stats = response.stats
+      const stats = response.stats
+      const storageSize = formatSize(stats.storage.size)
+      const totalSize = formatSize(stats.totalBytesInUse)
 
-    // Format the statistics
-    const storageSize = formatSize(stats.storage.size)
-    const totalSize = formatSize(stats.totalBytesInUse)
+      // Build stats display using safe DOM methods
+      cacheStatsContainer.textContent = ''
+      const entries = [
+        ['Vahemälu kirjeid:', String(stats.storage.count)],
+        ['Vahemälu suurus:', storageSize],
+        ['Kogu kasutus:', totalSize]
+      ]
+      for (const [label, value] of entries) {
+        const div = document.createElement('div')
+        const b = document.createElement('b')
+        b.textContent = label
+        div.appendChild(b)
+        div.appendChild(document.createTextNode(' ' + value))
+        cacheStatsContainer.appendChild(div)
+      }
 
-    // Update the container
-    cacheStatsContainer.innerHTML = `
-      <div><b>Vahemälu kirjeid:</b> ${stats.storage.count}</div>
-      <div><b>Vahemälu suurus:</b> ${storageSize}</div>
-      <div><b>Kogu kasutus:</b> ${totalSize}</div>
-    `
-
-    // Update details container
-    updateCacheDetailsContent(stats)
+      updateCacheDetailsContent(stats)
+    })
   })
 }
 
@@ -724,34 +736,30 @@ function displayTeachers(teachers) {
  * Clear all cache items
  */
 function clearCache() {
+  // Clean up any legacy OA_cache_ entries from chrome.storage.local
   chrome.storage.local.get(null, function(items) {
-    const keysToRemove = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX))
+    const oldKeys = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX))
+    if (oldKeys.length > 0) {
+      chrome.storage.local.remove(oldKeys)
+    }
+  })
 
-    if (keysToRemove.length > 0) {
-      chrome.storage.local.remove(keysToRemove, function() {
-        console.log(`Cleared ${keysToRemove.length} cache items`)
-
-        // Notify the user
-        alert(`Tühjendatud ${keysToRemove.length} vahemälu kirjet.`)
-
-        // Refresh the cache statistics
-        loadCacheStatistics()
-
-        // Notify content script about the cache clear
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-          if (tabs[0]) {
-            chrome.tabs
-              .sendMessage(tabs[0].id, {
-                action: 'cacheClearedFromPopup'
-              })
-              .catch(error => {
-                console.error('Error sending message:', error)
-              })
-          }
+  // Notify content script to clear Cache API (cache lives in page origin)
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (tabs[0]) {
+      chrome.tabs
+        .sendMessage(tabs[0].id, {
+          action: 'cacheClearedFromPopup'
         })
-      })
-    } else {
-      alert('Vahemälu on juba tühi.')
+        .then(() => {
+          alert('Vahemälu tühjendatud.')
+          loadCacheStatistics()
+        })
+        .catch(error => {
+          console.error('Error sending message:', error)
+          alert('Vahemälu tühjendatud.')
+          loadCacheStatistics()
+        })
     }
   })
 }
