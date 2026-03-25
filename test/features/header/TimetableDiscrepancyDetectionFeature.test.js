@@ -162,7 +162,7 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     it('should call user API to get school and teacher ID', async () => {
       await feature.onActivate()
 
-      expect(feature.api.tahvel.get).toHaveBeenCalledWith('/user', {}, { cache: true })
+      expect(feature.api.tahvel.get).toHaveBeenCalledWith('/user', {}, { cache: true, cacheExpiration: 864e5 })
     })
   })
 

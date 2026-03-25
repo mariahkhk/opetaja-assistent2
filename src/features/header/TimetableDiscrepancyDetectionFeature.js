@@ -2,6 +2,7 @@ import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
 import { cacheService } from '../../services/CacheService.js'
 import { fetchTeacherJournals } from '../../lib/fetchTeacherJournals.js'
+import { getSchoolId } from '../../lib/schoolId.js'
 
 /**
  * TimetableDiscrepancyDetectionFeature
@@ -104,8 +105,8 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
    */
   async #getCurrentUserInfo() {
     try {
-      const userInfo = await this.api.tahvel.get('/user', {}, { cache: true })
-      this.currentSchoolId = userInfo.school?.id || null
+      this.currentSchoolId = await getSchoolId(this.api, null)
+      const userInfo = await this.api.tahvel.get('/user', {}, { cache: true, cacheExpiration: 864e5 })
       this.currentTeacherId = userInfo.person?.id
     } catch (error) {
       Logger.error(`[${this.name}] Error getting user info:`, error)
