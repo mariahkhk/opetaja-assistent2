@@ -16,6 +16,8 @@ export class DiscrepanciesTable {
     blue: ['#17a2b8', '#138496', '#fff']
   }
 
+  static MIN_ENTRIES_FOR_BULK_ADD = 2
+
   /**
    * Creates button styling
    * @param {Array} colors - Array of [background, hover, text] colors
@@ -44,6 +46,7 @@ export class DiscrepanciesTable {
     this.shouldContinue = shouldContinue
     this.tableCreated = false
     this.currentJournalId = null
+    this.lastMissingEntries = []
     this.name = 'DiscrepanciesTable'
   }
 
@@ -131,6 +134,9 @@ export class DiscrepanciesTable {
         background: #d4edda;
         border: 1px solid #c3e6cb;
       }
+      .oa2-btn--green:not(:disabled):hover { background: #218838 !important; }
+      .oa2-btn--amber:not(:disabled):hover { background: #e0a800 !important; }
+      .oa2-btn--blue:not(:disabled):hover { background: #138496 !important; }
     `
     styleService.injectCSS(css, 'lesson-discrepancies-styles')
   }
@@ -497,9 +503,17 @@ export class DiscrepanciesTable {
     const rows = sortedDiscrepancies.map(discrepancy => this.#createDiscrepancyRow(discrepancy)).join('')
     const tableHead = `<thead><tr style="background:#f8f9fa"><th class="lesson-discrepancy-table-cell lesson-discrepancy-table-cell-20">Kuupäev</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25">Algustund</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25">Tundide arv</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-30">Tegevus</th></tr></thead>`
 
+    const missingEntries = discrepancies.filter(d => d.type === 'missingJournalEntry')
+    this.lastMissingEntries = missingEntries
+    const showAddAll = missingEntries.length >= DiscrepanciesTable.MIN_ENTRIES_FOR_BULK_ADD
+    const addAllButton = showAddAll
+      ? `<div style="text-align:right;margin-bottom:20px">${this.#createButton(null, 'Lisa kõik', 'green', { handler: 'addAllMissing' })}</div>`
+      : ''
+
     return (
       sectionHeader +
-      `<table style="width:100%;border-collapse:collapse;background:white;margin-bottom:20px;border:1px solid #dee2e6;">${tableHead}<tbody>${rows}</tbody></table>`
+      `<table style="width:100%;border-collapse:collapse;background:white;margin-bottom:${showAddAll ? '8px' : '20px'};border:1px solid #dee2e6;">${tableHead}<tbody>${rows}</tbody></table>` +
+      addAllButton
     )
   }
 
@@ -852,13 +866,9 @@ export class DiscrepanciesTable {
     const dataAttributes = Object.entries(data)
       .map(([key, value]) => `data-${key.toLowerCase()}="${String(value).replace(/"/g, '&quot;')}"`)
       .join(' ')
+    const idAttribute = id ? `id="${id}"` : ''
     const titleAttribute = tooltip ? `title="${tooltip}"` : ''
-    // Resolve colors so we can attach simple hover handlers as attributes
-    const colors = DiscrepanciesTable.HEX[colorKey] || DiscrepanciesTable.HEX.green
-    const [bg, hover] = colors
-    // Add onmouseover/onmouseout attributes to mimic hover background change
-    const hoverAttr = `onmouseover="this.style.background='${hover}'" onmouseout="this.style.background='${bg}'"`
-    return `<button id="${id}" style="${DiscrepanciesTable.createButtonStyle(DiscrepanciesTable.HEX[colorKey])}" ${hoverAttr} ${dataAttributes} ${titleAttribute}>${text}</button>`
+    return `<button ${idAttribute} class="oa2-btn oa2-btn--${colorKey}" style="${DiscrepanciesTable.createButtonStyle(DiscrepanciesTable.HEX[colorKey])}" ${dataAttributes} ${titleAttribute}>${text}</button>`
   }
 
   /**

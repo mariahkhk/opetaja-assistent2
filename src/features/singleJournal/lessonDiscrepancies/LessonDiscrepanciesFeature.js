@@ -47,6 +47,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   #refreshDebounceTimer = null
   #lastRefreshTs = 0
   #refreshInProgress = false
+  #bulkAddInProgress = false
   #refreshPending = false
 
   static SCHOOL_ID_FALLBACK = 9
@@ -734,7 +735,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   async #handleDiscrepancyButtonClick(event, button) {
     event.preventDefault()
     event.stopPropagation()
-    if (button.disabled) return
+    if (button.disabled || this.#bulkAddInProgress) return
 
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Button clicked - starting click handler`)
     if (Logger.isDebugMode())
@@ -749,17 +750,23 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     const originalState = this.#captureButtonState(button)
     this.#setButtonProcessingState(button)
 
+    let data
+    let isLisaButton = false
     let fadeTarget = null
     let fadeTable = null
     let restorePending = false
     try {
-      const data = this.#parseButtonData(button)
-      Logger.debug(`[${this.name}] Raw button dataset:`, button.dataset)
-      Logger.debug(`[${this.name}] Parsed button data:`, data)
-      Logger.debug(
-        `[${this.name}] Button data types:`,
-        Object.entries(data).map(([key, value]) => [key, typeof value, value])
-      )
+      data = this.#parseButtonData(button)
+      isLisaButton = data.handler === 'addMissing'
+
+      if (Logger.isDebugMode()) {
+        Logger.debug(`[${this.name}] Raw button dataset:`, button.dataset)
+        Logger.debug(`[${this.name}] Parsed button data:`, data)
+        Logger.debug(
+          `[${this.name}] Button data types:`,
+          Object.entries(data).map(([key, value]) => [key, typeof value, value])
+        )
+      }
 
       // Special-case: duplicate "Muuda ... #1/#2" buttons should only open the
       // journal entry for manual editing. Do not perform any server-side fetch/PUT
@@ -792,7 +799,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
       }
 
-      await this.#executeButtonAction(data)
+      await this.#executeButtonAction(data, button)
       if (data.handler === 'addMissing') {
         Logger.debug(`[${this.name}] Lisa button clicked, waiting for table refresh...`)
         await this.#delay(1000)
@@ -804,7 +811,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // On error, allow restore
       restorePending = true
     } finally {
-      const isLisaButton = this.#parseButtonData(button).handler === 'addMissing'
+      // The addAllMissing handler manages its own button lifecycle — do not restore
+      if (data?.handler === 'addAllMissing') return
+
       if (isLisaButton && fadeTarget) {
         // Only restore when the row is actually removed from DOM
         const checkRowRemoved = () => {
@@ -908,70 +917,54 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return parsedData
   }
 
-  async #executeButtonAction(data) {
-    Logger.debug(`[${this.name}] Executing button action with data:`, data)
-    Logger.debug(`[${this.name}] Action data analysis:`, {
-      handler: data.handler,
-      date: data.date,
-      dateType: typeof data.date,
-      entryId: data.entryId,
-      entryIdType: typeof data.entryId,
-      allKeys: Object.keys(data),
-      allValues: Object.values(data)
-    })
+  async #executeButtonAction(data, button) {
+    if (Logger.isDebugMode()) {
+      Logger.debug(`[${this.name}] Executing button action with data:`, data)
+      Logger.debug(`[${this.name}] Action data analysis:`, {
+        handler: data.handler,
+        date: data.date,
+        dateType: typeof data.date,
+        entryId: data.entryId,
+        entryIdType: typeof data.entryId,
+        allKeys: Object.keys(data),
+        allValues: Object.values(data)
+      })
+    }
 
     const actionHandlers = {
       addMissing: () => {
-        Logger.debug(`[${this.name}] Calling handleAddMissingEntry with:`, {
-          date: data.date,
-          startLesson: data.startLesson,
-          lessonCount: data.lessonCount,
-          data: data
-        })
+        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleAddMissingEntry with:`, { date: data.date, startLesson: data.startLesson, lessonCount: data.lessonCount })
         return this.#handleAddMissingEntry(data.date, data.startLesson, data.lessonCount, data)
       },
       editEntry: () => {
-        Logger.debug(`[${this.name}] Calling handleEditEntry with:`, {
-          date: data.date,
-          entryId: data.entryId,
-          type: data.type,
-          data: data
-        })
+        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleEditEntry with:`, { date: data.date, entryId: data.entryId, type: data.type })
         return this.#handleEditEntry(data.date, data.entryId, data.type, data)
       },
       fixCapacity: () => {
-        Logger.debug(`[${this.name}] Calling handleFixCapacity with:`, {
-          date: data.date,
-          dateType: typeof data.date,
-          dateValue: data.date,
-          entryId: data.entryId,
-          entryIdType: typeof data.entryId,
-          entryIdValue: data.entryId,
-          data: data
-        })
-        // Test date formatting before calling the handler
-        const testFormattedDate = this.#formatDisplayDate(data.date)
-        Logger.debug(`[${this.name}] Date formatting test - input: ${data.date}, output: ${testFormattedDate}`)
-
+        if (Logger.isDebugMode()) {
+          Logger.debug(`[${this.name}] Calling handleFixCapacity with:`, { date: data.date, entryId: data.entryId })
+          Logger.debug(`[${this.name}] Date formatting test - input: ${data.date}, output: ${this.#formatDisplayDate(data.date)}`)
+        }
         return this.#handleFixCapacity(data.date, data.entryId, data)
       },
       openEntry: () => {
-        Logger.debug(`[${this.name}] Calling handleOpenEntry with:`, {
-          entryId: data.entryId,
-          data: data
-        })
+        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleOpenEntry with:`, { entryId: data.entryId })
         return this.#handleOpenEntry(data.entryId, data)
+      },
+      addAllMissing: () => {
+        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleAddAllMissingEntries`)
+        return this.#handleAddAllMissingEntries(button)
       }
     }
 
     const handler = actionHandlers[data.handler]
     if (handler) {
-      Logger.debug(`[${this.name}] Handler found for '${data.handler}', executing...`)
+      if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Handler found for '${data.handler}', executing...`)
       await handler()
-      Logger.debug(`[${this.name}] Handler '${data.handler}' completed`)
+      if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Handler '${data.handler}' completed`)
     } else {
       Logger.warning(`[${this.name}] Unknown handler: ${data.handler}`)
-      Logger.debug(`[${this.name}] Available handlers:`, Object.keys(actionHandlers))
+      if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Available handlers:`, Object.keys(actionHandlers))
     }
   }
 
@@ -996,11 +989,102 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
+  /**
+   * Handles the "Lisa koik" (Add all) button click.
+   * Collects all individual "Lisa" (addMissing) buttons from the DOM,
+   * creates each missing entry sequentially, then reloads once.
+   */
+  async #handleAddAllMissingEntries(addAllButton) {
+    if (this.#bulkAddInProgress) return
+    this.#bulkAddInProgress = true
+
+    try {
+      const entries = this.table.lastMissingEntries || []
+      if (entries.length === 0) {
+        Logger.warning(`[${this.name}] No missing entries found for addAllMissing`)
+        return
+      }
+
+      Logger.info(`[${this.name}] Adding all ${entries.length} missing entries`)
+
+      // Disable all individual Lisa buttons during bulk operation
+      const lisaButtons = document.querySelectorAll('[data-discrepancies-table] button[data-handler="addMissing"]')
+      lisaButtons.forEach(btn => {
+        btn.disabled = true
+        btn.style.opacity = '0.6'
+        btn.style.cursor = 'not-allowed'
+      })
+      let successCount = 0
+      let failCount = 0
+
+      for (let i = 0; i < entries.length; i++) {
+        if (!this.isActive) {
+          Logger.warning(`[${this.name}] Aborting bulk add - feature deactivated`)
+          break
+        }
+        if (addAllButton) addAllButton.textContent = `Lisamine (${i + 1}/${entries.length})...`
+        try {
+          await this.#createMissingEntryDirect({
+            date: entries[i].date,
+            start: entries[i].lessonNumber,
+            count: entries[i].lessonCount,
+            timetableData: entries[i],
+            skipReload: true
+          })
+          successCount++
+        } catch (err) {
+          failCount++
+          Logger.error(`[${this.name}] Failed to add entry for ${entries[i].date}`, err)
+        }
+      }
+
+      const journalId = this.#currentJournalId || this.#extractJournalId()
+      if (journalId) {
+        try {
+          await cacheService.clearJournalCache(journalId)
+        } catch (e) {
+          Logger.warning('Failed to clear journal cache', e)
+        }
+      }
+
+      Logger.info(`[${this.name}] Bulk add complete: ${successCount} succeeded, ${failCount} failed`)
+
+      if (!this.isActive) return
+
+      if (successCount === 0) {
+        if (addAllButton) {
+          addAllButton.textContent = 'Lisa kõik'
+          addAllButton.disabled = false
+          addAllButton.style.opacity = ''
+          addAllButton.style.cursor = ''
+        }
+        lisaButtons.forEach(btn => {
+          btn.disabled = false
+          btn.style.opacity = ''
+          btn.style.cursor = ''
+        })
+        return
+      }
+
+      if (failCount > 0) {
+        if (addAllButton) addAllButton.textContent = `Lisatud: ${successCount}, ebaõnnestus: ${failCount}`
+        await this.#delay(1000)
+        await this.#refreshTableWithRetry()
+        return
+      }
+
+      await this.#delay(400)
+      window.location.reload()
+    } finally {
+      this.#bulkAddInProgress = false
+    }
+  }
+
   // Create and show a lightweight confirmation overlay. When user clicks
   // "Open form" the add-entry modal is opened and pre-filled via existing
   // helpers (#findAndClickAddButton and #fillAddForm).
   // Immediately create a missing journal entry (no confirmation UI).
-  async #createMissingEntryDirect({ date, start, count, timetableData = {} } = {}) {
+  async #createMissingEntryDirect({ date, start, count, timetableData = {}, skipReload = false } = {}) {
     const journalId = this.#currentJournalId || this.#extractJournalId()
     if (!journalId) throw new Error('Journal ID puudub')
 
@@ -1026,6 +1110,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     try {
       const res = await this.api.tahvel.post(url, payload)
+
+      if (skipReload) return res
+
       try {
         await cacheService.clearJournalCache(journalId)
       } catch (e) {
