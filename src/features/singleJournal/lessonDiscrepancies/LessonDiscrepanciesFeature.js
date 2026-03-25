@@ -86,6 +86,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     this.#cleanupMonitoring()
     this.reset()
     styleService.removeCSS('lesson-discrepancies-styles')
+    document.querySelectorAll('[data-oa2-entry-id]').forEach(el => el.removeAttribute('data-oa2-entry-id'))
     super.onDeactivate()
   }
 
@@ -789,7 +790,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // for this exact UI case to avoid unintended API modifications.
       try {
         const text = (button.textContent || '').trim()
-        if (data.handler === 'editEntry' && /Muuda/i.test(text) && /#\d+/.test(text)) {
+        if (data.handler === 'editEntry' && /^Muuda\s+#\d+$/i.test(text)) {
           Logger.info(`[${this.name}] Detected duplicate 'Muuda' button - opening entry instead of server-side edit`, { text, data })
           // Prefer entryId camelCase, fall back to lower-case dataset variant
           const entryId = data.entryId ?? data.entryid
@@ -1226,6 +1227,12 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     try {
       const actualEntryId = entryId || data.entryid
       const duplicateIndex = data.duplicateindex || 0
+      // multiEntryFix buttons don't carry timetable data, so the extension lacks
+      // the data to construct a meaningful PUT. Open the entry for manual editing instead.
+      if (type === 'multiEntryFix') {
+        return this.#handleOpenEntry(actualEntryId, data)
+      }
+
       // Preferred flow: perform a server-side fetch -> modify -> PUT to update the entry
       const journalId = this.#currentJournalId || this.#extractJournalId()
       if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
@@ -1621,6 +1628,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   async #findJournalEntryElement(entryId, date, duplicateIndex = 0) {
+    // New Tahvel (Angular): entries are columns, not rows. Match by column index.
+    const headerLink = this.#findEntryInNewTahvel(entryId)
+    if (headerLink) return headerLink
+
+    // Old Tahvel (AngularJS): entries are rows with ng-click
+    if (document.querySelector('tr[ng-click*="editJournalEntry"]')) {
+      const annotatedRow = await this.#findEntryRowViaAngularScope(entryId)
+      if (annotatedRow) return annotatedRow
+    }
+
     const { exactMatches, targetIndex } = this.#findDuplicateMatches(entryId, date)
 
     Logger.debug(
@@ -1628,7 +1645,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     )
 
     if (exactMatches.length === 0) {
-      // Fallback: try a broader search if exact matching fails
+      // Broader fallback: try text-based search
       Logger.warning(`[${this.name}] No exact matches found, trying fallback search`)
 
       // For null dates, we need to find all independent work entries with "-" date
@@ -1756,6 +1773,114 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return exactMatches[0]
   }
 
+  /**
+   * New Tahvel (Angular): entries are table COLUMNS, not rows.
+   * Header <th class="header-cell"> elements correspond 1:1 with API entries.
+   * Find the column by matching the entry's index in the API data.
+   */
+  #findEntryInNewTahvel(entryId) {
+    const headers = document.querySelectorAll('th.header-cell')
+    if (headers.length === 0 || !this.#lastJournalData?.entries) return null
+
+    const entries = this.#lastJournalData.entries
+
+    if (headers.length !== entries.length) {
+      Logger.warning(`[${this.name}] New Tahvel: header/entry count mismatch (${headers.length} headers, ${entries.length} entries) - skipping positional match`)
+      return null
+    }
+
+    const entryIndex = entries.findIndex(e => String(e.id) === String(entryId))
+    if (entryIndex < 0 || entryIndex >= headers.length) {
+      Logger.debug(`[${this.name}] New Tahvel: entry ${entryId} at index ${entryIndex}, ${headers.length} headers`)
+      return null
+    }
+
+    const th = headers[entryIndex]
+    const link = th.querySelector('a')
+    if (!link) {
+      Logger.debug(`[${this.name}] New Tahvel: header at index ${entryIndex} has no <a> child: "${th.innerHTML.slice(0, 100)}"`)
+      return null
+    }
+
+    // Verify the link actually relates to this journal entry (not an unrelated table)
+    const href = link.getAttribute('href') || ''
+    if (href && !href.includes(`${entryId}`)) {
+      Logger.warning(`[${this.name}] New Tahvel: header link href "${href}" does not contain entryId ${entryId} - skipping`)
+      return null
+    }
+
+    Logger.info(`[${this.name}] New Tahvel: found entry column at index ${entryIndex}`)
+    return link
+  }
+
+  /**
+   * Injects a page-context script to read Angular scopes and find the entry row by ID.
+   * Content scripts can't access Angular directly (isolated world), so we inject a
+   * <script> tag that runs in the main world, annotates rows, then read the result.
+   */
+  async #findEntryRowViaAngularScope(entryId) {
+    try {
+      const attrName = 'data-oa2-entry-id'
+      const safeId = CSS.escape(String(entryId))
+      // Check if rows are already annotated from a previous call
+      const existing = document.querySelector(`tr[${attrName}="${safeId}"]`)
+      if (existing && existing.isConnected) return existing
+
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          document.removeEventListener('oa2-rows-annotated', handler)
+          reject(new Error('Timeout annotating rows'))
+        }, 2000)
+        const handler = () => {
+          clearTimeout(timeout)
+          document.removeEventListener('oa2-rows-annotated', handler)
+          resolve()
+        }
+        document.addEventListener('oa2-rows-annotated', handler)
+
+        const script = document.createElement('script')
+        script.textContent = `(function(){
+          try {
+            if (typeof angular === 'undefined') { document.dispatchEvent(new Event('oa2-rows-annotated')); return; }
+            document.querySelectorAll('[data-oa2-entry-id]').forEach(function(el) { el.removeAttribute('data-oa2-entry-id'); });
+            document.querySelectorAll('tr[ng-click*="editJournalEntry"]').forEach(function(row) {
+              try {
+                var scope = angular.element(row).scope();
+                if (!scope) return;
+                var ngClick = row.getAttribute('ng-click') || '';
+                var m = ngClick.match(/editJournalEntry\\((\\w+)/);
+                var entry = m ? scope[m[1]] : (scope.row || scope.entry);
+                if (entry && entry.id != null) row.setAttribute('data-oa2-entry-id', entry.id);
+              } catch(e) {}
+            });
+          } catch(e) {}
+          document.dispatchEvent(new Event('oa2-rows-annotated'));
+        })();`
+        try {
+          document.head.appendChild(script)
+          script.remove()
+        } catch (injectErr) {
+          Logger.warning(`[${this.name}] Script injection blocked (CSP?):`, injectErr)
+          document.dispatchEvent(new Event('oa2-rows-annotated'))
+        }
+      })
+
+      const row = document.querySelector(`tr[${attrName}="${safeId}"]`)
+      if (row) {
+        Logger.info(`[${this.name}] Found entry row via Angular scope for entryId=${entryId}`)
+        return row
+      }
+      Logger.debug(`[${this.name}] Angular scope annotation did not find entryId=${entryId}`)
+    } catch (err) {
+      if (err.message?.includes('Timeout')) {
+        Logger.warning(`[${this.name}] Angular scope matching timed out:`, err)
+      } else {
+        Logger.debug(`[${this.name}] Angular scope matching failed:`, err)
+      }
+    }
+    return null
+  }
+
   #parseRowLessonInfo(row) {
     const cells = row.querySelectorAll('td')
     let lessonCount = null
@@ -1815,6 +1940,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   async #clickJournalEntry(element) {
+    // New Tahvel: <a> links navigate the SPA to the entry detail page.
+    // No md-dialog will appear, so skip the dialog-waiting logic.
+    if (element.tagName === 'A') {
+      Logger.info(`[${this.name}] New Tahvel: clicking <a> link for SPA navigation`)
+      await this.#clickElementWithScrollPreservation(element)
+      return
+    }
+
     const { restoreScroll, startScrollMonitoring, stopScrollMonitoring } = this.#createScrollPreservation()
 
     try {
@@ -3661,16 +3794,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         return
       }
 
-      // Click the element to open the entry dialog
+      // Click the element to open the entry (dialog on Old Tahvel, SPA navigation on New Tahvel)
       await this.#clickElement(element)
 
-      // Wait for the dialog to open
-      await this.#waitForElement('md-dialog', 5000)
-
-      // Find and highlight the "Sissekande liik" (Entry type) field
-      setTimeout(() => {
-        this.#highlightEntryTypeField()
-      }, 500) // Small delay to ensure dialog is fully loaded
+      // Old Tahvel: wait for dialog and highlight entry type field
+      if (element.tagName !== 'A') {
+        await this.#waitForElement('md-dialog', 5000)
+        setTimeout(() => {
+          this.#highlightEntryTypeField()
+        }, 500)
+      }
     } catch (error) {
       Logger.error(`[${this.name}] Error in handleOpenEntry:`, error)
     }

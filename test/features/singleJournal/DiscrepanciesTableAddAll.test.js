@@ -102,7 +102,7 @@ describe('DiscrepanciesTable - Lisa koik (Add all) button', () => {
     expect(findAddAllButton(container)).toBeNull()
   })
 
-  test('"Lisa koik" button is outside the table', () => {
+  test('"Lisa koik" button is outside the table, aligned right under Tegevus column', () => {
     const container = renderTable([
       makeMissingEntry('2025-09-02', 7, 2),
       makeMissingEntry('2025-09-03', 7, 3)

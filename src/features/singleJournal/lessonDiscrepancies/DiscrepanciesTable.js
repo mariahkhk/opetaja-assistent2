@@ -507,7 +507,7 @@ export class DiscrepanciesTable {
     this.lastMissingEntries = missingEntries
     const showAddAll = missingEntries.length >= DiscrepanciesTable.MIN_ENTRIES_FOR_BULK_ADD
     const addAllButton = showAddAll
-      ? `<div style="text-align:right;margin-bottom:20px">${this.#createButton(null, 'Lisa kõik', 'green', { handler: 'addAllMissing' })}</div>`
+      ? `<div style="display:flex;justify-content:flex-end;margin-bottom:20px"><div style="width:30%;text-align:center">${this.#createButton(null, 'Lisa kõik', 'green', { handler: 'addAllMissing' })}</div></div>`
       : ''
 
     return (
