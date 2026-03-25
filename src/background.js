@@ -99,7 +99,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Handle lesson times loading request
   if (message.action === 'loadLessonTimes') {
-    const jsonUrl = chrome.runtime.getURL('src/features/singleJournal/lessonDiscrepancies/VIKKLessonTimes.json')
+    const jsonUrl = chrome.runtime.getURL('src/features/singleJournal/lessonDiscrepancies/LessonTimes.json')
 
     fetch(jsonUrl)
       .then(response => {

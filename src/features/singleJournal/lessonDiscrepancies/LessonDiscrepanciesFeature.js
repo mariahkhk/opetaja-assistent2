@@ -10,7 +10,7 @@ import { DiscrepanciesTable } from './DiscrepanciesTable.js'
  * @typedef {Object} JournalInfo
  * @property {Array} journalTeachers - Array of teacher objects
  * @property {Object} school - School information
- * @property {string} school.id - School ID
+ * @property {number} school.id - School ID
  * @property {string} [studyYearStartDate] - Study year's start date
  * @property {string} [studyYearEndDate] - Study year's end date
  * @property {string} id - Journal ID
@@ -242,19 +242,23 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     const params = cacheBuster ? { _t: cacheBuster } : {}
     const entriesParams = { allStudents: true, ...params }
 
-    const info = await this.api.tahvel.get(`/journals/${journalId}`, params, {
-      cache: true,
-      cacheExpiration: 864e5
-    })
-    const entries = await this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, entriesParams, {
-      cache: true,
-      cacheExpiration
-    })
-    const timetable = await this.#fetchTimetableData(info, forceRefresh)
+    const [info, entries] = await Promise.all([
+      this.api.tahvel.get(`/journals/${journalId}`, params, {
+        cache: true,
+        cacheExpiration: 864e5
+      }),
+      this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, entriesParams, {
+        cache: true,
+        cacheExpiration
+      })
+    ])
+    const schoolId = info.school?.id ?? await this.#getSchoolIdFromUser()
+    const timetable = await this.#fetchTimetableData(info, schoolId, forceRefresh)
     return {
       journalData: {
         info,
-        entries: entries ?? []
+        entries: entries ?? [],
+        schoolId
       },
       timetableData: timetable ?? []
     }
@@ -271,15 +275,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
   /**
    * @param {JournalInfo} info - Journal info object
+   * @param {number} schoolId - School ID for timetable endpoint
    * @param {boolean} forceRefresh - Whether to force refresh cache
    * @returns {Promise<Array<TimetableEvent>>} Timetable events
    */
-  async #fetchTimetableData(info, forceRefresh = false) {
+  async #fetchTimetableData(info, schoolId, forceRefresh = false) {
     try {
       const teacherId = info.journalTeachers?.[0]?.id
       if (!teacherId) return []
-
-      const schoolId = info.school?.id ?? LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
       const { from: defaultFrom, thru: defaultThru } = this.#getCurrentStudyYearDates()
       const from = info.studyYearStartDate ?? defaultFrom
       const thru = info.studyYearEndDate ?? defaultThru
@@ -298,6 +301,19 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     } catch (error) {
       Logger.warning(`[${this.name}] timetable`, error.message)
       return []
+    }
+  }
+
+  async #getSchoolIdFromUser() {
+    try {
+      const userInfo = await this.api.tahvel.get('/user', {}, {
+        cache: true,
+        cacheExpiration: 864e5
+      })
+      return userInfo?.school?.id ?? LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
+    } catch (error) {
+      Logger.warning(`[${this.name}] /user fallback failed:`, error.message)
+      return LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
     }
   }
 
@@ -382,7 +398,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   async #findLessonDiscrepancies(journal, timetable) {
-    const schoolId = journal.info.school?.id ?? LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
+    const schoolId = journal.schoolId
     const journalStats = this.#aggregateJournalEntries(journal.entries)
     const timetableStats = await this.#aggregateTimetableEvents(timetable, schoolId)
 
@@ -469,7 +485,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // If date parsing fails, continue normally (safer to show discrepancy)
       Logger.debug(`[${this.name}] date parsing error in #createMissingLessonDiscrepancies:`, err)
     }
-    const schoolId = journal.info.school?.id ?? LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
+    const schoolId = journal.schoolId
     /** @type {Array<{date: string, timeStart: string, timeEnd: string, name: string, rooms: Array, lessonNumber: number, type: string}>} */
     const missingLessons = await Promise.all(
       tEntries.map(async entry => ({
