@@ -105,11 +105,10 @@ export default class LessonCountWarningFeature extends BaseFeature {
   async getCurrentUserInfo() {
     try {
       const userInfo = await this.api.tahvel.get('/user', {}, { cache: true })
-      this.currentSchoolId = userInfo.school?.id || 9
-      this.currentTeacherId = userInfo.person?.id // Keep this as fallback
+      this.currentSchoolId = userInfo.school?.id || null
+      this.currentTeacherId = userInfo.person?.id
     } catch (error) {
       Logger.error(`[${this.name}] Error getting user info:`, error)
-      this.currentSchoolId = 9 // Default school ID
     }
   }
 

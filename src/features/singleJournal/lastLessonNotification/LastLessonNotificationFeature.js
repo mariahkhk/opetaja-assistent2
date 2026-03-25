@@ -4,14 +4,13 @@
 
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
+import { getSchoolId } from '../../../lib/schoolId.js'
 
 /**
  * LastLessonNotificationFeature
  * Notifies the teacher about the last lesson date if all lessons are not yet in the past.
  */
 export default class LastLessonNotificationFeature extends BaseFeature {
-  static SCHOOL_ID_FALLBACK = 9
-
   constructor() {
     super('lastLessonNotification', /\/journal\/(\d+)\/edit/)
     this.name = 'LastLessonNotificationFeature'
@@ -343,12 +342,12 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       return { timetable: [], journalEntries: [], journalInfo: null }
     }
 
-    const schoolId = info.school?.id || LastLessonNotificationFeature.SCHOOL_ID_FALLBACK
+    const schoolId = await getSchoolId(this.api, info)
     const teacherId = info.journalTeachers?.[0]?.id
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] schoolId:', schoolId, 'teacherId:', teacherId)
 
-    if (!teacherId) {
-      if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Missing teacherId')
+    if (!teacherId || !schoolId) {
+      if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Missing teacherId or schoolId')
       return { timetable: [], journalEntries: [], journalInfo: info }
     }
 

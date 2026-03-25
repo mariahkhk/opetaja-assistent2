@@ -3,6 +3,7 @@ import Logger from '../../../services/Logger.js'
 import { cacheService } from '../../../services/CacheService.js'
 import { styleService } from '../../../services/StyleService.js'
 import { DiscrepanciesTable } from './DiscrepanciesTable.js'
+import { getSchoolId } from '../../../lib/schoolId.js'
 
 // HEX constant and createButtonStyle function moved to DiscrepanciesTable class
 
@@ -50,7 +51,6 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   #bulkAddInProgress = false
   #refreshPending = false
 
-  static SCHOOL_ID_FALLBACK = 9
   static JOURNAL_ENTRY_CONTACT_TYPES = ['SISSEKANNE_T', 'SISSEKANNE_P', 'SISSEKANNE_E']
   static JOURNAL_ENTRY_DEFAULT_TYPE = 'SISSEKANNE_T'
 
@@ -253,7 +253,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         cacheExpiration
       })
     ])
-    const schoolId = info.school?.id ?? await this.#getSchoolIdFromUser()
+    const schoolId = await getSchoolId(this.api, info)
     const timetable = await this.#fetchTimetableData(info, schoolId, forceRefresh)
     return {
       journalData: {
@@ -283,7 +283,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   async #fetchTimetableData(info, schoolId, forceRefresh = false) {
     try {
       const teacherId = info.journalTeachers?.[0]?.id
-      if (!teacherId) return []
+      if (!teacherId || !schoolId) return []
       const { from: defaultFrom, thru: defaultThru } = this.#getCurrentStudyYearDates()
       const from = info.studyYearStartDate ?? defaultFrom
       const thru = info.studyYearEndDate ?? defaultThru
@@ -305,20 +305,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #getSchoolIdFromUser() {
-    try {
-      const userInfo = await this.api.tahvel.get('/user', {}, {
-        cache: true,
-        cacheExpiration: 864e5
-      })
-      return userInfo?.school?.id ?? LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
-    } catch (error) {
-      Logger.warning(`[${this.name}] /user fallback failed:`, error.message)
-      return LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK
-    }
-  }
-
-  async #fetchLessonTimes(schoolId = LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK) {
+  async #fetchLessonTimes(schoolId) {
+    if (!schoolId) return []
     try {
       return await new Promise((resolve, reject) => {
         /** @type {any} */
@@ -330,8 +318,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           if (response.error) {
             return reject(new Error(response.error))
           }
-          const lessonTimes = response.data?.[schoolId] || response.data?.[LessonDiscrepanciesFeature.SCHOOL_ID_FALLBACK] || []
-          resolve(lessonTimes)
+          resolve(response.data?.[schoolId] || [])
         })
       })
     } catch (error) {

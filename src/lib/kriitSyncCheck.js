@@ -1,6 +1,7 @@
 import Logger from '../services/Logger.js'
 import { cacheService } from '../services/CacheService.js'
 import { fetchTeacherJournals } from './fetchTeacherJournals.js'
+import { getSchoolId } from './schoolId.js'
 
 // Cache expiration constants
 const ONE_HOUR_MS = 60 * 60 * 1000
@@ -644,9 +645,9 @@ async function getLessonDates(api, journalId, journalInfo) {
 
   if (!journalInfo) return result
 
-  const schoolId = journalInfo.school?.id || 9
+  const schoolId = await getSchoolId(api, journalInfo)
   const teacherId = journalInfo.journalTeachers?.[0]?.id
-  if (!teacherId) return result
+  if (!teacherId || !schoolId) return result
 
   const now = new Date()
   const studyYear = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()

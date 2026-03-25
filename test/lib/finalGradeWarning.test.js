@@ -119,6 +119,7 @@ describe('finalGradeWarning shared utility', () => {
           get: mock((url) => {
             if (url === '/journals/123') {
               return Promise.resolve({
+                school: { id: 9 },
                 curriculumVersions: [{ curriculumId: 456 }],
                 journalTeachers: [{ id: 789 }]
               })
@@ -210,6 +211,7 @@ describe('finalGradeWarning shared utility', () => {
       }
 
       const info = {
+        school: { id: 9 },
         curriculumVersions: [{ curriculumId: 456 }],
         journalTeachers: [{ id: 789 }]
       }

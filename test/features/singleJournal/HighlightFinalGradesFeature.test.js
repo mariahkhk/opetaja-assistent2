@@ -138,6 +138,7 @@ describe('HighlightFinalGradesFeature', () => {
           get: mock(url => {
             if (url === '/journals/123') {
               return Promise.resolve({
+                school: { id: 9 },
                 curriculumVersions: [{ curriculumId: 456 }],
                 journalTeachers: [{ id: 789 }]
               })
@@ -166,6 +167,7 @@ describe('HighlightFinalGradesFeature', () => {
           get: mock((url, params, opts) => {
             if (url === '/journals/123') {
               return Promise.resolve({
+                school: { id: 9 },
                 curriculumVersions: [{ curriculumId: 456 }],
                 journalTeachers: [{ id: 789 }]
               })

@@ -48,9 +48,6 @@ describe('LastLessonNotificationFeature', () => {
       expect(typeof feature.comparisonDate).toBe('string')
     })
 
-    test('should have static SCHOOL_ID_FALLBACK', () => {
-      expect(LastLessonNotificationFeature.SCHOOL_ID_FALLBACK).toBe(9)
-    })
   })
 
   describe('#extractJournalId (private)', () => {

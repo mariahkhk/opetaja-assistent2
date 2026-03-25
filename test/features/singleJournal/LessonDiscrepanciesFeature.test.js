@@ -396,21 +396,4 @@ describe('LessonDiscrepanciesFeature - Utility Methods', () => {
     })
   })
 
-  describe('School ID fallback', () => {
-    test('should use fallback school ID when not provided', () => {
-      const FALLBACK_ID = 9
-      const info = { school: null }
-      const schoolId = info.school?.id ?? FALLBACK_ID
-
-      expect(schoolId).toBe(9)
-    })
-
-    test('should use provided school ID when available', () => {
-      const FALLBACK_ID = 9
-      const info = { school: { id: 15 } }
-      const schoolId = info.school?.id ?? FALLBACK_ID
-
-      expect(schoolId).toBe(15)
-    })
-  })
 })

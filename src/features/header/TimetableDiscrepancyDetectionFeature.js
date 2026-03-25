@@ -105,11 +105,10 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
   async #getCurrentUserInfo() {
     try {
       const userInfo = await this.api.tahvel.get('/user', {}, { cache: true })
-      this.currentSchoolId = userInfo.school?.id || 9
+      this.currentSchoolId = userInfo.school?.id || null
       this.currentTeacherId = userInfo.person?.id
     } catch (error) {
       Logger.error(`[${this.name}] Error getting user info:`, error)
-      this.currentSchoolId = 9
     }
   }
 

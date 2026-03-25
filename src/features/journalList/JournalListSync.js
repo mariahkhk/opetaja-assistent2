@@ -20,6 +20,7 @@ import { differenceRenderer, journalSyncBannerService } from './JournalSyncBanne
 
 import { sendOutcomeEntriesToKriit } from './OutComes.js'
 import { notifyKriitGradesSynced, buildGradesForNotification } from './KriitSyncNotifier.js'
+import { getSchoolId } from '../../lib/schoolId.js'
 
 class JournalListSyncFeature extends BaseFeature {
   /**
@@ -2021,11 +2022,11 @@ class JournalListSyncFeature extends BaseFeature {
         return result
       }
 
-      const schoolId = journalInfo.school?.id || 9
+      const schoolId = await getSchoolId(this.api, journalInfo)
       const teacherId = journalInfo.journalTeachers?.[0]?.id
 
-      if (!teacherId) {
-        Logger.debug(`No teacher ID available for journal ${journalId}`)
+      if (!teacherId || !schoolId) {
+        Logger.debug(`No teacher ID or school ID available for journal ${journalId}`)
         return result
       }
 

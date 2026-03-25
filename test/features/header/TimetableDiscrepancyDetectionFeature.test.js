@@ -435,14 +435,14 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
       expect(feature.currentTeacherId).toBe(123)
     })
 
-    it('should fallback to school ID 9 on error', async () => {
+    it('should set currentSchoolId to null on error', async () => {
       feature.api.tahvel.get = mock(async () => {
         throw new Error('API error')
       })
 
       await feature.onActivate()
 
-      expect(feature.currentSchoolId).toBe(9)
+      expect(feature.currentSchoolId).toBeNull()
     })
   })
 })

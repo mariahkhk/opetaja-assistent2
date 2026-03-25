@@ -522,11 +522,12 @@ describe('MyFeature', () => {
 | `✨` | Extension log prefix | Logger service |
 | `oa2-` | CSS class prefix | All injected elements |
 
-### School/System Defaults
+### School ID Resolution
 
-| Constant | Value | Usage |
-|----------|-------|-------|
-| `SCHOOL_ID_FALLBACK` | `9` | Default school ID if not found |
+School ID is resolved via `getSchoolId(api, info)` from `src/lib/schoolId.js`:
+1. `info.school?.id` from journal info
+2. `/user` endpoint fallback
+3. Returns `null` if unavailable — features skip timetable-dependent functionality
 
 ## Feature Dependencies & Interactions
 
