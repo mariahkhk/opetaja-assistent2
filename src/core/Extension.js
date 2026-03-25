@@ -158,27 +158,39 @@ const tahvelExtension = {
     }
   },
 
-  // Check for role change and clear cache if needed
-  async checkRoleChange() {
+  // Check for role or school change and clear cache if needed
+  async checkContextChange() {
     try {
       const { api } = await import('./BaseFeature.js')
       const apiService = api?.tahvel
       if (!apiService) return
 
-      const userInfo = await apiService.get('/user', {}, {
-        cache: true,
-        cacheExpiration: 60 * 1000 // 1 minute
-      })
+      const userInfo = await apiService.get('/user', {}, { cache: false })
       if (!userInfo?.roleCode) return
 
-      const stored = await new Promise(resolve => chrome.storage.local.get('OA_currentRole', resolve))
-      if (stored.OA_currentRole && stored.OA_currentRole !== userInfo.roleCode) {
-        Logger.info(`[Extension] Role changed from ${stored.OA_currentRole} to ${userInfo.roleCode}, clearing cache`)
+      const currentSchoolId = userInfo.school?.id
+      const stored = await new Promise(resolve =>
+        chrome.storage.local.get(['OA_currentRole', 'OA_currentSchoolId'], resolve)
+      )
+
+      const roleChanged = stored.OA_currentRole && stored.OA_currentRole !== userInfo.roleCode
+      const schoolChanged = stored.OA_currentSchoolId != null && currentSchoolId != null &&
+        Number(stored.OA_currentSchoolId) !== Number(currentSchoolId)
+
+      if (roleChanged || schoolChanged) {
+        const reasons = []
+        if (roleChanged) reasons.push(`role ${stored.OA_currentRole} → ${userInfo.roleCode}`)
+        if (schoolChanged) reasons.push(`school ${stored.OA_currentSchoolId} → ${currentSchoolId}`)
+        Logger.info(`[Extension] ${reasons.join(', ')}, clearing cache`)
         await cacheService.clearCache()
       }
-      chrome.storage.local.set({ OA_currentRole: userInfo.roleCode })
+
+      chrome.storage.local.set({
+        OA_currentRole: userInfo.roleCode,
+        ...(currentSchoolId != null && { OA_currentSchoolId: currentSchoolId })
+      })
     } catch (e) {
-      Logger.warning('[Extension] Error checking role change:', e.message)
+      Logger.warning('[Extension] Error checking role/school change:', e.message)
     }
   },
 
@@ -189,7 +201,8 @@ const tahvelExtension = {
     // Evict expired cache entries when visiting main page
     if (this.isMainPage(url)) {
       cacheService.evictExpired().catch(e => Logger.warning('[Cache] evictExpired error:', e.message))
-      this.checkRoleChange()
+      // Fire-and-forget: cache clears before next navigation to a feature page
+      this.checkContextChange()
     }
 
     // Activate relevant features for current page
