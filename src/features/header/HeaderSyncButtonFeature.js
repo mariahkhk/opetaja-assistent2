@@ -144,7 +144,7 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
     }
 
     // Create new handler using event delegation
-    this.clickHandler = (event) => {
+    this.clickHandler = event => {
       const target = event.target
 
       // Check if clicked element is our button or inside it

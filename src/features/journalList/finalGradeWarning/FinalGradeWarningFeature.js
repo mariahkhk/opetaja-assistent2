@@ -234,7 +234,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
       const activeStudentIds = new Set(activeStudents.map(s => String(s.studentId)))
 
       for (const entry of outcomeEntries) {
-        let results = entry.studentOutcomeResults
+        const results = entry.studentOutcomeResults
 
         // If studentOutcomeResults is missing, fetch detailed outcome data
         if (!results && entry.curriculumModuleOutcomes) {

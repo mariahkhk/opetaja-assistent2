@@ -201,7 +201,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       const journalResults = await Promise.all(
         journalList
           .filter(item => item.id)
-          .map(async (item) => {
+          .map(async item => {
             try {
               const journal = await this.api.tahvel.get(
                 `/journals/${item.id}`,
@@ -361,7 +361,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       document.body.removeEventListener('click', this.clickHandler)
     }
 
-    this.clickHandler = (event) => {
+    this.clickHandler = event => {
       const target = event.target
 
       if (target.id === 'oa2-timetable-discrepancy-header-button' ||
