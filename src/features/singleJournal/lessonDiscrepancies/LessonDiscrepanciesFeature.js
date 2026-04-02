@@ -816,20 +816,20 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       restorePending = true
     } finally {
       // The addAllMissing handler manages its own button lifecycle — do not restore
-      if (data?.handler === 'addAllMissing') return
-
-      if (isLisaButton && fadeTarget) {
-        // Only restore when the row is actually removed from DOM
-        const checkRowRemoved = () => {
-          if (!fadeTarget.isConnected) {
-            this.#restoreButtonState(button, originalState, isLisaButton)
-          } else {
-            setTimeout(checkRowRemoved, 200)
+      if (data?.handler !== 'addAllMissing') {
+        if (isLisaButton && fadeTarget) {
+          // Only restore when the row is actually removed from DOM
+          const checkRowRemoved = () => {
+            if (!fadeTarget.isConnected) {
+              this.#restoreButtonState(button, originalState, isLisaButton)
+            } else {
+              setTimeout(checkRowRemoved, 200)
+            }
           }
+          if (restorePending) checkRowRemoved()
+        } else {
+          this.#restoreButtonState(button, originalState, isLisaButton)
         }
-        if (restorePending) checkRowRemoved()
-      } else {
-        this.#restoreButtonState(button, originalState, isLisaButton)
       }
     }
   }
