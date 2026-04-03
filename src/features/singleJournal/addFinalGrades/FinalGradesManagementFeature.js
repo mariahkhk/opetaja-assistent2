@@ -1144,6 +1144,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       if (!results || !Array.isArray(results.output)) return
       const out = results.output
       out.forEach(student => {
+        if (student.finalGrade === null) return
         // Ensure ovGrades object exists
         student.ovGrades = student.ovGrades || {}
         if (mode === 'mitte') {
@@ -2084,7 +2085,8 @@ class FinalGradesByOvFeature extends BaseFeature {
         finalGrade = String(Math.round(avg))
         Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: combined avg ${avg} → ${finalGrade}`)
       } else {
-        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: no grades`)
+        finalGrade = null
+        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: no SISSEKANNE_T/I grades, skipping calculation`)
       }
       output.push({
         name: student.name,
@@ -2184,7 +2186,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           }
 
           if (!student) student = results.output[rowIdx] || null
-          if (!student) return
+          if (!student || student.finalGrade === null) return
 
           finalGradeCols.forEach(colIdx => {
             const cell = cells[colIdx]
@@ -2431,6 +2433,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         })
       }
       const filteredOutput = results.output.filter(r => {
+        if (r.finalGrade === null) return false
         const key = String(r.journalStudentId).trim()
         const current = lGrades[key]
         if (!current) return r.finalGrade && r.finalGrade !== ''

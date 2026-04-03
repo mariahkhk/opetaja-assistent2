@@ -245,6 +245,122 @@ describe('FinalGradesManagementFeature - Utility Methods', () => {
     })
   })
 
+  describe('extractFinalGrades - no SISSEKANNE_T/I grades', () => {
+    test('should set finalGrade to null when student has no SISSEKANNE_T or SISSEKANNE_I grades', () => {
+      const entries = [
+        { entryType: 'SISSEKANNE_O', nameEt: '1) ÕV1', curriculumModuleOutcomes: 100 },
+        {
+          entryType: 'SISSEKANNE_L',
+          journalEntryStudents: [{ journalStudent: '1', grade: { code: 'KUTSEHINDAMINE_A' } }]
+        }
+      ]
+      const students = [{ id: '1', student: { id: 10, idcode: '50001010001', fullname: 'Test Student' } }]
+
+      const result = extractFinalGradesLogic(entries, students)
+      expect(result.output[0].finalGrade).toBeNull()
+    })
+
+    test('should calculate finalGrade normally when SISSEKANNE_I grades exist', () => {
+      const entries = [
+        {
+          entryType: 'SISSEKANNE_I',
+          nameEt: 'Assignment 1',
+          journalEntryStudents: [{ journalStudent: '1', grade: { code: 'KUTSEHINDAMINE_5' } }]
+        }
+      ]
+      const students = [{ id: '1', student: { id: 10, idcode: '50001010001', fullname: 'Test Student' } }]
+
+      const result = extractFinalGradesLogic(entries, students)
+      expect(result.output[0].finalGrade).toBe('5')
+    })
+
+    test('should calculate finalGrade normally when SISSEKANNE_T grades exist', () => {
+      const entries = [
+        {
+          entryType: 'SISSEKANNE_T',
+          journalEntryStudents: [{ journalStudent: '1', grade: { code: 'KUTSEHINDAMINE_4' } }]
+        }
+      ]
+      const students = [{ id: '1', student: { id: 10, idcode: '50001010001', fullname: 'Test Student' } }]
+
+      const result = extractFinalGradesLogic(entries, students)
+      expect(result.output[0].finalGrade).toBe('4')
+    })
+
+    test('should set finalGrade to null and exclude from filtered output', () => {
+      const output = [
+        { journalStudentId: '1', finalGrade: null, name: 'Student A' },
+        { journalStudentId: '2', finalGrade: '5', name: 'Student B' }
+      ]
+      const lGrades = { '1': 'A', '2': '4' }
+
+      const filteredOutput = output.filter(r => {
+        if (r.finalGrade === null) return false
+        const key = String(r.journalStudentId).trim()
+        const current = lGrades[key]
+        if (!current) return r.finalGrade && r.finalGrade !== ''
+        return (r.finalGrade && String(r.finalGrade).toUpperCase()) !== current
+      })
+
+      expect(filteredOutput.length).toBe(1)
+      expect(filteredOutput[0].name).toBe('Student B')
+    })
+
+    test('null finalGrade should survive grading mode application', () => {
+      const results = {
+        output: [
+          { name: 'Student A', finalGrade: null },
+          { name: 'Student B', finalGrade: '4' }
+        ]
+      }
+
+      applyGradingModeToResults(results, 'mitte')
+      expect(results.output[0].finalGrade).toBeNull()
+      expect(results.output[1].finalGrade).toBe('A')
+    })
+
+    test('null finalGrade should survive eristav grading mode', () => {
+      const results = {
+        output: [
+          { name: 'Student A', finalGrade: null },
+          { name: 'Student B', finalGrade: 'A' }
+        ]
+      }
+
+      applyGradingModeToResults(results, 'eristav')
+      expect(results.output[0].finalGrade).toBeNull()
+      expect(results.output[1].finalGrade).toBe('5')
+    })
+
+    test('full pipeline: extraction with no grades → grading mode → filter excludes null', () => {
+      const entries = [
+        { entryType: 'SISSEKANNE_O', nameEt: '1) ÕV1', curriculumModuleOutcomes: 100 },
+        {
+          entryType: 'SISSEKANNE_L',
+          journalEntryStudents: [{ journalStudent: '1', grade: { code: 'KUTSEHINDAMINE_A' } }]
+        }
+      ]
+      const students = [{ id: '1', student: { id: 10, idcode: '50001010001', fullname: 'Test Student' } }]
+
+      const results = extractFinalGradesLogic(entries, students)
+      expect(results.output[0].finalGrade).toBeNull()
+
+      applyGradingModeToResults(results, 'mitte')
+      expect(results.output[0].finalGrade).toBeNull()
+
+      const lGrades = { '1': 'A' }
+      const filteredOutput = results.output.filter(r => {
+        if (r.finalGrade === null) return false
+        const key = String(r.journalStudentId).trim()
+        const current = lGrades[key]
+        if (!current) return r.finalGrade && r.finalGrade !== ''
+        return (r.finalGrade && String(r.finalGrade).toUpperCase()) !== current
+      })
+
+      expect(filteredOutput.length).toBe(0)
+    })
+  })
+
   describe('Grade date formatting', () => {
     test('should format Estonian timezone date', () => {
       const estDate = new Date('2024-09-15').toLocaleDateString('sv-SE', { timeZone: 'Europe/Tallinn' })
@@ -306,6 +422,186 @@ function mapGrade(grade) {
     return null
   }
   return { code, value, nameEt, nameEn }
+}
+
+function extractFinalGradesLogic(entries, students) {
+  const studentMap = {}
+  students.forEach(s => {
+    let name, idcode, studentId, journalStudentId
+    if (s.student && s.student.idcode) {
+      name = s.student.fullname || `${s.student.firstname} ${s.student.lastname}`
+      idcode = s.student.idcode
+      studentId = s.student.id
+      journalStudentId = s.id
+    } else {
+      name = s.fullname || `${s.firstname} ${s.lastname}`
+      idcode = s.idcode || 'N/A'
+      studentId = s.studentId || s.id
+      journalStudentId = s.id
+    }
+    studentMap[journalStudentId] = { name, idcode, studentId }
+  })
+
+  const gradesT = {}
+  const gradesI = {}
+
+  entries.forEach(entry => {
+    if (entry.entryType === 'SISSEKANNE_T' || entry.entryType === 'SISSEKANNE_I') {
+      if (entry.journalStudentResults) {
+        Object.entries(entry.journalStudentResults).forEach(([journalStudentId, resultsArr]) => {
+          if (Array.isArray(resultsArr)) {
+            resultsArr.forEach(result => {
+              if (result.grade && result.grade.code) {
+                const grade = result.grade.code.replace('KUTSEHINDAMINE_', '')
+                if (['1', '2', '3', '4', '5'].includes(grade)) {
+                  if (entry.entryType === 'SISSEKANNE_T') {
+                    if (!gradesT[journalStudentId]) gradesT[journalStudentId] = []
+                    gradesT[journalStudentId].push(parseInt(grade))
+                  } else {
+                    if (!gradesI[journalStudentId]) gradesI[journalStudentId] = []
+                    gradesI[journalStudentId].push(parseInt(grade))
+                  }
+                } else if (['A', 'MA'].includes(grade)) {
+                  const key = journalStudentId + '_str'
+                  if (entry.entryType === 'SISSEKANNE_T') {
+                    if (!gradesT[key]) gradesT[key] = []
+                    gradesT[key].push(grade)
+                  } else {
+                    if (!gradesI[key]) gradesI[key] = []
+                    gradesI[key].push(grade)
+                  }
+                }
+              }
+            })
+          }
+        })
+      }
+      if (Array.isArray(entry.journalEntryStudents)) {
+        entry.journalEntryStudents.forEach(js => {
+          if (js.grade && js.grade.code) {
+            const grade = js.grade.code.replace('KUTSEHINDAMINE_', '')
+            const journalStudentId = js.journalStudent
+            if (['1', '2', '3', '4', '5'].includes(grade)) {
+              if (entry.entryType === 'SISSEKANNE_T') {
+                if (!gradesT[journalStudentId]) gradesT[journalStudentId] = []
+                gradesT[journalStudentId].push(parseInt(grade))
+              } else {
+                if (!gradesI[journalStudentId]) gradesI[journalStudentId] = []
+                gradesI[journalStudentId].push(parseInt(grade))
+              }
+            } else if (['A', 'MA'].includes(grade)) {
+              const key = journalStudentId + '_str'
+              if (entry.entryType === 'SISSEKANNE_T') {
+                if (!gradesT[key]) gradesT[key] = []
+                gradesT[key].push(grade)
+              } else {
+                if (!gradesI[key]) gradesI[key] = []
+                gradesI[key].push(grade)
+              }
+            }
+          }
+        })
+      }
+    }
+  })
+
+  const output = []
+  Object.entries(studentMap).forEach(([journalStudentId, student]) => {
+    const tGrades = gradesT[journalStudentId] || []
+    const iGrades = gradesI[journalStudentId] || []
+    const allGrades = [...tGrades, ...iGrades]
+    const allStringGrades = [...(gradesT[journalStudentId + '_str'] || []), ...(gradesI[journalStudentId + '_str'] || [])]
+    let finalGrade = ''
+    if (allStringGrades.includes('MA')) {
+      finalGrade = 'MA'
+    } else if (allStringGrades.length > 0 && allStringGrades.every(g => g === 'A')) {
+      finalGrade = 'A'
+    } else if (allGrades.length > 0) {
+      const sum = allGrades.reduce((a, b) => a + b, 0)
+      const avg = sum / allGrades.length
+      finalGrade = String(Math.round(avg))
+    } else {
+      finalGrade = null
+    }
+    output.push({ name: student.name, idcode: student.idcode, finalGrade, journalStudentId, studentId: student.studentId })
+  })
+  return { output }
+}
+
+function applyGradingModeToResults(results, mode) {
+  if (!results || !Array.isArray(results.output)) return
+  results.output.forEach(student => {
+    if (student.finalGrade === null) return
+    student.ovGrades = student.ovGrades || {}
+    if (mode === 'mitte') {
+      Object.keys(student.ovGrades).forEach(ov => {
+        const raw = String(student.ovGrades[ov] || '').trim()
+        let token = ''
+        if (!raw) token = ''
+        else if (/^MA$/i.test(raw)) token = 'MA'
+        else if (/^A$/i.test(raw)) token = 'A'
+        else if (raw.includes('_hasLow')) token = 'MA'
+        else if (/^\d+(?:\.\d+)?$/.test(raw)) {
+          const n = Math.round(Number(raw))
+          token = n >= 3 ? 'A' : 'MA'
+        } else token = raw
+        student.ovGrades[ov] = token
+      })
+      const ovVals = Object.values(student.ovGrades)
+      if (ovVals.length > 0) {
+        const anyUngraded = ovVals.some(v => !v || String(v).trim() === '')
+        const anyTwoOrMA = ovVals.some(v => {
+          if (!v) return false
+          const s = String(v).trim().toUpperCase()
+          if (s === 'MA') return true
+          if (/^\d+(?:\.\d+)?$/.test(s)) return Math.round(Number(s)) === 2
+          return false
+        })
+        if (anyTwoOrMA) student.finalGrade = 'MA'
+        else {
+          const allA = ovVals.length > 0 && ovVals.every(v => String(v).toUpperCase() === 'A')
+          student.finalGrade = allA && !anyUngraded ? 'A' : 'MA'
+        }
+      } else {
+        const rawFg = String(student.finalGrade || '').trim()
+        if (!rawFg) student.finalGrade = ''
+        else if (/^A$/i.test(rawFg)) student.finalGrade = 'A'
+        else if (/^MA$/i.test(rawFg)) student.finalGrade = 'MA'
+        else if (/^\d+(?:\.\d+)?$/.test(rawFg)) {
+          const n = Math.round(Number(rawFg))
+          student.finalGrade = n >= 3 ? 'A' : 'MA'
+        }
+      }
+    } else if (mode === 'eristav') {
+      const numericGrades = []
+      Object.keys(student.ovGrades).forEach(ov => {
+        const raw = String(student.ovGrades[ov] || '').trim()
+        if (!raw) { numericGrades.push(2); student.ovGrades[ov] = '2' }
+        else if (/^A$/i.test(raw)) { numericGrades.push(5); student.ovGrades[ov] = '5' }
+        else if (/^MA$/i.test(raw)) { numericGrades.push(2); student.ovGrades[ov] = '2' }
+        else if (raw.includes('_hasLow')) {
+          const average = parseFloat(raw.split('_')[0])
+          const n = Math.round(average)
+          numericGrades.push(n)
+          student.ovGrades[ov] = String(n)
+        } else if (/^\d+(?:\.\d+)?$/.test(raw)) {
+          const n = Math.round(Number(raw))
+          numericGrades.push(n)
+          student.ovGrades[ov] = String(n)
+        } else { numericGrades.push(2); student.ovGrades[ov] = '2' }
+      })
+      if (numericGrades.length > 0) {
+        const avg = numericGrades.reduce((a, b) => a + b, 0) / numericGrades.length
+        student.finalGrade = String(Math.round(avg))
+      } else {
+        const rawFg = String(student.finalGrade || '').trim()
+        if (!rawFg) student.finalGrade = ''
+        else if (/^A$/i.test(rawFg)) student.finalGrade = '5'
+        else if (/^MA$/i.test(rawFg)) student.finalGrade = '2'
+        else if (/^\d+(?:\.\d+)?$/.test(rawFg)) student.finalGrade = String(Math.round(Number(rawFg)))
+      }
+    }
+  })
 }
 
 function extractGrade(text) {
