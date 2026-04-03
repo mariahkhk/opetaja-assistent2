@@ -4,6 +4,7 @@
 import TahvelExtension from './core/Extension.js'
 import Logger from './services/Logger.js'
 import { cacheService } from './services/CacheService.js'
+import { ApiService } from './services/ApiService.js'
 
 const VERSION = '6'
 
@@ -56,6 +57,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ status: 'error', message: error.message })
       })
     return true // Keep the message channel open for async responses
+  } else if (message.action === 'getCapturedRequests') {
+    const allRequests = ApiService.getCapturedRequests()
+    const journalMatch = window.location.href.match(/\/journal\/(\d+)/)
+    const journalId = journalMatch ? journalMatch[1] : null
+
+    let filtered = []
+    if (journalId) {
+      filtered = allRequests.filter(r => {
+        if (!r.url) return false
+        const urlPath = r.url.split('?')[0]
+        return urlPath.includes(`/journals/${journalId}/`) || urlPath.endsWith(`/journals/${journalId}`)
+      })
+    }
+
+    const requests = filtered.length > 0 ? filtered : allRequests
+
+    sendResponse({
+      status: 'success',
+      data: {
+        metadata: {
+          exportedAt: new Date().toISOString(),
+          journalId: journalId ? parseInt(journalId) : null,
+          pageUrl: window.location.href,
+          totalCaptured: allRequests.length,
+          filteredForJournal: filtered.length,
+          filterApplied: filtered.length > 0,
+          warning: 'This file may contain sensitive data. Share only with trusted parties.'
+        },
+        requests
+      }
+    })
+    return true
   } else if (message.action === 'findTeachers') {
     Logger.debug('Received findTeachers request')
     handleFindTeachers()

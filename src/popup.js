@@ -10,6 +10,16 @@ const KRIIT_API_URL_KEY = 'OA_kriitApiBaseUrl'
 const KRIIT_API_KEY_KEY = 'OA_kriitApiToken'
 const HIGHLIGHT_MISSING_GRADES_KEY = 'OA_highlightMissingGrades'
 const DEFAULT_KRIIT_API_URL = 'https://kriit.vikk.ee/api'
+const TAHVEL_DOMAINS = ['tahvel.edu.ee', 'tahvel.eenet.ee', 'uustahvel.eenet.ee', 'test.uustahvel.eenet.ee']
+
+/**
+ * Check if a URL belongs to a Tahvel instance
+ * @param {string} url - The URL to check
+ * @returns {boolean}
+ */
+function isTahvelUrl(url) {
+  return url && TAHVEL_DOMAINS.some(domain => url.includes(domain))
+}
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -64,6 +74,8 @@ function initPopup() {
   const comparisonDateInput = document.getElementById('comparison-date')
   const findTeachersButton = document.getElementById('find-teachers')
   const teachersContainer = document.getElementById('teachers-container')
+  const debugToolsContainer = document.getElementById('debug-tools')
+  const downloadApiRequestsButton = document.getElementById('download-api-requests')
 
   // Check if all elements are found
   if (!debugModeCheckbox) throw new Error('Debug mode checkbox not found')
@@ -82,6 +94,8 @@ function initPopup() {
   if (!comparisonDateInput) throw new Error('Comparison date input not found')
   if (!findTeachersButton) throw new Error('Find teachers button not found')
   if (!teachersContainer) throw new Error('Teachers container not found')
+  if (!debugToolsContainer) throw new Error('Debug tools container not found')
+  if (!downloadApiRequestsButton) throw new Error('Download API requests button not found')
 
   // Set version from manifest
   try {
@@ -93,7 +107,9 @@ function initPopup() {
 
   // Initialize debug mode checkbox
   chrome.storage.sync.get([DEBUG_MODE_KEY], function(result) {
-    debugModeCheckbox.checked = result[DEBUG_MODE_KEY] === true
+    const isDebug = result[DEBUG_MODE_KEY] === true
+    debugModeCheckbox.checked = isDebug
+    debugToolsContainer.style.display = isDebug ? 'block' : 'none'
   })
 
   // Initialize highlight missing grades checkbox (default: enabled)
@@ -228,6 +244,16 @@ function initPopup() {
     }
   })
 
+  // Add event listener for API request download
+  downloadApiRequestsButton.addEventListener('click', function() {
+    try {
+      downloadCapturedRequests()
+    } catch (error) {
+      console.error('Error downloading API requests:', error)
+      showError('Failed to download API requests: ' + error.message)
+    }
+  })
+
   // Add event listeners for teachers
   findTeachersButton.addEventListener('click', function() {
     try {
@@ -249,6 +275,9 @@ function initPopup() {
  * @param {boolean} enabled - Whether debug mode should be enabled
  */
 function toggleDebugMode(enabled) {
+  const debugToolsContainer = document.getElementById('debug-tools')
+  if (debugToolsContainer) debugToolsContainer.style.display = enabled ? 'block' : 'none'
+
   chrome.storage.sync.set({ [DEBUG_MODE_KEY]: enabled }, function() {
     console.log('Debug mode set to:', enabled)
 
@@ -305,13 +334,7 @@ function toggleKriitEnabled(enabled, settingsContainer) {
 
     // Notify content script about the change
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-      if (
-        tabs[0] &&
-        (tabs[0].url.includes('tahvel.edu.ee') ||
-          tabs[0].url.includes('tahvel.eenet.ee') ||
-          tabs[0].url.includes('uustahvel.eenet.ee') ||
-          tabs[0].url.includes('test.uustahvel.eenet.ee'))
-      ) {
+      if (tabs[0] && isTahvelUrl(tabs[0].url)) {
         chrome.tabs
           .sendMessage(tabs[0].id, {
             action: 'kriitEnabledChanged',
@@ -359,13 +382,7 @@ function saveKriitSettings(apiUrl, apiKey, statusElement) {
 
       // Notify content script about the settings change
       chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (
-          tabs[0] &&
-          (tabs[0].url.includes('tahvel.edu.ee') ||
-            tabs[0].url.includes('tahvel.eenet.ee') ||
-            tabs[0].url.includes('uustahvel.eenet.ee') ||
-            tabs[0].url.includes('test.uustahvel.eenet.ee'))
-        ) {
+        if (tabs[0] && isTahvelUrl(tabs[0].url)) {
           chrome.tabs
             .sendMessage(tabs[0].id, {
               action: 'kriitSettingsUpdated',
@@ -402,7 +419,7 @@ function loadCacheStatistics() {
       return
     }
     chrome.tabs.sendMessage(tabs[0].id, { action: 'getCacheStats' }, function(response) {
-      if (!response || !response.stats) {
+      if (chrome.runtime.lastError || !response || !response.stats) {
         cacheStatsContainer.textContent = 'Vahemälu statistika pole saadaval'
         return
       }
@@ -699,9 +716,7 @@ function findTeachers() {
       return
     }
 
-    const isValidTahvelPage = tabs[0].url.includes('tahvel.edu.ee') || tabs[0].url.includes('tahvel.eenet.ee')
-
-    if (!isValidTahvelPage) {
+    if (!isTahvelUrl(tabs[0].url)) {
       showError('Palun mine Tahvli lehele, et kasutada seda funktsiooni')
       teachersContainer.style.display = 'none'
       return
@@ -801,6 +816,51 @@ function clearCache() {
           loadCacheStatistics()
         })
     }
+  })
+}
+
+/**
+ * Download captured API requests from the content script
+ */
+function downloadCapturedRequests() {
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs[0]) {
+      showError('Aktiivset vahekaarti ei leitud')
+      return
+    }
+
+    if (!isTahvelUrl(tabs[0].url)) {
+      showError('Ava Tahvli leht ja proovi uuesti.')
+      return
+    }
+
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'getCapturedRequests' }, function(response) {
+      if (chrome.runtime.lastError) {
+        showError('Ava Tahvli leht ja värskenda lehte, seejärel proovi uuesti.')
+        return
+      }
+      if (!response || response.status !== 'success') {
+        showError('API päringute allalaadimine ebaõnnestus: ' + (response?.message || 'Tundmatu viga'))
+        return
+      }
+
+      const exportData = response.data
+      if (!exportData.requests || exportData.requests.length === 0) {
+        showError('Salvestatud API päringuid ei leitud. Ava Tahvli leht ja proovi uuesti.')
+        return
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const journalId = exportData.metadata.journalId || 'all'
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+      const filename = `oa2_debug_journal_${journalId}_${timestamp}.json`
+
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename
+      link.click()
+      setTimeout(() => URL.revokeObjectURL(link.href), 5000)
+    })
   })
 }
 

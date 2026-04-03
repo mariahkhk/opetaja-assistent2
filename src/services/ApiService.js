@@ -34,6 +34,10 @@ class ApiService {
   static requestQueue = []
   static delayBetweenRequestsMs = 0
 
+  // Debug capture buffer for network requests (only populated when debug mode is on)
+  static capturedRequests = []
+  static MAX_CAPTURE_SIZE = 200
+
   /**
    * Set global concurrency limit for underlying fetch calls.
    * @param {number} limit - Max parallel fetches
@@ -42,6 +46,44 @@ class ApiService {
   static setConcurrencyLimit(limit, delayMs = 0) {
     ApiService.concurrencyLimit = Math.max(1, parseInt(limit, 10) || 1)
     ApiService.delayBetweenRequestsMs = Math.max(0, parseInt(delayMs, 10) || 0)
+  }
+
+  static _sanitizeHeaders(headers) {
+    if (!headers) return null
+    const sanitized = { ...headers }
+    const sensitive = ['authorization', 'x-xsrf-token', 'cookie']
+    for (const key of Object.keys(sanitized)) {
+      if (sensitive.includes(key.toLowerCase())) {
+        sanitized[key] = '[REDACTED]'
+      }
+    }
+    return sanitized
+  }
+
+  static _recordCapture({ method, url, requestHeaders, requestBody, responseStatus, responseData, source, error }) {
+    if (!Logger.isDebugMode()) return
+    if (ApiService.capturedRequests.length >= ApiService.MAX_CAPTURE_SIZE) {
+      ApiService.capturedRequests.shift()
+    }
+    ApiService.capturedRequests.push({
+      timestamp: new Date().toISOString(),
+      method,
+      url,
+      requestHeaders: ApiService._sanitizeHeaders(requestHeaders),
+      requestBody,
+      responseStatus: responseStatus ?? null,
+      responseData,
+      source: source || 'network',
+      error: error || null
+    })
+  }
+
+  static getCapturedRequests() {
+    return [...ApiService.capturedRequests]
+  }
+
+  static clearCapturedRequests() {
+    ApiService.capturedRequests = []
   }
 
   /**
@@ -138,6 +180,9 @@ class ApiService {
       cacheExpiration = cacheService.EXPIRATION.MEDIUM
     } = config
 
+    let urlString = endpoint
+    let captured = false
+
     try {
       // Resolve the full URL
       let fullUrl
@@ -155,7 +200,7 @@ class ApiService {
         })
       }
 
-      const urlString = url.toString()
+      urlString = url.toString()
 
       // Set up request options
       const requestOptions = {
@@ -232,13 +277,16 @@ class ApiService {
             response => {
               if (chrome.runtime.lastError) {
                 Logger.error(`[${this.name}] Background script error:`, chrome.runtime.lastError)
+                ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, source: 'background', error: chrome.runtime.lastError.message })
                 reject(new Error(`Background script error: ${chrome.runtime.lastError.message}`))
                 return
               }
 
               if (response.status === 'success') {
+                ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseData: response.data, source: 'background' })
                 resolve(response.data)
               } else {
+                ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, source: 'background', error: response.message })
                 reject(new Error(response.message))
               }
             }
@@ -250,7 +298,7 @@ class ApiService {
       if (method === 'GET' && cache) {
         const cacheKey = `${method}_${urlString}`
 
-        return cacheService.getOrFetch(
+        const cachedResult = await cacheService.getOrFetch(
           cacheKey,
           async() => {
             const response = await ApiService._throttledFetch(urlString, requestOptions)
@@ -268,6 +316,9 @@ class ApiService {
           },
           cacheExpiration
         )
+        ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseData: cachedResult, source: 'cache' })
+        captured = true
+        return cachedResult
       }
 
       // For GET requests, try to dedupe identical in-flight requests so multiple
@@ -325,26 +376,36 @@ class ApiService {
         }
 
         // noinspection ExceptionCaughtLocallyJS
+        ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, source: 'network', error: `API Error: ${response.status} ${errorDetails || response.statusText}` })
+        captured = true
         throw new Error(`API Error: ${response.status} ${errorDetails ? `(${errorDetails})` : response.statusText}`)
       }
 
       // First, get the response as text
       const responseText = await response.text()
+      let result
 
       // For PUT requests, empty response is often valid (indicates success)
       if (method === 'PUT' && responseText === '') {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] PUT request returned empty response - treating as success`)
-        return { success: true, status: response.status }
+        result = { success: true, status: response.status }
+      } else {
+        // Try to parse as JSON, fall back to text if that fails
+        try {
+          result = JSON.parse(responseText)
+        } catch (parseError) {
+          if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Response is not JSON, returning as text`)
+          result = responseText || { success: true, status: response.status }
+        }
       }
 
-      // Try to parse as JSON, fall back to text if that fails
-      try {
-        return JSON.parse(responseText)
-      } catch (error) {
-        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Response is not JSON, returning as text`)
-        return responseText || { success: true, status: response.status }
-      }
+      ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, responseData: result, source: 'network' })
+      captured = true
+      return result
     } catch (error) {
+      if (!captured) {
+        ApiService._recordCapture({ method, url: urlString, requestBody: data, source: 'network', error: error.message })
+      }
       Logger.error(`[${this.name}] ${method} Error:`, error)
       throw error
     }
