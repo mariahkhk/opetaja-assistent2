@@ -95,6 +95,19 @@ class HighlightMissingGradesFeature extends BaseFeature {
             return false
           }
 
+          // Ignore style changes on non-header elements (hover effects on cells)
+          if (mutation.type === 'attributes' && mutation.attributeName === 'style' && mutation.target.tagName !== 'TH') {
+            return false
+          }
+
+          // Ignore childList mutations that don't add/remove table rows (e.g. tooltips, popovers on hover)
+          if (mutation.type === 'childList') {
+            const hasTableNodes = [...mutation.addedNodes, ...mutation.removedNodes].some(
+              node => node.nodeType === 1 && ['TR', 'TD', 'TH', 'TABLE', 'THEAD', 'TBODY'].includes(node.tagName)
+            )
+            if (!hasTableNodes) return false
+          }
+
           return true
         })
 
