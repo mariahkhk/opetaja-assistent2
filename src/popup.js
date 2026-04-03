@@ -8,6 +8,7 @@ const CACHE_PREFIX = 'OA_cache_'
 const KRIIT_ENABLED_KEY = 'OA_kriitEnabled'
 const KRIIT_API_URL_KEY = 'OA_kriitApiBaseUrl'
 const KRIIT_API_KEY_KEY = 'OA_kriitApiToken'
+const HIGHLIGHT_MISSING_GRADES_KEY = 'OA_highlightMissingGrades'
 const DEFAULT_KRIIT_API_URL = 'https://kriit.vikk.ee/api'
 
 // Initialize popup when DOM is loaded
@@ -48,6 +49,7 @@ function initPopup() {
   const debugModeCheckbox = document.getElementById('debug-mode')
   const clearCacheButton = document.getElementById('clear-cache')
   const versionElement = document.getElementById('version')
+  const highlightMissingGradesCheckbox = document.getElementById('highlight-missing-grades')
   const kriitEnabledCheckbox = document.getElementById('kriit-enabled')
   const kriitSettingsContainer = document.getElementById('kriit-settings-container')
   const kriitApiUrlInput = document.getElementById('kriit-api-url')
@@ -67,6 +69,7 @@ function initPopup() {
   if (!debugModeCheckbox) throw new Error('Debug mode checkbox not found')
   if (!clearCacheButton) throw new Error('Clear cache button not found')
   if (!versionElement) throw new Error('Version element not found')
+  if (!highlightMissingGradesCheckbox) throw new Error('Highlight missing grades checkbox not found')
   if (!kriitEnabledCheckbox) throw new Error('Kriit enabled checkbox not found')
   if (!kriitSettingsContainer) throw new Error('Kriit settings container not found')
   if (!kriitApiUrlInput) throw new Error('Kriit API URL input not found')
@@ -91,6 +94,11 @@ function initPopup() {
   // Initialize debug mode checkbox
   chrome.storage.sync.get([DEBUG_MODE_KEY], function(result) {
     debugModeCheckbox.checked = result[DEBUG_MODE_KEY] === true
+  })
+
+  // Initialize highlight missing grades checkbox (default: enabled)
+  chrome.storage.sync.get([HIGHLIGHT_MISSING_GRADES_KEY], function(result) {
+    highlightMissingGradesCheckbox.checked = result[HIGHLIGHT_MISSING_GRADES_KEY] !== false
   })
 
   // Initialize Kriit API settings
@@ -152,6 +160,15 @@ function initPopup() {
     } catch (error) {
       console.error('Error toggling debug mode:', error)
       showError('Failed to toggle debug mode: ' + error.message)
+    }
+  })
+
+  highlightMissingGradesCheckbox.addEventListener('change', function() {
+    try {
+      toggleHighlightMissingGrades(highlightMissingGradesCheckbox.checked)
+    } catch (error) {
+      console.error('Error toggling highlight missing grades:', error)
+      showError('Failed to toggle highlight missing grades: ' + error.message)
     }
   })
 
@@ -241,6 +258,29 @@ function toggleDebugMode(enabled) {
         chrome.tabs
           .sendMessage(tabs[0].id, {
             action: 'toggleDebugMode',
+            enabled: enabled
+          })
+          .catch(error => {
+            console.error('Error sending message:', error)
+          })
+      }
+    })
+  })
+}
+
+/**
+ * Toggle highlight missing grades feature
+ * @param {boolean} enabled - Whether highlighting should be enabled
+ */
+function toggleHighlightMissingGrades(enabled) {
+  chrome.storage.sync.set({ [HIGHLIGHT_MISSING_GRADES_KEY]: enabled }, function() {
+    console.log('Highlight missing grades set to:', enabled)
+
+    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+      if (tabs[0]) {
+        chrome.tabs
+          .sendMessage(tabs[0].id, {
+            action: 'highlightMissingGradesChanged',
             enabled: enabled
           })
           .catch(error => {

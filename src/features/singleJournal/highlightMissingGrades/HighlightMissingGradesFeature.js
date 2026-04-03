@@ -27,7 +27,39 @@ class HighlightMissingGradesFeature extends BaseFeature {
 
   onActivate() {
     console.debug('[HighlightMissingGradesFeature] onActivate called')
-    setTimeout(() => {
+
+    // Set up message listener for real-time toggle from popup
+    if (!this._messageListener) {
+      this._messageListener = (message) => {
+        if (message.action === 'highlightMissingGradesChanged') {
+          if (!message.enabled) {
+            this.#removeAllHighlights()
+            if (this._activateTimer) { clearTimeout(this._activateTimer); this._activateTimer = null }
+            if (this._observer) { this._observer.disconnect(); this._observer = null }
+            if (this._debounceTimer) { clearTimeout(this._debounceTimer); this._debounceTimer = null }
+            this._isUpdating = false
+          } else {
+            this.#activateFeature()
+          }
+        }
+      }
+      chrome.runtime.onMessage.addListener(this._messageListener)
+    }
+
+    // Check if feature is enabled in settings (default: true)
+    chrome.storage.sync.get(['OA_highlightMissingGrades'], (result) => {
+      if (result['OA_highlightMissingGrades'] === false) {
+        console.debug('[HighlightMissingGradesFeature] Feature disabled in settings')
+        return
+      }
+      this.#activateFeature()
+    })
+  }
+
+  #activateFeature() {
+    if (this._activateTimer) clearTimeout(this._activateTimer)
+    this._activateTimer = setTimeout(() => {
+      this._activateTimer = null;
       (async() => {
         await this.run()
       })()
@@ -104,8 +136,19 @@ class HighlightMissingGradesFeature extends BaseFeature {
     }
   }
 
+  #removeAllHighlights() {
+    document.querySelectorAll('.highlight-missing-grade').forEach(el => {
+      el.classList.remove('highlight-missing-grade')
+      el.title = ''
+    })
+  }
+
   onDeactivate() {
     console.debug('[HighlightMissingGradesFeature] onDeactivate called')
+    if (this._activateTimer) {
+      clearTimeout(this._activateTimer)
+      this._activateTimer = null
+    }
     if (this._observer) {
       this._observer.disconnect()
       this._observer = null
@@ -113,6 +156,10 @@ class HighlightMissingGradesFeature extends BaseFeature {
     if (this._debounceTimer) {
       clearTimeout(this._debounceTimer)
       this._debounceTimer = null
+    }
+    if (this._messageListener) {
+      chrome.runtime.onMessage.removeListener(this._messageListener)
+      this._messageListener = null
     }
     this._isUpdating = false
   }

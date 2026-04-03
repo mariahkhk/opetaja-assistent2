@@ -19,6 +19,19 @@ describe('HighlightMissingGradesFeature', () => {
       createElement: () => ({ id: '', textContent: '' }),
       head: { appendChild: () => {} }
     }
+    global.chrome = {
+      storage: {
+        sync: {
+          get: (_keys, callback) => callback({})
+        }
+      },
+      runtime: {
+        onMessage: {
+          addListener: () => {},
+          removeListener: () => {}
+        }
+      }
+    }
     feature = new HighlightMissingGradesFeature()
     global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' } }
   })
@@ -1023,6 +1036,65 @@ describe('HighlightMissingGradesFeature', () => {
       // Student with AP in class column should not be highlighted
       expect(gradeCell.classList.contains('highlight-missing-grade')).toBe(false)
       expect(feature._isUpdating).toBe(false)
+    })
+  })
+
+  describe('settings toggle', () => {
+    test('should not activate when OA_highlightMissingGrades is false', () => {
+      global.chrome.storage.sync.get = (_keys, cb) => cb({ OA_highlightMissingGrades: false })
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div id="studentTable"></div></body></html>')
+      global.document = dom.window.document
+      global.MutationObserver = dom.window.MutationObserver
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' } }
+
+      feature.onActivate()
+
+      expect(feature._observer).toBeUndefined()
+      expect(feature._activateTimer).toBeUndefined()
+    })
+
+    test('should disconnect observer when disabled via message', () => {
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div id="studentTable"></div></body></html>')
+      global.document = dom.window.document
+      global.MutationObserver = dom.window.MutationObserver
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' } }
+
+      // Capture the message listener registered by onActivate
+      let messageListener
+      global.chrome.runtime.onMessage.addListener = (listener) => { messageListener = listener }
+
+      feature.onActivate()
+
+      // Feature should be activated
+      expect(feature._observer).toBeDefined()
+
+      // Simulate toggle OFF message
+      messageListener({ action: 'highlightMissingGradesChanged', enabled: false })
+
+      expect(feature._observer).toBeNull()
+      expect(feature._activateTimer).toBeNull()
+      expect(feature._isUpdating).toBe(false)
+    })
+
+    test('should re-activate observer after disable then enable via message', () => {
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div id="studentTable"></div></body></html>')
+      global.document = dom.window.document
+      global.MutationObserver = dom.window.MutationObserver
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' } }
+
+      let messageListener
+      global.chrome.runtime.onMessage.addListener = (listener) => { messageListener = listener }
+
+      feature.onActivate()
+      expect(feature._observer).toBeDefined()
+
+      // Toggle OFF
+      messageListener({ action: 'highlightMissingGradesChanged', enabled: false })
+      expect(feature._observer).toBeNull()
+
+      // Toggle ON
+      messageListener({ action: 'highlightMissingGradesChanged', enabled: true })
+      expect(feature._observer).toBeDefined()
     })
   })
 })
