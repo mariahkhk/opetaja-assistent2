@@ -257,6 +257,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     }
     notif.style.cssText = `
       display: inline-block;
+      flex-shrink: 0;
       margin-left: 16px;
       background: ${bgColor};
       border: 1px solid ${borderColor};
@@ -269,47 +270,13 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       ${animationCss}
     `
     notif.textContent = bannerMessage
-    // Prefer inserting to the left of the label wrapper if present so the badge appears before the subject name
-    try {
-      const labelSelectors = ['.label-wrapper']
-      let inserted = false
-      for (const ls of labelSelectors) {
-        const labelEl = subjectSpan.closest(ls) || document.querySelector(ls)
-        if (labelEl && labelEl.parentNode) {
-          // Prefer inserting after the label wrapper but before the next element that has the generated ng class
-          const nextNg = labelEl.parentNode.querySelector('.ng-tns-c1628529983-16')
-          if (nextNg && nextNg !== labelEl) {
-            labelEl.parentNode.insertBefore(notif, nextNg)
-            inserted = true
-            if (Logger.isDebugMode())
-              Logger.debug('[LastLessonNotificationFeature] Inserted notification between label and ng element using selector:', ls)
-            break
-          }
-          // Fallback: insert after the label element (i.e., before labelEl.nextSibling)
-          if (labelEl.nextSibling) {
-            labelEl.parentNode.insertBefore(notif, labelEl.nextSibling)
-          } else {
-            labelEl.parentNode.appendChild(notif)
-          }
-          inserted = true
-          if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Inserted notification immediately after label with selector:', ls)
-          break
-        }
-      }
-      if (!inserted) {
-        // Fallback to appending to accordion header or inserting after the found element
-        const isHeaderLike = subjectSpan.classList && subjectSpan.classList.contains('accordion-header')
-        if (isHeaderLike) {
-          subjectSpan.appendChild(notif)
-        } else if (subjectSpan.parentNode) {
-          subjectSpan.parentNode.insertBefore(notif, subjectSpan.nextSibling)
-        } else {
-          document.body.appendChild(notif)
-        }
-      }
-    } catch (e) {
-      if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Error inserting notification:', e)
-      document.body.appendChild(notif)
+    // Insert inside .label-wrapper to avoid disrupting the accordion header's flex/grid layout
+    const searchRoot = subjectSpan.closest('.accordion-header, .hois-collapse-header') || subjectSpan
+    const labelWrapper = searchRoot.querySelector('.label-wrapper')
+    if (labelWrapper) {
+      labelWrapper.appendChild(notif)
+    } else {
+      subjectSpan.appendChild(notif)
     }
   }
 
