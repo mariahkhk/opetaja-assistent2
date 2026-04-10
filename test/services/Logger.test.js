@@ -134,22 +134,15 @@ describe('Logger', () => {
   })
 
   describe('debug function', () => {
-    test('should log in development mode', () => {
-      global.chrome.runtime.getManifest = mock(() => ({
-        update_url: null
-      }))
-
-      debug('debug message')
-      expect(console.groupCollapsed).toHaveBeenCalled()
-    })
-
-    test('should not log in production mode when debug is disabled', () => {
-      global.chrome.runtime.getManifest = mock(() => ({
-        update_url: 'https://example.com/updates.xml'
-      }))
-
+    test('should not log when debug mode is disabled', () => {
       debug('debug message')
       expect(console.groupCollapsed).not.toHaveBeenCalled()
+    })
+
+    test('should log when debug mode is enabled', () => {
+      enableDebugMode()
+      debug('debug message')
+      expect(console.groupCollapsed).toHaveBeenCalled()
     })
   })
 

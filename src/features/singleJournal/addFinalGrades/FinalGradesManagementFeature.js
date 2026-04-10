@@ -92,7 +92,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   async #syncOvGrades({ results, ovNumToOutcomeId, filteredOutput, container, statusDiv = null, button = null }) {
     // Prevent concurrent sync runs across different handlers/buttons
     if (this._oaSyncRunning) {
-      Logger.info('FinalGradesByOvFeature: Sync already in progress, skipping second invocation')
+      Logger.debug('FinalGradesByOvFeature: Sync already in progress, skipping second invocation')
       return false
     }
     this._oaSyncRunning = true
@@ -156,7 +156,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             const status = studentStatusMap[String(studentId)]
             const normalizedGrade = String(grade || '').toUpperCase()
             if (status === 'OPPURSTAATUS_A' && (normalizedGrade === 'MA' || normalizedGrade === '1' || normalizedGrade === '2')) {
-              Logger.info('FinalGradesByOvFeature: Skipping ÕV grade for OPPURSTAATUS_A student due to disallowed grade', {
+              Logger.debug('FinalGradesByOvFeature: Skipping ÕV grade for OPPURSTAATUS_A student due to disallowed grade', {
                 studentId,
                 ovNum,
                 grade: normalizedGrade
@@ -173,7 +173,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 const existingCode = existing.grade.code || (existing.grade.value ? `KUTSEHINDAMINE_${String(existing.grade.value)}` : null)
                 const existingValue = existing.grade.value != null ? String(existing.grade.value) : null
                 if (existingCode === mapped.code || existingValue === String(mapped.value)) {
-                  Logger.info('FinalGradesByOvFeature: Skipping no-op ÕV update (existing equals calculated)', {
+                  Logger.debug('FinalGradesByOvFeature: Skipping no-op ÕV update (existing equals calculated)', {
                     studentId,
                     ovNum,
                     existingCode,
@@ -226,7 +226,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         if (!outcomeStudents.length) continue
         const url = `/journals/${journalId}/journalOutcome/${journalOutcomeId}`
         const payload = { outcomeStudents }
-        Logger.info('✨ FinalGradesByOvFeature: Sending payload for ÕV', { ovNum, payload })
+        Logger.debug('✨ FinalGradesByOvFeature: Sending payload for ÕV', { ovNum, payload })
         try {
           await this.api.tahvel.post(url, payload)
           if (statusDiv) statusDiv.textContent += `ÕV ${ovNum}: OK. `
@@ -275,42 +275,36 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
   constructor() {
     super('finalGradesByOv', () => true, null) // Activate on any page for testing
-    Logger.info('✨ FinalGradesByOvFeature: Constructor called - will activate on any page for testing')
+    Logger.debug('✨ FinalGradesByOvFeature: Constructor called - will activate on any page for testing')
   }
 
   shouldActivate(url) {
     // Activate on /journal/<id>/edit and also on /journal/<id> (non-edit view) for broader coverage
     const match = url.match(/\/journal\/(\d+)(?:\/edit)?/)
     const result = !!match && super.shouldActivate(url)
-    Logger.info('✨ FinalGradesByOvFeature: shouldActivate called', { url, result })
+    Logger.debug('✨ FinalGradesByOvFeature: shouldActivate called', { url, result })
     if (!result && url.match(/\/journal\/(\d+)/)) {
-      Logger.info('[DEBUG] Not activating: journal page but not /edit subpage', { url })
+      Logger.debug('[DEBUG] Not activating: journal page but not /edit subpage', { url })
     }
     return result
   }
 
   async onActivate() {
-    // Console log to ensure visibility in page devtools (extension Logger may be quiet)
-    try {
-      console.log('✨ FinalGradesByOvFeature: onActivate called', window.location.href)
-    } catch (e) {
-      void e
-    }
-    Logger.info('✨ FinalGradesByOvFeature: onActivate called')
-    Logger.info('✨ FinalGradesByOvFeature: Current URL:', window.location.href)
+    Logger.debug('✨ FinalGradesByOvFeature: onActivate called')
+    Logger.debug('✨ FinalGradesByOvFeature: Current URL:', window.location.href)
 
     // Mutation observer to re-attach the real async handler if button is replaced
     const attachAsyncHandler = () => {
       const btn = document.querySelector('.oa-final-grades-btn')
-      Logger.info('[DEBUG] attachAsyncHandler called. Button found:', btn)
+      Logger.debug('[DEBUG] attachAsyncHandler called. Button found:', btn)
       if (!btn) return
       if (!btn._oaHandlerAttached) {
-        Logger.info('[DEBUG] Attaching direct click handler to button')
+        Logger.debug('[DEBUG] Attaching direct click handler to button')
         btn.addEventListener('click', async() => {
-          Logger.info('✨ FinalGradesByOvFeature: Direct button click detected')
+          Logger.debug('✨ FinalGradesByOvFeature: Direct button click detected')
           // Prevent re-entrancy if a delegated handler or another click is already processing
           if (btn._oaRunning) {
-            Logger.info('✨ FinalGradesByOvFeature: Direct click ignored, operation already running')
+            Logger.debug('✨ FinalGradesByOvFeature: Direct click ignored, operation already running')
             return
           }
           btn._oaRunning = true
@@ -318,9 +312,9 @@ class FinalGradesByOvFeature extends BaseFeature {
           btn.textContent = 'Laen...'
           btn.style.background = '#ff9800'
           try {
-            Logger.info('✨ FinalGradesByOvFeature: Button click handler start (direct)')
+            Logger.debug('✨ FinalGradesByOvFeature: Button click handler start (direct)')
             const journalId = this.#extractJournalId()
-            Logger.info('[DEBUG] Direct click: journalId:', journalId)
+            Logger.debug('[DEBUG] Direct click: journalId:', journalId)
             if (!journalId) {
               Logger.error('[DEBUG] Direct click: No journalId found!')
               btn.textContent = 'Viga!'
@@ -331,20 +325,20 @@ class FinalGradesByOvFeature extends BaseFeature {
             if (this._lastJournalId && this._lastJournalId === journalId && this._lastEntries && this._lastStudents) {
               entries = this._lastEntries
               students = this._lastStudents
-              Logger.info('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId:', journalId)
+              Logger.debug('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId:', journalId)
             } else {
               [entries, students] = await Promise.all([
                 this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, { allStudents: true }, { cache: false }),
                 this.api.tahvel.get(`/journals/${journalId}/journalStudents`, { allStudents: true }, { cache: false })
               ])
-              Logger.info('✨ FinalGradesByOvFeature: API entries fetched:', entries)
-              Logger.info('✨ FinalGradesByOvFeature: API students fetched:', students)
+              Logger.debug('✨ FinalGradesByOvFeature: API entries fetched:', entries)
+              Logger.debug('✨ FinalGradesByOvFeature: API students fetched:', students)
               this._lastEntries = entries
               this._lastStudents = students
               this._lastJournalId = journalId
             }
             const results = await this.#calculateFinalGrades(entries, students)
-            Logger.info('✨ FinalGradesByOvFeature: Results calculated:', results)
+            Logger.debug('✨ FinalGradesByOvFeature: Results calculated:', results)
             await this.#showResults(results, btn)
             btn.textContent = 'Valmis!'
             btn.style.background = '#388e3c'
@@ -378,79 +372,79 @@ class FinalGradesByOvFeature extends BaseFeature {
 
     // Observe changes to #studentTable so we re-attach handlers if the table/button is replaced
     const tableForObserver = document.querySelector('#studentTable')
-    Logger.info('[DEBUG] #studentTable found for observer:', tableForObserver)
+    Logger.debug('[DEBUG] #studentTable found for observer:', tableForObserver)
     if (tableForObserver) {
       const observer = new MutationObserver(() => {
-        Logger.info('[DEBUG] MutationObserver triggered on #studentTable')
+        Logger.debug('[DEBUG] MutationObserver triggered on #studentTable')
         attachAsyncHandler()
       })
       observer.observe(tableForObserver, { childList: true, subtree: true })
       // Initial attach
-      Logger.info('[DEBUG] Initial attachAsyncHandler call')
+      Logger.debug('[DEBUG] Initial attachAsyncHandler call')
       attachAsyncHandler()
     } else {
-      Logger.warning('[DEBUG] #studentTable not found on page load')
+      Logger.debug('#studentTable not found on page load')
     }
 
-    Logger.info('✨ FinalGradesByOvFeature: Test button logic start')
+    Logger.debug('✨ FinalGradesByOvFeature: Test button logic start')
 
     try {
       // Only proceed if URL matches /journal/<id>/edit
       const url = window.location.href
       const match = url.match(/\/journal\/(\d+)\/edit/)
       if (!match) {
-        Logger.info('[DEBUG] Not on /journal/<id>/edit, skipping button logic', { url })
+        Logger.debug('[DEBUG] Not on /journal/<id>/edit, skipping button logic', { url })
         return
       }
       const journalId = match[1]
-      Logger.info('[DEBUG] Journal ID extracted:', journalId)
+      Logger.debug('[DEBUG] Journal ID extracted:', journalId)
       if (!journalId) {
         Logger.warning('✨ FinalGradesByOvFeature: No journal ID found, feature will not work')
         return
       }
       // Fetch entries and students to check for ÕV columns or SISSEKANNE_L
-      Logger.info('[DEBUG] Fetching entries and students for journalId:', journalId)
+      Logger.debug('[DEBUG] Fetching entries and students for journalId:', journalId)
       let entries, students
       if (this._lastJournalId && this._lastJournalId === journalId && this._lastEntries && this._lastStudents) {
         entries = this._lastEntries
         students = this._lastStudents
-        Logger.info('[DEBUG] Reusing cached entries/students for journalId:', journalId)
+        Logger.debug('[DEBUG] Reusing cached entries/students for journalId:', journalId)
       } else {
         [entries, students] = await Promise.all([
           this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, { allStudents: true }, { cache: false }),
           this.api.tahvel.get(`/journals/${journalId}/journalStudents`, { allStudents: true }, { cache: false })
         ])
-        Logger.info('[DEBUG] Entries fetched:', entries)
-        Logger.info('[DEBUG] Students fetched:', students)
+        Logger.debug('[DEBUG] Entries fetched:', entries)
+        Logger.debug('[DEBUG] Students fetched:', students)
         this._lastEntries = entries
         this._lastStudents = students
         this._lastJournalId = journalId
       }
       const hasSissekanneL = this.detectLGrades(entries)
-      Logger.info('[DEBUG] hasSissekanneL:', hasSissekanneL)
+      Logger.debug('[DEBUG] hasSissekanneL:', hasSissekanneL)
       const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
-      Logger.info('[DEBUG] Results:', results)
+      Logger.debug('[DEBUG] Results:', results)
       if (!hasSissekanneL && (!results.allOvNums || results.allOvNums.length === 0)) {
-        Logger.info('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected, feature will not activate')
-        Logger.info('[DEBUG] Not activating: hasSissekanneL:', hasSissekanneL, 'allOvNums:', results.allOvNums)
+        Logger.debug('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected, feature will not activate')
+        Logger.debug('[DEBUG] Not activating: hasSissekanneL:', hasSissekanneL, 'allOvNums:', results.allOvNums)
         return
       }
       // Wait for the student table element (#studentTable) - strict placement under the real table
       let tableContainer = null
       try {
-        Logger.info('[DEBUG] Waiting for #studentTable')
+        Logger.debug('[DEBUG] Waiting for #studentTable')
         tableContainer = await domService.waitForElement('#studentTable', 20000, 100)
-        Logger.info('✨ FinalGradesByOvFeature: #studentTable found', tableContainer)
+        Logger.debug('✨ FinalGradesByOvFeature: #studentTable found', tableContainer)
       } catch (e) {
         Logger.error('FinalGradesByOvFeature: #studentTable not found, aborting feature initialization', e)
         return
       }
       // Use existing button if present, otherwise insert
       let button = document.querySelector('.oa-final-grades-btn')
-      Logger.info('[DEBUG] Existing button found:', button)
+      Logger.debug('[DEBUG] Existing button found:', button)
       const buttonText = hasSissekanneL ? 'Lisa lõpptulemuse hinded' : 'Lisa õpiväljundite hinded'
       if (!button) {
-        Logger.info('[DEBUG] No existing button, will insert new button under #studentTable')
+        Logger.debug('[DEBUG] No existing button, will insert new button under #studentTable')
         // Strictly insert right after the #studentTable element (no legacy fallbacks)
         button = domService.createAndInsertElement(
           'button',
@@ -463,10 +457,10 @@ class FinalGradesByOvFeature extends BaseFeature {
           tableContainer,
           'afterend'
         )
-        Logger.info('✨ FinalGradesByOvFeature: Button inserted after #studentTable', button)
+        Logger.debug('✨ FinalGradesByOvFeature: Button inserted after #studentTable', button)
       } else {
-        Logger.info('✨ FinalGradesByOvFeature: Using existing button', button)
-        Logger.info('✨ FinalGradesByOvFeature: Button visibility:', {
+        Logger.debug('✨ FinalGradesByOvFeature: Using existing button', button)
+        Logger.debug('✨ FinalGradesByOvFeature: Button visibility:', {
           display: button.style.display,
           visibility: button.style.visibility,
           opacity: button.style.opacity,
@@ -481,7 +475,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
       // --- NEW: Calculate grades on page load (without auto-sync) ---
       try {
-        Logger.info('✨ FinalGradesByOvFeature: Calculating grades on page load')
+        Logger.debug('✨ FinalGradesByOvFeature: Calculating grades on page load')
         const hasSissekanneL = this.detectLGrades(entries)
         const resultsOnLoad = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
         // Call showResults with autoSync=false so we only compute filteredOutput and update button state/UI
@@ -575,7 +569,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             // mark as intentionally disabled (no further re-enable)
             button._oaFinalGradesDisabled = true
-            Logger.info('✨ FinalGradesByOvFeature: No grade changes detected — disabled button')
+            Logger.debug('✨ FinalGradesByOvFeature: No grade changes detected — disabled button')
           } catch (e) {
             Logger.warn('FinalGradesByOvFeature: Failed to disable button', e)
           }
@@ -585,7 +579,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
       // Remove any old event delegation to avoid duplicates
       if (window._oaFinalGradesDelegation) {
-        Logger.info('[DEBUG] Removing old event delegation')
+        Logger.debug('[DEBUG] Removing old event delegation')
         document.removeEventListener('click', window._oaFinalGradesDelegation, true)
       }
       // Use event delegation for robustness
@@ -594,18 +588,18 @@ class FinalGradesByOvFeature extends BaseFeature {
         if (!btn) return
         // Ignore if another handler is already processing this button
         if (btn._oaRunning) {
-          Logger.info('✨ FinalGradesByOvFeature: Delegated click ignored, operation already running')
+          Logger.debug('✨ FinalGradesByOvFeature: Delegated click ignored, operation already running')
           return
         }
         btn._oaRunning = true
-        Logger.info('✨ FinalGradesByOvFeature: Delegated button click detected')
+        Logger.debug('✨ FinalGradesByOvFeature: Delegated button click detected')
         btn.disabled = true
         btn.textContent = 'Laen...'
         btn.style.background = '#ff9800'
         try {
-          Logger.info('✨ FinalGradesByOvFeature: Button click handler start (delegated)')
+          Logger.debug('✨ FinalGradesByOvFeature: Button click handler start (delegated)')
           const journalId = this.#extractJournalId()
-          Logger.info('[DEBUG] Delegated click: journalId:', journalId)
+          Logger.debug('[DEBUG] Delegated click: journalId:', journalId)
           if (!journalId) {
             Logger.error('[DEBUG] Delegated click: No journalId found!')
             btn.textContent = 'Viga!'
@@ -616,25 +610,25 @@ class FinalGradesByOvFeature extends BaseFeature {
           if (this._lastJournalId && this._lastJournalId === journalId && this._lastEntries && this._lastStudents) {
             entries = this._lastEntries
             students = this._lastStudents
-            Logger.info('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId:', journalId)
+            Logger.debug('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId:', journalId)
           } else {
             [entries, students] = await Promise.all([
               this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, { allStudents: true }, { cache: false }),
               this.api.tahvel.get(`/journals/${journalId}/journalStudents`, { allStudents: true }, { cache: false })
             ])
-            Logger.info('✨ FinalGradesByOvFeature: API entries fetched:', entries)
-            Logger.info('✨ FinalGradesByOvFeature: API students fetched:', students)
+            Logger.debug('✨ FinalGradesByOvFeature: API entries fetched:', entries)
+            Logger.debug('✨ FinalGradesByOvFeature: API students fetched:', students)
             this._lastEntries = entries
             this._lastStudents = students
             this._lastJournalId = journalId
           }
           const hasSissekanneL = this.detectLGrades(entries)
-          Logger.info('[DEBUG] Delegated click: hasSissekanneL:', hasSissekanneL)
+          Logger.debug('[DEBUG] Delegated click: hasSissekanneL:', hasSissekanneL)
           const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
-          Logger.info('[DEBUG] Delegated click: results:', results)
+          Logger.debug('[DEBUG] Delegated click: results:', results)
           if (!hasSissekanneL && (!results.allOvNums || results.allOvNums.length === 0)) {
-            Logger.info('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected on button click, aborting')
-            Logger.info('[DEBUG] Delegated click: Not activating: hasSissekanneL:', hasSissekanneL, 'allOvNums:', results.allOvNums)
+            Logger.debug('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected on button click, aborting')
+            Logger.debug('[DEBUG] Delegated click: Not activating: hasSissekanneL:', hasSissekanneL, 'allOvNums:', results.allOvNums)
             btn.textContent = 'ÕV-sid või lõpptulemust ei leitud'
             btn.style.background = '#d32f2f'
             setTimeout(() => {
@@ -644,7 +638,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }, 3000)
             return
           }
-          Logger.info('✨ FinalGradesByOvFeature: Results calculated:', results)
+          Logger.debug('✨ FinalGradesByOvFeature: Results calculated:', results)
           if (hasSissekanneL) {
             await this.showLGradeResults(results, btn, entries)
           } else {
@@ -684,7 +678,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
       window._oaFinalGradesDelegation = delegatedHandler
-      Logger.info('[DEBUG] Adding event delegation for .oa-final-grades-btn')
+      Logger.debug('[DEBUG] Adding event delegation for .oa-final-grades-btn')
       document.addEventListener('click', delegatedHandler, true)
       // No need to add a direct event listener here; handled by mutation observer logic above
       // --- NEW: Observe journal table for changes and re-evaluate button state ---
@@ -709,18 +703,18 @@ class FinalGradesByOvFeature extends BaseFeature {
                 // Compute snapshot and bail out quickly if nothing meaningful changed
                 const snapshot = getSnapshot()
                 if (snapshot === lastSnapshot) {
-                  Logger.info('✨ FinalGradesByOvFeature: DOM changed but table snapshot unchanged — skipping API')
+                  Logger.debug('✨ FinalGradesByOvFeature: DOM changed but table snapshot unchanged — skipping API')
                   return
                 }
                 lastSnapshot = snapshot
-                Logger.info('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating grade diffs')
+                Logger.debug('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating grade diffs')
                 const journalId = this.#extractJournalId()
                 if (!journalId) return
                 let newEntries, newStudents
                 if (this._lastJournalId && this._lastJournalId === journalId && this._lastEntries && this._lastStudents) {
                   newEntries = this._lastEntries
                   newStudents = this._lastStudents
-                  Logger.info('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId (DOM change):', journalId)
+                  Logger.debug('✨ FinalGradesByOvFeature: Reusing cached entries/students for journalId (DOM change):', journalId)
                 } else {
                   [newEntries, newStudents] = await Promise.all([
                     this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, { allStudents: true }, { cache: false }),
@@ -763,7 +757,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                         // ignore and leave title/style as-is
                       }
                     }
-                    Logger.info('✨ FinalGradesByOvFeature: Button enabled after DOM change — changes detected')
+                    Logger.debug('✨ FinalGradesByOvFeature: Button enabled after DOM change — changes detected')
                   } else {
                     // disable globally
                     window._oaFinalGradesDisabled = true
@@ -785,7 +779,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                         Logger.warn('FinalGradesByOvFeature: Ignored inner error', innerErr)
                       }
                     }
-                    Logger.info('✨ FinalGradesByOvFeature: Button disabled after DOM change — no changes detected')
+                    Logger.debug('✨ FinalGradesByOvFeature: Button disabled after DOM change — no changes detected')
                   }
                 } catch (e) {
                   Logger.warn('FinalGradesByOvFeature: Failed to update button state after DOM change', e)
@@ -803,7 +797,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
     } catch (e) {
       Logger.error('FinalGradesByOvFeature init error', e)
-      Logger.info('[DEBUG] Exception in onActivate:', e)
+      Logger.debug('[DEBUG] Exception in onActivate:', e)
     }
   }
 
@@ -813,12 +807,12 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   async #calculateFinalGrades(entries, students) {
-    Logger.info('✨ FinalGradesByOvFeature: DEBUG students structure:', students)
+    Logger.debug('✨ FinalGradesByOvFeature: DEBUG students structure:', students)
     const studentMap = {}
     const journalStudentIdToStudentId = {}
     let hasOvSissekanneI = false
     students.forEach(s => {
-      Logger.info('✨ FinalGradesByOvFeature: DEBUG processing student:', s)
+      Logger.debug('✨ FinalGradesByOvFeature: DEBUG processing student:', s)
       // Check if student data is nested under .student or directly on the object
       let name, idcode, studentId, journalStudentId
       if (s.student && s.student.idcode) {
@@ -835,7 +829,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       studentMap[journalStudentId] = { name, idcode, studentId }
       journalStudentIdToStudentId[journalStudentId] = studentId
     })
-    Logger.info('✨ FinalGradesByOvFeature: DEBUG studentMap after processing:', studentMap)
+    Logger.debug('✨ FinalGradesByOvFeature: DEBUG studentMap after processing:', studentMap)
 
     // Map ÕV number using outcomeOrderNr+1 for SISSEKANNE_O (robust to all nameEt formats)
     // This ensures correct mapping regardless of how ÕV is tagged in nameEt
@@ -878,7 +872,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     })
-    Logger.info('✨ FinalGradesByOvFeature: ovNumToOutcomeId mapping for this journal', ovNumToOutcomeId)
+    Logger.debug('✨ FinalGradesByOvFeature: ovNumToOutcomeId mapping for this journal', ovNumToOutcomeId)
 
     // Collect grades for each student
     const gradesByStudent = {}
@@ -894,7 +888,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           if (entryStudent.grade && entryStudent.grade.code && entryStudent.journalStudent) {
             const grade = entryStudent.grade.code.replace('KUTSEHINDAMINE_', '')
             finalGradesByStudent[entryStudent.journalStudent] = grade
-            Logger.info('✨ FinalGradesByOvFeature: Found SISSEKANNE_L grade', {
+            Logger.debug('✨ FinalGradesByOvFeature: Found SISSEKANNE_L grade', {
               journalStudent: entryStudent.journalStudent,
               grade
             })
@@ -1024,7 +1018,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     // Calculate per-ÕV grades for each student
     // Use ovNumToOutcomeId keys for allOvNums
     const allOvNums = Object.keys(ovNumToOutcomeId).sort((a, b) => Number(a) - Number(b))
-    Logger.info('✨ FinalGradesByOvFeature: All ÕV numbers:', allOvNums)
+    Logger.debug('✨ FinalGradesByOvFeature: All ÕV numbers:', allOvNums)
 
     const output = []
     const summary = []
@@ -1033,7 +1027,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       let finalGrade = ''
       if (finalGradesByStudent[journalStudentId]) {
         finalGrade = finalGradesByStudent[journalStudentId]
-        Logger.info('✨ FinalGradesByOvFeature: Using SISSEKANNE_L grade', { student: student.name, finalGrade })
+        Logger.debug('✨ FinalGradesByOvFeature: Using SISSEKANNE_L grade', { student: student.name, finalGrade })
       } else {
         // Placeholder - grading mode logic will calculate the actual final grade
         const grades = gradesByStudent[journalStudentId] || []
@@ -1043,7 +1037,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         } else {
           finalGrade = ''
         }
-        Logger.info('✨ FinalGradesByOvFeature: Initial placeholder grade (will be overridden by grading mode)', {
+        Logger.debug('✨ FinalGradesByOvFeature: Initial placeholder grade (will be overridden by grading mode)', {
           student: student.name,
           finalGrade,
           grades
@@ -1110,7 +1104,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
 
         ovGrades[ovNum] = ovGrade
-        Logger.info('✨ FinalGradesByOvFeature: Per-ÕV grade calculated', { student: student.name, ovNum, ovGrade, gradesArr, allGradesAsNumeric })
+        Logger.debug('✨ FinalGradesByOvFeature: Per-ÕV grade calculated', { student: student.name, ovNum, ovGrade, gradesArr, allGradesAsNumeric })
       })
 
       output.push({
@@ -1130,7 +1124,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         studentId: student.studentId
       })
     })
-    Logger.info('✨ FinalGradesByOvFeature: SUMMARY', summary)
+    Logger.debug('✨ FinalGradesByOvFeature: SUMMARY', summary)
     return { output, allOvNums, ovNumToOutcomeId, journalStudentIdToStudentId, hasOvSissekanneI }
   }
 
@@ -1256,7 +1250,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   async #showResults(results, button, opts = { autoSync: true }) {
-    Logger.info('✨ FinalGradesByOvFeature: #showResults called', { results, button, opts })
+    Logger.debug('✨ FinalGradesByOvFeature: #showResults called', { results, button, opts })
     // Only perform sync logic, do not render a table
     // eslint-disable-next-line no-unused-vars
     const { allOvNums, ovNumToOutcomeId, hasOvSissekanneI, output } = results
@@ -1304,7 +1298,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               this._journalAssessment = journalAssessment
             }
           } catch (e) {
-            Logger.info('FinalGradesByOvFeature: Could not prefetch journal assessment, will infer', e)
+            Logger.debug('FinalGradesByOvFeature: Could not prefetch journal assessment, will infer', e)
           }
         }
         if (journalAssessment === 'KUTSEHINDAMISVIIS_M') modeToApply = 'mitte'
@@ -1398,7 +1392,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
           } catch (e) {
             // ignore and fall back to computed grades
-            Logger.info('FinalGradesByOvFeature: Could not fetch journal assessment, falling back to grade-based default', e)
+            Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, falling back to grade-based default', e)
           }
         }
         // If journal assessment explicitly indicates a known mode, prefer that
@@ -1903,7 +1897,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
       // If autoSync is false, we only compute filteredOutput and update button/UI state, do not post grades
       if (!opts.autoSync) {
-        Logger.info('✨ FinalGradesByOvFeature: autoSync disabled on page load — skipping POST')
+        Logger.debug('✨ FinalGradesByOvFeature: autoSync disabled on page load — skipping POST')
         // If there are no changes, disable the button (this logic mirrors earlier checks)
         if (filteredOutput.length === 0) {
           try {
@@ -1924,7 +1918,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             // Mark as intentionally disabled so click handlers don't re-enable
             button._oaFinalGradesDisabled = true
-            Logger.info('✨ FinalGradesByOvFeature: Button disabled on page load because no changes detected')
+            Logger.debug('✨ FinalGradesByOvFeature: Button disabled on page load because no changes detected')
           } catch (e) {
             Logger.warn('FinalGradesByOvFeature: Failed to disable button on page load', e)
           }
@@ -1955,7 +1949,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     if (existingStatusDiv) {
       existingStatusDiv.remove()
     }
-    Logger.info('✨ FinalGradesByOvFeature: Table rendering skipped as requested')
+    Logger.debug('✨ FinalGradesByOvFeature: Table rendering skipped as requested')
   }
 
   // ============= L-GRADE (SISSEKANNE_L) FUNCTIONALITY =============
@@ -1991,7 +1985,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       if (entry.entryType === 'SISSEKANNE_T' || entry.entryType === 'SISSEKANNE_I') {
         // 1. Extract from journalStudentResults (if present)
         if (entry.journalStudentResults) {
-          Logger.info(`✨ FinalGradesLFeature: Processing ${entry.entryType} entry (journalStudentResults)`, entry.journalStudentResults)
+          Logger.debug(`✨ FinalGradesLFeature: Processing ${entry.entryType} entry (journalStudentResults)`, entry.journalStudentResults)
           Object.entries(entry.journalStudentResults).forEach(([journalStudentId, resultsArr]) => {
             if (Array.isArray(resultsArr)) {
               resultsArr.forEach(result => {
@@ -2001,22 +1995,22 @@ class FinalGradesByOvFeature extends BaseFeature {
                     if (entry.entryType === 'SISSEKANNE_T') {
                       if (!gradesT[journalStudentId]) gradesT[journalStudentId] = []
                       gradesT[journalStudentId].push(parseInt(grade))
-                      Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_T grade for student ${journalStudentId}: ${grade}`)
+                      Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_T grade for student ${journalStudentId}: ${grade}`)
                     } else if (entry.entryType === 'SISSEKANNE_I') {
                       if (!gradesI[journalStudentId]) gradesI[journalStudentId] = []
                       gradesI[journalStudentId].push(parseInt(grade))
-                      Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_I grade for student ${journalStudentId}: ${grade}`)
+                      Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_I grade for student ${journalStudentId}: ${grade}`)
                     }
                   } else if (['A', 'MA'].includes(grade)) {
                     const key = journalStudentId + '_str'
                     if (entry.entryType === 'SISSEKANNE_T') {
                       if (!gradesT[key]) gradesT[key] = []
                       gradesT[key].push(grade)
-                      Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_T string grade for student ${journalStudentId}: ${grade}`)
+                      Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_T string grade for student ${journalStudentId}: ${grade}`)
                     } else if (entry.entryType === 'SISSEKANNE_I') {
                       if (!gradesI[key]) gradesI[key] = []
                       gradesI[key].push(grade)
-                      Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_I string grade for student ${journalStudentId}: ${grade}`)
+                      Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_I string grade for student ${journalStudentId}: ${grade}`)
                     }
                   }
                 }
@@ -2026,7 +2020,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
         // 2. Extract from journalEntryStudents (if present)
         if (Array.isArray(entry.journalEntryStudents)) {
-          Logger.info(`✨ FinalGradesLFeature: Processing ${entry.entryType} entry (journalEntryStudents)`, entry.journalEntryStudents)
+          Logger.debug(`✨ FinalGradesLFeature: Processing ${entry.entryType} entry (journalEntryStudents)`, entry.journalEntryStudents)
           entry.journalEntryStudents.forEach(js => {
             if (js.grade && js.grade.code) {
               const grade = js.grade.code.replace('KUTSEHINDAMINE_', '')
@@ -2035,22 +2029,22 @@ class FinalGradesByOvFeature extends BaseFeature {
                 if (entry.entryType === 'SISSEKANNE_T') {
                   if (!gradesT[journalStudentId]) gradesT[journalStudentId] = []
                   gradesT[journalStudentId].push(parseInt(grade))
-                  Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_T grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
+                  Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_T grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
                 } else if (entry.entryType === 'SISSEKANNE_I') {
                   if (!gradesI[journalStudentId]) gradesI[journalStudentId] = []
                   gradesI[journalStudentId].push(parseInt(grade))
-                  Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_I grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
+                  Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_I grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
                 }
               } else if (['A', 'MA'].includes(grade)) {
                 const key = journalStudentId + '_str'
                 if (entry.entryType === 'SISSEKANNE_T') {
                   if (!gradesT[key]) gradesT[key] = []
                   gradesT[key].push(grade)
-                  Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_T string grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
+                  Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_T string grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
                 } else if (entry.entryType === 'SISSEKANNE_I') {
                   if (!gradesI[key]) gradesI[key] = []
                   gradesI[key].push(grade)
-                  Logger.info(`✨ FinalGradesLFeature: Added SISSEKANNE_I string grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
+                  Logger.debug(`✨ FinalGradesLFeature: Added SISSEKANNE_I string grade for student ${journalStudentId} (journalEntryStudents): ${grade}`)
                 }
               }
             }
@@ -2059,8 +2053,8 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
     })
 
-    Logger.info('✨ FinalGradesLFeature: All SISSEKANNE_T grades', gradesT)
-    Logger.info('✨ FinalGradesLFeature: All SISSEKANNE_I grades', gradesI)
+    Logger.debug('✨ FinalGradesLFeature: All SISSEKANNE_T grades', gradesT)
+    Logger.debug('✨ FinalGradesLFeature: All SISSEKANNE_I grades', gradesI)
 
     const output = []
     Object.entries(studentMap).forEach(([journalStudentId, student]) => {
@@ -2068,25 +2062,25 @@ class FinalGradesByOvFeature extends BaseFeature {
       const iGrades = gradesI[journalStudentId] || []
       const allGrades = [...tGrades, ...iGrades]
       const allStringGrades = [...(gradesT[journalStudentId + '_str'] || []), ...(gradesI[journalStudentId + '_str'] || [])]
-      Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL SISSEKANNE_T grades:`, tGrades)
-      Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL SISSEKANNE_I grades:`, iGrades)
-      Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL COMBINED grades:`, allGrades)
-      Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL STRING grades:`, allStringGrades)
+      Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL SISSEKANNE_T grades:`, tGrades)
+      Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL SISSEKANNE_I grades:`, iGrades)
+      Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL COMBINED grades:`, allGrades)
+      Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) ALL STRING grades:`, allStringGrades)
       let finalGrade = ''
       if (allStringGrades.includes('MA')) {
         finalGrade = 'MA'
-        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: at least one MA → MA`)
+        Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: at least one MA → MA`)
       } else if (allStringGrades.length > 0 && allStringGrades.every(g => g === 'A')) {
         finalGrade = 'A'
-        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: all A → A`)
+        Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: all A → A`)
       } else if (allGrades.length > 0) {
         const sum = allGrades.reduce((a, b) => a + b, 0)
         const avg = sum / allGrades.length
         finalGrade = String(Math.round(avg))
-        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: combined avg ${avg} → ${finalGrade}`)
+        Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: combined avg ${avg} → ${finalGrade}`)
       } else {
         finalGrade = null
-        Logger.info(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: no SISSEKANNE_T/I grades, skipping calculation`)
+        Logger.debug(`✨ FinalGradesLFeature: Student ${journalStudentId} (${student.name}) FINAL: no SISSEKANNE_T/I grades, skipping calculation`)
       }
       output.push({
         name: student.name,
@@ -2096,7 +2090,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         studentId: student.studentId
       })
     })
-    Logger.info('✨ FinalGradesLFeature: output', output)
+    Logger.debug('✨ FinalGradesLFeature: output', output)
     return { output }
   }
 
@@ -2323,7 +2317,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               this._journalAssessment = journalAssessment
             }
           } catch (e) {
-            Logger.info('FinalGradesByOvFeature: Could not prefetch journal assessment for L flow, will infer', e)
+            Logger.debug('FinalGradesByOvFeature: Could not prefetch journal assessment for L flow, will infer', e)
           }
         }
 
@@ -2418,9 +2412,9 @@ class FinalGradesByOvFeature extends BaseFeature {
       // If we don't have a usable currentEntry (or it lacks journalEntryStudents), fetch fresh from API
       if (!currentEntry || !Array.isArray(currentEntry.journalEntryStudents)) {
         currentEntry = await this.api.tahvel.get(`/journals/${journalId}/journalEntry/${lEntry.id}`, {}, { cache: false })
-        Logger.info('✨ FinalGradesLFeature: Fetched current entry from API', currentEntry)
+        Logger.debug('✨ FinalGradesLFeature: Fetched current entry from API', currentEntry)
       } else {
-        Logger.info('✨ FinalGradesLFeature: Using current entry from lastEntries', currentEntry)
+        Logger.debug('✨ FinalGradesLFeature: Using current entry from lastEntries', currentEntry)
       }
       // Build journalEntryStudents array from our filtered calculated grades
       const lGrades = {}
@@ -2467,7 +2461,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             } catch (innerErr) {
               Logger.warn('FinalGradesByOvFeature: Failed to set disabled button state', innerErr)
             }
-            Logger.info('✨ FinalGradesByOvFeature: Button disabled on page load because no L changes detected')
+            Logger.debug('✨ FinalGradesByOvFeature: Button disabled on page load because no L changes detected')
           } else {
             // enable button if previously disabled
             try {
@@ -2499,14 +2493,14 @@ class FinalGradesByOvFeature extends BaseFeature {
             } catch (innerErr) {
               Logger.warn('FinalGradesByOvFeature: Failed deciding button label', innerErr)
             }
-            Logger.info('✨ FinalGradesByOvFeature: Button enabled on page load — L changes detected')
+            Logger.debug('✨ FinalGradesByOvFeature: Button enabled on page load — L changes detected')
           }
         } catch (e) {
           Logger.warn('FinalGradesByOvFeature: Error while updating button state on page load', e)
         }
         return filteredOutput
       }
-      Logger.info(
+      Logger.debug(
         '✨ FinalGradesByOvFeature: filtered results.output journalStudentIds',
         filteredOutput.map(r => r.journalStudentId)
       )
@@ -2530,7 +2524,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           const status = studentStatusMap[String(r.studentId)]
           const gradeStr = String(r.finalGrade || '').toUpperCase()
           if (status === 'OPPURSTAATUS_A' && (gradeStr === 'MA' || gradeStr === '1' || gradeStr === '2')) {
-            Logger.info('✨ FinalGradesByOvFeature: Skipping L grade for OPPURSTAATUS_A student due to disallowed grade', {
+            Logger.debug('✨ FinalGradesByOvFeature: Skipping L grade for OPPURSTAATUS_A student due to disallowed grade', {
               journalStudentId: r.journalStudentId,
               studentId: r.studentId,
               grade: gradeStr
@@ -2631,13 +2625,13 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       })
       const journalEntryStudents = Array.from(seen.values()).filter(js => js && js.journalStudent != null)
-      Logger.info('✨ FinalGradesByOvFeature: journalEntryStudents to send', journalEntryStudents)
+      Logger.debug('✨ FinalGradesByOvFeature: journalEntryStudents to send', journalEntryStudents)
       // Build payload using the current entry from API
       const payload = {
         ...currentEntry,
         journalEntryStudents
       }
-      Logger.info('✨ FinalGradesByOvFeature: Sending SISSEKANNE_L PUT', { url: `/journals/${journalId}/journalEntry/${lEntry.id}`, payload })
+      Logger.debug('✨ FinalGradesByOvFeature: Sending SISSEKANNE_L PUT', { url: `/journals/${journalId}/journalEntry/${lEntry.id}`, payload })
       await this.api.tahvel.put(`/journals/${journalId}/journalEntry/${lEntry.id}`, payload)
       setTimeout(() => window.location.reload(), 1000)
     } catch (err) {
@@ -2851,7 +2845,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
       // Here you could implement actual grade saving logic
       // For now, just update the visual state
-      Logger.info('FinalGradesByOvFeature: L-grade changed', { studentId, newGrade })
+      Logger.debug('FinalGradesByOvFeature: L-grade changed', { studentId, newGrade })
 
       // Reset background after a delay
       setTimeout(() => {
@@ -2872,7 +2866,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     try {
       const tableEl = document.querySelector('#studentTable')
       if (!tableEl) {
-        Logger.info('FinalGradesByOvFeature: attachDomObserver - #studentTable not found, skipping')
+        Logger.debug('FinalGradesByOvFeature: attachDomObserver - #studentTable not found, skipping')
         return null
       }
       let debounceTimer = null
@@ -2900,11 +2894,11 @@ class FinalGradesByOvFeature extends BaseFeature {
           try {
             const snapshot = getSnapshot()
             if (snapshot === lastSnapshot) {
-              Logger.info('✨ FinalGradesByOvFeature: DOM changed but table snapshot unchanged — skipping API')
+              Logger.debug('✨ FinalGradesByOvFeature: DOM changed but table snapshot unchanged — skipping API')
               return
             }
             lastSnapshot = snapshot
-            Logger.info('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating L diffs')
+            Logger.debug('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating L diffs')
             const journalId = this.#extractJournalId()
             if (!journalId) return
             const [newEntries, newStudents] = await Promise.all([
@@ -2914,7 +2908,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             this._lastEntries = newEntries
             const newResults = this.extractFinalGrades(newEntries, newStudents)
             await this.showLGradeResults(newResults, button, newEntries, { autoSync: false })
-            Logger.info('✨ FinalGradesByOvFeature: Button state updated after DOM change')
+            Logger.debug('✨ FinalGradesByOvFeature: Button state updated after DOM change')
           } catch (err) {
             Logger.warn('✨ FinalGradesByOvFeature: Error while re-evaluating after DOM change', err)
           }
@@ -3026,9 +3020,9 @@ class FinalGradesByOvFeature extends BaseFeature {
         colIdx += colspan
       })
     })
-    if (Logger.isDebugMode()) Logger.info('✨ FinalGradesByOvFeature: header debug:', debugHeaders.join(' | '))
-    if (Logger.isDebugMode()) Logger.info('✨ FinalGradesByOvFeature: detected final grade columns:', finalGradeCols)
-    if (Logger.isDebugMode()) Logger.info('✨ FinalGradesByOvFeature: detected ÕV columns:', ovCols)
+    if (Logger.isDebugMode()) Logger.debug('✨ FinalGradesByOvFeature: header debug:', debugHeaders.join(' | '))
+    if (Logger.isDebugMode()) Logger.debug('✨ FinalGradesByOvFeature: detected final grade columns:', finalGradeCols)
+    if (Logger.isDebugMode()) Logger.debug('✨ FinalGradesByOvFeature: detected ÕV columns:', ovCols)
     return { finalGradeCols: Array.from(new Set(finalGradeCols)), ovCols: Array.from(new Set(ovCols)) }
   }
 }

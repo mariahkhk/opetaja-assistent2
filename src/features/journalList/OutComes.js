@@ -60,14 +60,14 @@ export async function sendOutcomeEntriesToKriit(api, journalLinks) {
         assignments
       }
     } catch (error) {
-      Logger.error(`Failed to process journal ${id} for final grades:`, error)
+      Logger.debug(`Failed to process journal ${id} for final grades:`, error)
       return null
     }
   })
   const results = await Promise.all(journalPromises)
   const finalGradesData = results.filter(r => r !== null)
   if (finalGradesData.length === 0) {
-    Logger.info('No outcome entries to send for final grades')
+    Logger.debug('No outcome entries to send for final grades')
     return
   }
   // Build payload: only subjectId, outcomeId, outcomeName, learningOutcomeOrderNr

@@ -209,11 +209,11 @@ const tahvelExtension = {
     this.activeFeatures.forEach(feature => {
       if (feature.shouldActivate(url)) {
         if (!feature.isActive) {
-          Logger.feature(feature.name, 'Activating feature')
+          Logger.debug(`[${feature.name}] Activating feature`)
         }
         feature.activate()
       } else if (feature.isActive) {
-        Logger.feature(feature.name, 'Deactivating feature')
+        Logger.debug(`[${feature.name}] Deactivating feature`)
         feature.deactivate()
       }
     })

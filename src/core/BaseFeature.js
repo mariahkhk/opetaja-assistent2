@@ -93,7 +93,7 @@ export class BaseFeature {
 
     // Mark as active
     this.isActive = true
-    Logger.feature(this.name, 'Base activation complete - initializing feature')
+    Logger.debug(`[${this.name}] Base activation complete - initializing feature`)
 
     // If we have required selectors, wait for them before calling onActivate
     if (this.requiredSelectors) {
@@ -128,7 +128,7 @@ export class BaseFeature {
   deactivate() {
     if (this.isActive) {
       this.isActive = false
-      Logger.feature(this.name, 'Deactivated')
+      Logger.debug(`[${this.name}] Deactivated`)
       this.onDeactivate()
     }
   }

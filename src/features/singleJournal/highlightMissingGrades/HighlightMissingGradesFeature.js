@@ -2,11 +2,12 @@
 // Highlights cells in independent work columns in red if due date has passed and no grade is assigned
 
 import { BaseFeature } from '../../../core/BaseFeature.js'
+import Logger from '../../../services/Logger.js'
 
 class HighlightMissingGradesFeature extends BaseFeature {
   constructor() {
     super('highlightMissingGrades', /#\/journal\//)
-    console.debug('[HighlightMissingGradesFeature] constructor called')
+    Logger.debug('[HighlightMissingGradesFeature] constructor called')
   }
 
   injectMissingGradeCSS() {
@@ -26,7 +27,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
   }
 
   onActivate() {
-    console.debug('[HighlightMissingGradesFeature] onActivate called')
+    Logger.debug('[HighlightMissingGradesFeature] onActivate called')
 
     // Set up message listener for real-time toggle from popup
     if (!this._messageListener) {
@@ -49,7 +50,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
     // Check if feature is enabled in settings (default: true)
     chrome.storage.sync.get(['OA_highlightMissingGrades'], (result) => {
       if (result['OA_highlightMissingGrades'] === false) {
-        console.debug('[HighlightMissingGradesFeature] Feature disabled in settings')
+        Logger.debug('[HighlightMissingGradesFeature] Feature disabled in settings')
         return
       }
       this.#activateFeature()
@@ -127,7 +128,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
         })
 
         if (affectsStudentTable) {
-          console.debug('[HighlightMissingGradesFeature] studentTable change detected, scheduling re-run')
+          Logger.debug('[HighlightMissingGradesFeature] studentTable change detected, scheduling re-run')
           // Debounce to avoid excessive re-runs during rapid DOM changes
           if (this._debounceTimer) {
             clearTimeout(this._debounceTimer)
@@ -157,7 +158,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
   }
 
   onDeactivate() {
-    console.debug('[HighlightMissingGradesFeature] onDeactivate called')
+    Logger.debug('[HighlightMissingGradesFeature] onDeactivate called')
     if (this._activateTimer) {
       clearTimeout(this._activateTimer)
       this._activateTimer = null
@@ -191,13 +192,13 @@ class HighlightMissingGradesFeature extends BaseFeature {
     const studentTableContainer = document.getElementById('studentTable')
     if (studentTableContainer) {
       table = studentTableContainer.querySelector('table')
-      console.debug('[HighlightMissingGradesFeature] run(): found table inside #studentTable')
+      Logger.debug('[HighlightMissingGradesFeature] run(): found table inside #studentTable')
     }
 
     if (!table) {
       const layoutPadding = document.querySelector('.layout-padding')
       if (!layoutPadding) {
-        console.debug('[HighlightMissingGradesFeature] run(): .layout-padding not found, attempting fallbacks')
+        Logger.debug('[HighlightMissingGradesFeature] run(): .layout-padding not found, attempting fallbacks')
       }
       // Prefer table inside layoutPadding, but fall back to global selectors if not present
       if (layoutPadding) table = layoutPadding.querySelector('table.journalTable')
@@ -209,7 +210,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
             const t = document.querySelector(sel)
             if (t) {
               table = t
-              console.debug('[HighlightMissingGradesFeature] run(): found table via fallback selector', sel)
+              Logger.debug('[HighlightMissingGradesFeature] run(): found table via fallback selector', sel)
               break
             }
           } catch (e) {
@@ -217,12 +218,12 @@ class HighlightMissingGradesFeature extends BaseFeature {
           }
         }
       } else {
-        console.debug('[HighlightMissingGradesFeature] run(): found table inside .layout-padding')
+        Logger.debug('[HighlightMissingGradesFeature] run(): found table inside .layout-padding')
       }
     }
 
     if (!table) {
-      console.debug('[HighlightMissingGradesFeature] run(): journal table not found, aborting')
+      Logger.debug('[HighlightMissingGradesFeature] run(): journal table not found, aborting')
       this._isUpdating = false
       return
     }
@@ -232,7 +233,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
       cell.title = ''
     })
     const headerCells = Array.from(table.querySelectorAll('thead th'))
-    console.debug('[HighlightMissingGradesFeature] run(): headerCells count', headerCells.length)
+    Logger.debug('[HighlightMissingGradesFeature] run(): headerCells count', headerCells.length)
     const nowDate = new Date()
 
     // Try to extract journalId from URL
@@ -252,16 +253,16 @@ class HighlightMissingGradesFeature extends BaseFeature {
         { cache: true, cacheExpiration: 6e4 }
       )
     } catch (e) {
-      console.info('[HighlightMissingGradesFeature] run(): failed to fetch journalEntries', e)
+      Logger.debug('[HighlightMissingGradesFeature] run(): failed to fetch journalEntries', e)
       this._isUpdating = false
       return
     }
     if (!Array.isArray(journalEntries) || journalEntries.length === 0) {
-      console.debug('[HighlightMissingGradesFeature] run(): journalEntries empty or not array', journalEntries)
+      Logger.debug('[HighlightMissingGradesFeature] run(): journalEntries empty or not array', journalEntries)
       this._isUpdating = false
       return
     }
-    console.debug('[HighlightMissingGradesFeature] run(): journalEntries length', journalEntries.length)
+    Logger.debug('[HighlightMissingGradesFeature] run(): journalEntries length', journalEntries.length)
 
     // Map columns to journalEntries by matching header cell date text to entry.entryDate
     const entryColumns = headerCells.slice(2)
@@ -329,7 +330,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
       }
     })
     await Promise.all(entryDetailPromises)
-    console.debug(
+    Logger.debug(
       '[HighlightMissingGradesFeature] run(): detected iseseisevColumns (pre-filter)',
       iseseisevColumns.map(c => c.idx)
     )
@@ -358,7 +359,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
       return isGreenHeader(th)
     })
     if (filtered.length !== iseseisevColumns.length) {
-      console.debug(
+      Logger.debug(
         '[HighlightMissingGradesFeature] run(): filtered iseseisevColumns to only green headers. before:',
         preFilterIdxs,
         'after:',
@@ -369,7 +370,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
     const finalIseseisevColumns = filtered
     if (finalIseseisevColumns.length > 0) {
       const rows = Array.from(table.querySelectorAll('tbody tr'))
-      console.debug('[HighlightMissingGradesFeature] run(): rows count', rows.length)
+      Logger.debug('[HighlightMissingGradesFeature] run(): rows count', rows.length)
 
       // helper: robustly extract student id from row/cell
       const extractStudentId = (r, c) => {
@@ -410,7 +411,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
           const text = getCellText(cell)
           const hasAP = /\bAP\b/.test(text)
           if (hasAP) {
-            console.debug('[HighlightMissingGradesFeature] Found AP status in row', _rowIdx, 'cell text:', text)
+            Logger.debug('[HighlightMissingGradesFeature] Found AP status in row', _rowIdx, 'cell text:', text)
           }
           return hasAP
         })
@@ -419,7 +420,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
           const cell = cells[idx]
           if (!cell) return
           const studentId = extractStudentId(row, cell)
-          console.debug('[HighlightMissingGradesFeature] run(): row idx', _rowIdx, 'col idx', idx, 'studentId', studentId)
+          Logger.debug('[HighlightMissingGradesFeature] run(): row idx', _rowIdx, 'col idx', idx, 'studentId', studentId)
           let grade = ''
           let absence = ''
           if (studentId && entry.journalStudentResults && entry.journalStudentResults[studentId]) {
@@ -459,7 +460,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
             (!grade || !validGrades.has(grade)) &&
             (absence === '' || absence === 'PUUDUMINE_H' || absence === 'PUUDUMINE_P' || absence === 'H' || absence === 'P')
           if (shouldHighlight) {
-            console.debug('[HighlightMissingGradesFeature] run(): will highlight cell', { row: _rowIdx, col: idx, studentId, grade, absence })
+            Logger.debug('[HighlightMissingGradesFeature] run(): will highlight cell', { row: _rowIdx, col: idx, studentId, grade, absence })
             cell.classList.add('highlight-missing-grade')
             // Set tooltip with due date in required format
             const dueDateStr = entry.homeworkDuedate || entry.entryDate
@@ -470,8 +471,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
             }
             cell.title = tooltipDate ? `Tähtaeg oli ${tooltipDate}, aga hinne puudub` : 'Hinne puudub'
           } else {
-            if (console && console.debug)
-              console.debug('[HighlightMissingGradesFeature] run(): not highlighting', { row: _rowIdx, col: idx, studentId, grade, absence })
+            Logger.debug('[HighlightMissingGradesFeature] run(): not highlighting', { row: _rowIdx, col: idx, studentId, grade, absence })
             cell.classList.remove('highlight-missing-grade')
           }
         })

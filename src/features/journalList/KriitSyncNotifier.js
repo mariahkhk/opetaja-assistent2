@@ -30,7 +30,7 @@ export async function notifyKriitGradesSynced(apiService, grades) {
   }
 
   try {
-    Logger.info(`🔔 Notifying Kriit that ${grades.length} grade(s) are synced:`, grades)
+    Logger.debug(`🔔 Notifying Kriit that ${grades.length} grade(s) are synced:`, grades)
 
     const response = await apiService.kriit.post('/grades/markSynchronized', {
       grades: grades,
@@ -40,7 +40,7 @@ export async function notifyKriitGradesSynced(apiService, grades) {
     Logger.debug('Kriit API response:', response)
 
     if (response && response.success) {
-      Logger.info(`✅ Successfully marked ${response.affectedGrades} grade(s) as synchronized in Kriit`)
+      Logger.debug(`✅ Successfully marked ${response.affectedGrades} grade(s) as synchronized in Kriit`)
     } else {
       Logger.warning('Kriit sync confirmation returned unexpected response:', response)
     }

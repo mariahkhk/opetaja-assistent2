@@ -158,7 +158,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
       if (studyYearElement) {
         this.currentStudyYear = studyYearElement.textContent.trim()
       } else {
-        Logger.warning(`[${this.name}] Study year dropdown not found, using current year`)
+        Logger.debug(`[${this.name}] Study year dropdown not found, using current year`)
         this.currentStudyYear = this.getDefaultStudyYear()
       }
     } catch (error) {
@@ -223,7 +223,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
   setupStudyYearObserver() {
     const studyYearElement = document.querySelector('[ng-model="criteria.studyYear"]')
     if (!studyYearElement) {
-      Logger.warning(`[${this.name}] Study year dropdown not found for observer`)
+      Logger.debug(`[${this.name}] Study year dropdown not found for observer`)
       return
     }
 
@@ -253,7 +253,7 @@ export default class LessonCountWarningFeature extends BaseFeature {
   setupMainContentObserver() {
     const mainContentElement = document.querySelector('#tahvelTable')
     if (!mainContentElement) {
-      Logger.warning(`[${this.name}] Main content element not found for observer`)
+      Logger.debug(`[${this.name}] Main content element not found for observer`)
       return
     }
 

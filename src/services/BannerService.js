@@ -331,8 +331,8 @@ export class BannerService {
    */
   showSuccessBanner(message, options = {}) {
     this.loadStyles()
-    Logger.info('=== SHOWING SUCCESS BANNER ===')
-    Logger.info(`Success message: ${message}`)
+    Logger.debug('=== SHOWING SUCCESS BANNER ===')
+    Logger.debug(`Success message: ${message}`)
 
     const container = this.getBannerContainer()
     if (!container) {
@@ -400,7 +400,7 @@ export class BannerService {
       )
     }
 
-    Logger.info('Success banner created and displayed')
+    Logger.debug('Success banner created and displayed')
   }
 
   /**

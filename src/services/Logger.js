@@ -145,21 +145,12 @@ export function error(message, ...args) {
 }
 
 /**
- * Log a debug message (only shown if in development mode or debug mode is enabled)
+ * Log a debug message (only shown if debug mode is enabled via the popup toggle)
  * @param {string} message - The message to log
  * @param {any[]} args - Additional arguments to log
  */
 export function debug(message, ...args) {
-  // Check if we're in development mode
-  let isDev = true
-
-  // If chrome API is available, use it to check for production mode
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getManifest) {
-    isDev = !chrome.runtime.getManifest().update_url
-  }
-
-  // Log if in development mode OR if debug mode is explicitly enabled
-  if (isDev || isDebugMode()) {
+  if (isDebugMode()) {
     log(message, LogLevel.DEBUG, ...args)
   }
 }

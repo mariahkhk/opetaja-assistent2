@@ -324,7 +324,7 @@ class JournalListSyncFeature extends BaseFeature {
       return
     }
     if (!this.journalLinks || this.journalLinks.length === 0) {
-      Logger.warning('No journal links available for outcome sync')
+      Logger.debug('No journal links available for outcome sync')
       return
     }
     Logger.debug('Triggering outcome sync (outcome entries only)')
@@ -396,7 +396,7 @@ class JournalListSyncFeature extends BaseFeature {
     }
 
     // Log a specific message for this feature's activation
-    Logger.feature(this.name, 'Journal List Sync feature initialized')
+    Logger.debug(`[${this.name}] Journal List Sync feature initialized`)
 
     if (Logger.isDebugMode()) Logger.debug('[DEBUG] onActivate: elements', elements)
 
@@ -440,7 +440,7 @@ class JournalListSyncFeature extends BaseFeature {
         }
       } else {
         // No token available - feature will be disabled
-        Logger.warning('No Kriit API token found - JournalListSync feature will be disabled')
+        Logger.debug('No Kriit API token found - JournalListSync feature will be disabled')
         this.showMissingApiKeyBanner()
       }
 
@@ -1423,7 +1423,7 @@ class JournalListSyncFeature extends BaseFeature {
         // First, sync new assignments to Tahvel if any exist
         const globalNewAssignments = (window.journalListSync && window.journalListSync.newAssignments) || {}
         if (Object.keys(globalNewAssignments).length > 0) {
-          Logger.info('Syncing new assignments to Tahvel before grade sync')
+          Logger.debug('Syncing new assignments to Tahvel before grade sync')
           try {
             // Import and trigger the TahvelNewAssignmentSync feature
             const { tahvelNewAssignmentSync } = await import('./TahvelNewAssignmentSync.js')
@@ -2334,7 +2334,7 @@ class JournalListSyncFeature extends BaseFeature {
       const detectStudyYear = async() => {
         const selectedYearText = this.getSelectedStudyYear()
         if (!selectedYearText) {
-          Logger.warning('No study year selected in dropdown')
+          Logger.debug('No study year selected in dropdown')
           return null
         }
 
@@ -2562,7 +2562,7 @@ class JournalListSyncFeature extends BaseFeature {
             }
           }
         } else {
-          Logger.warning('⚠️ Journal students response does NOT include personal codes in old format')
+          Logger.debug('Journal students response does not include personal codes in old format')
           if (Logger.isDebugMode()) {
             Logger.debug('🔧 Attempting to fetch personal codes for each student individually...')
           }
@@ -3320,7 +3320,7 @@ class JournalListSyncFeature extends BaseFeature {
         return
       }
 
-      Logger.info(`🕐 Updating ${assignmentHoursDiffs.length} assignments with lesson hour changes`)
+      Logger.debug(`🕐 Updating ${assignmentHoursDiffs.length} assignments with lesson hour changes`)
 
       for (const diff of assignmentHoursDiffs) {
         try {
@@ -3344,7 +3344,7 @@ class JournalListSyncFeature extends BaseFeature {
           // PUT request to update the assignment
           await this.api.tahvel.put(`/journals/${journalId}/journalEntry/${assignmentId}`, updatedPayload, { cache: false })
 
-          Logger.info(`✅ Updated assignment "${diff.assignmentName}" lessons to ${diff.kriitHours} hours`)
+          Logger.debug(`✅ Updated assignment "${diff.assignmentName}" lessons to ${diff.kriitHours} hours`)
 
           // Update UI status indicator for success
           try {
@@ -3393,7 +3393,7 @@ class JournalListSyncFeature extends BaseFeature {
     if (this.globalTeacherCache) {
       Logger.debug('[SYNC] Teacher cache:', JSON.stringify(this.globalTeacherCache))
     }
-    Logger.feature(this.name, 'Syncing with Kriit...')
+    Logger.debug(`[${this.name}] Syncing with Kriit...`)
 
     // Prevent multiple sync operations from running simultaneously
     if (this.isLoading) {
@@ -3410,7 +3410,7 @@ class JournalListSyncFeature extends BaseFeature {
 
     try {
       if (!this.differences || !Array.isArray(this.differences) || this.differences.length === 0) {
-        Logger.warning('No differences to sync')
+        Logger.debug('No differences to sync')
         return
       }
 
@@ -3440,7 +3440,7 @@ class JournalListSyncFeature extends BaseFeature {
           }
 
           if (!assignment.results || !Array.isArray(assignment.results)) {
-            Logger.warning(`⚠️ Assignment ${assignmentIndex + 1}: No results array`)
+            Logger.debug(`⚠️ Assignment ${assignmentIndex + 1}: No results array`)
             return
           }
 

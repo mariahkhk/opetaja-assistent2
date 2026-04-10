@@ -590,7 +590,7 @@ export class DiscrepanciesTable {
           shortDate = `${dateObj.getDate().toString().padStart(2, '0')}.${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`
         }
       } catch (error) {
-        console.log('[LessonDiscrepanciesTable] Date formatting error for display:', error)
+        Logger.debug('[LessonDiscrepanciesTable] Date formatting error for display:', error)
       }
     }
 

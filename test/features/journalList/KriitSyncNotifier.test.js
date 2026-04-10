@@ -190,8 +190,8 @@ describe('KriitSyncNotifier', () => {
 
       await notifyKriitGradesSynced(apiService, grades)
 
-      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('🔔 Notifying Kriit that 1 grade(s) are synced:'), grades)
-      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 1 grade(s) as synchronized in Kriit'))
+      expect(loggerDebugMock).toHaveBeenCalledWith(expect.stringContaining('🔔 Notifying Kriit that 1 grade(s) are synced:'), grades)
+      expect(loggerDebugMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 1 grade(s) as synchronized in Kriit'))
     })
 
     test('should handle empty grades array', async () => {
@@ -342,7 +342,7 @@ describe('KriitSyncNotifier', () => {
         grades: grades,
         systemId: 1
       })
-      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 50 grade(s) as synchronized in Kriit'))
+      expect(loggerDebugMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 50 grade(s) as synchronized in Kriit'))
     })
 
     test('should include systemId in request', async () => {
@@ -401,7 +401,7 @@ describe('KriitSyncNotifier', () => {
 
       await notifyKriitGradesSynced(apiService, grades)
 
-      expect(loggerInfoMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 2 grade(s) as synchronized in Kriit'))
+      expect(loggerDebugMock).toHaveBeenCalledWith(expect.stringContaining('✅ Successfully marked 2 grade(s) as synchronized in Kriit'))
     })
   })
 

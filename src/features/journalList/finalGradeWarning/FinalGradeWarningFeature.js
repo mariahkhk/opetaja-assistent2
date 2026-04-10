@@ -75,7 +75,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
   setupMainContentObserver() {
     const mainContentElement = document.querySelector('#tahvelTable')
     if (!mainContentElement) {
-      Logger.warning(`[${this.name}] Main content element not found for observer`)
+      Logger.debug(`[${this.name}] Main content element not found for observer`)
       return
     }
 

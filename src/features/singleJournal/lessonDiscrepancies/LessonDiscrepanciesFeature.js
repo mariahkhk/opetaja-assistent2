@@ -166,7 +166,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   async #createLessonDiscrepanciesTable(forceRefresh = false, trigger = 'unknown') {
     // Lock: only one refresh at a time, queue one extra if needed
     if (this.#refreshInProgress) {
-      Logger.info(
+      Logger.debug(
         `[${this.name}] Refresh requested (trigger: ${trigger}, forceRefresh: ${forceRefresh}) but refresh is already in progress. Queueing one more.`
       )
       this.#refreshPending = true
@@ -174,7 +174,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
     this.#refreshInProgress = true
     this.#refreshPending = false
-    Logger.info(`[${this.name}] Starting refresh (trigger: ${trigger}, forceRefresh: ${forceRefresh})`)
+    Logger.debug(`[${this.name}] Starting refresh (trigger: ${trigger}, forceRefresh: ${forceRefresh})`)
 
     // Debounce: only allow one refresh per 750ms window
     const now = Date.now()
@@ -182,7 +182,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       clearTimeout(this.#refreshDebounceTimer)
     }
     if (now - this.#lastRefreshTs < 750 && !forceRefresh) {
-      Logger.info(`[${this.name}] Debouncing refresh (trigger: ${trigger})`)
+      Logger.debug(`[${this.name}] Debouncing refresh (trigger: ${trigger})`)
       // Schedule a single refresh after debounce window
       this.#refreshDebounceTimer = setTimeout(
         () => {
@@ -209,7 +209,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       // Verify we're still on the correct page before inserting the table
       if (!this.isActive || !this.shouldActivate(window.location.href)) {
-        Logger.info(`[${this.name}] Feature deactivated or URL changed, skipping table insertion`)
+        Logger.debug(`[${this.name}] Feature deactivated or URL changed, skipping table insertion`)
         this.#refreshInProgress = false
         return
       }
@@ -231,7 +231,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       this.#refreshInProgress = false
       if (this.#refreshPending) {
         this.#refreshPending = false
-        Logger.info(`[${this.name}] Running queued refresh after previous finished`)
+        Logger.debug(`[${this.name}] Running queued refresh after previous finished`)
         await this.#createLessonDiscrepanciesTable(true, 'queued')
       }
     }
@@ -778,7 +778,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       try {
         const text = (button.textContent || '').trim()
         if (data.handler === 'editEntry' && /^Muuda\s+#\d+$/i.test(text)) {
-          Logger.info(`[${this.name}] Detected duplicate 'Muuda' button - opening entry instead of server-side edit`, { text, data })
+          Logger.debug(`[${this.name}] Detected duplicate 'Muuda' button - opening entry instead of server-side edit`, { text, data })
           // Prefer entryId camelCase, fall back to lower-case dataset variant
           const entryId = data.entryId ?? data.entryid
           await this.#handleOpenEntry(entryId, data)
@@ -1009,7 +1009,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         return
       }
 
-      Logger.info(`[${this.name}] Adding all ${entries.length} missing entries`)
+      Logger.debug(`[${this.name}] Adding all ${entries.length} missing entries`)
 
       // Disable all individual Lisa buttons during bulk operation
       const lisaButtons = document.querySelectorAll('[data-discrepancies-table] button[data-handler="addMissing"]')
@@ -1051,7 +1051,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
       }
 
-      Logger.info(`[${this.name}] Bulk add complete: ${successCount} succeeded, ${failCount} failed`)
+      Logger.debug(`[${this.name}] Bulk add complete: ${successCount} succeeded, ${failCount} failed`)
 
       if (!this.isActive) return
 
@@ -1110,7 +1110,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
 
     const url = `/journals/${journalId}/journalEntry`
-    Logger.info(`[${this.name}] Creating missing journal entry (direct)`, { url, payload })
+    Logger.debug(`[${this.name}] Creating missing journal entry (direct)`, { url, payload })
 
     try {
       const res = await this.api.tahvel.post(url, payload)
@@ -1145,7 +1145,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       // Now attempt a full reload; fallback to table refresh
       try {
-        Logger.info(`[${this.name}] Reloading page to show newly created entry`)
+        Logger.debug(`[${this.name}] Reloading page to show newly created entry`)
         window.location.reload()
       } catch (reloadErr) {
         Logger.warn(`[${this.name}] window.location.reload failed, falling back to table refresh`, reloadErr)
@@ -1194,7 +1194,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       // Fallback: log to console so nothing blocks UI
-      Logger.info(`[${this.name}] ${title} - ${message}`)
+      Logger.debug(`[${this.name}] ${title} - ${message}`)
       return null
     } catch (err) {
       Logger.debug(`[${this.name}] safeNotify error`, err)
@@ -1225,7 +1225,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
         try {
           const detailUrl = `/journals/${journalId}/journalEntry/${actualEntryId}`
-          Logger.info(`[${this.name}] Fetching current entry for server-side edit`, { detailUrl })
+          Logger.debug(`[${this.name}] Fetching current entry for server-side edit`, { detailUrl })
           const current = await this.api.tahvel.get(detailUrl, { allStudents: true }, { cache: false, cacheExpiration: 0 })
 
           if (!current) throw new Error('failed to fetch current entry')
@@ -1269,7 +1269,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           delete putPayload.teacherSelection
           delete putPayload._links
 
-          Logger.info(`[${this.name}] Sending PUT to update journal entry`, { url: detailUrl, payload: putPayload })
+          Logger.debug(`[${this.name}] Sending PUT to update journal entry`, { url: detailUrl, payload: putPayload })
 
           try {
             const putRes = await this.api.tahvel.put(detailUrl, putPayload)
@@ -1796,7 +1796,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       return null
     }
 
-    Logger.info(`[${this.name}] New Tahvel: found entry column at index ${entryIndex}`)
+    Logger.debug(`[${this.name}] New Tahvel: found entry column at index ${entryIndex}`)
     return link
   }
 
@@ -1854,7 +1854,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       const row = document.querySelector(`tr[${attrName}="${safeId}"]`)
       if (row) {
-        Logger.info(`[${this.name}] Found entry row via Angular scope for entryId=${entryId}`)
+        Logger.debug(`[${this.name}] Found entry row via Angular scope for entryId=${entryId}`)
         return row
       }
       Logger.debug(`[${this.name}] Angular scope annotation did not find entryId=${entryId}`)
@@ -1930,7 +1930,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     // New Tahvel: <a> links navigate the SPA to the entry detail page.
     // No md-dialog will appear, so skip the dialog-waiting logic.
     if (element.tagName === 'A') {
-      Logger.info(`[${this.name}] New Tahvel: clicking <a> link for SPA navigation`)
+      Logger.debug(`[${this.name}] New Tahvel: clicking <a> link for SPA navigation`)
       await this.#clickElementWithScrollPreservation(element)
       return
     }
@@ -2152,7 +2152,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
   async #refreshTableWithRetry(maxRetries = 3) {
     this.maxRetries = maxRetries
-    Logger.info(`[${this.name}] #refreshTableWithRetry called`)
+    Logger.debug(`[${this.name}] #refreshTableWithRetry called`)
     await this.#createLessonDiscrepanciesTable(true, 'refreshTableWithRetry')
   }
   #setupJournalSaveMonitoring() {
@@ -2999,7 +2999,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
             // Special case: if this is a lesson entry and auditoorne capacity is missing,
             // perform a focused server-side PUT to add MAHT_a and return early (no UI fallback).
             if (safeCopy.entryType === 'SISSEKANNE_T' && !safeCopy.journalEntryCapacityTypes.includes('MAHT_a')) {
-              Logger.info(`[${this.name}] Detected lesson entry without auditoorne capacity - adding MAHT_a via API for entry ${actualEntryId}`)
+              Logger.debug(`[${this.name}] Detected lesson entry without auditoorne capacity - adding MAHT_a via API for entry ${actualEntryId}`)
               // Add MAHT_a while keeping uniqueness
               safeCopy.journalEntryCapacityTypes = Array.from(new Set([...(safeCopy.journalEntryCapacityTypes || []), 'MAHT_a']))
 
@@ -3061,7 +3061,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
             // Special case: if this is a practical-work entry and praktiline capacity is missing,
             // perform a focused server-side PUT to add MAHT_p and return early (no UI fallback).
             if (safeCopy.entryType === 'SISSEKANNE_P' && !safeCopy.journalEntryCapacityTypes.includes('MAHT_p')) {
-              Logger.info(`[${this.name}] Detected practical-work entry without praktiline capacity - adding MAHT_p via API for entry ${actualEntryId}`)
+              Logger.debug(`[${this.name}] Detected practical-work entry without praktiline capacity - adding MAHT_p via API for entry ${actualEntryId}`)
               // Add MAHT_p while keeping uniqueness
               safeCopy.journalEntryCapacityTypes = Array.from(new Set([...(safeCopy.journalEntryCapacityTypes || []), 'MAHT_p']))
 
@@ -3139,7 +3139,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
               safeCopy.journalEntryCapacityTypes.includes('MAHT_a') &&
               safeCopy.journalEntryCapacityTypes.includes('MAHT_i')
             ) {
-              Logger.info(`[${this.name}] Normalizing capacity types for entry ${actualEntryId}: removing MAHT_i since MAHT_a is present`)
+              Logger.debug(`[${this.name}] Normalizing capacity types for entry ${actualEntryId}: removing MAHT_i since MAHT_a is present`)
               safeCopy.journalEntryCapacityTypes = safeCopy.journalEntryCapacityTypes.filter(t => t !== 'MAHT_i')
             }
 
@@ -3147,7 +3147,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
             if (safeCopy.entryType === 'SISSEKANNE_I') {
               const has_i = safeCopy.journalEntryCapacityTypes.includes('MAHT_i')
               if (!has_i) {
-                Logger.info(`[${this.name}] Adding MAHT_i for independent work entry ${actualEntryId}`)
+                Logger.debug(`[${this.name}] Adding MAHT_i for independent work entry ${actualEntryId}`)
                 safeCopy.journalEntryCapacityTypes = safeCopy.journalEntryCapacityTypes.filter(t => t !== 'MAHT_a')
                 safeCopy.journalEntryCapacityTypes.push('MAHT_i')
               }
@@ -3368,7 +3368,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 delete safeCopy._links
                 delete safeCopy.journalStudent
 
-                Logger.info(`[${this.name}] Attempting server-side teacher assignment for entry ${entryId}`, {
+                Logger.debug(`[${this.name}] Attempting server-side teacher assignment for entry ${entryId}`, {
                   journalId,
                   teacherId,
                   payloadPreview: { journalEntryTeachers: safeCopy.journalEntryTeachers, teacherSelection: safeCopy.teacherSelection }

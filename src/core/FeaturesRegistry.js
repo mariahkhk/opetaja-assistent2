@@ -156,6 +156,6 @@ export async function loadFeatures() {
     Logger.debug(`Loaded feature: ${feature.name}`)
   }
 
-  Logger.info(`Loaded ${allFeatures.length} feature(s)`)
+  Logger.debug(`Loaded ${allFeatures.length} feature(s)`)
   return allFeatures
 }

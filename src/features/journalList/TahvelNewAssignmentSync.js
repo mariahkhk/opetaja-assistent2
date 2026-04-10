@@ -27,7 +27,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
    * Called when the feature is activated
    */
   async onActivate() {
-    Logger.feature(this.name, 'Tahvel New Assignment Sync feature initialized')
+    Logger.debug(`[${this.name}] Tahvel New Assignment Sync feature initialized`)
 
     // Wait for Kriit API settings to be loaded from chrome.storage
     if (this.api._kriitInitPromise) await this.api._kriitInitPromise
@@ -183,7 +183,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
     this.isProcessing = true
 
     try {
-      Logger.info('🚀 Starting sync of new assignments to Tahvel')
+      Logger.debug('🚀 Starting sync of new assignments to Tahvel')
       Logger.debug('New assignments to sync:', newAssignments)
 
       const results = {
@@ -194,7 +194,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
       // Process each subject with new assignments
       for (const [subjectExternalId, assignments] of Object.entries(newAssignments)) {
         try {
-          Logger.info(`📚 Processing subject ${subjectExternalId} with ${assignments.length} new assignments`)
+          Logger.debug(`📚 Processing subject ${subjectExternalId} with ${assignments.length} new assignments`)
 
           // Process assignments for this subject
           const subjectResults = await this.syncAssignmentsForSubject(subjectExternalId, assignments)
@@ -212,11 +212,11 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
         }
       }
 
-      Logger.info(`🎯 New assignment sync completed: ${results.success.length} success, ${results.failed.length} failed`)
+      Logger.debug(`🎯 New assignment sync completed: ${results.success.length} success, ${results.failed.length} failed`)
 
       if (results.success.length > 0) {
-        Logger.info('📋 Successful syncs:', results.success)
-        Logger.info('📤 Now sending external IDs back to Kriit...')
+        Logger.debug('📋 Successful syncs:', results.success)
+        Logger.debug('📤 Now sending external IDs back to Kriit...')
         await this.sendExternalIdsToKriit(results.success)
       } else {
         Logger.warning('⚠️ No successful assignment syncs to send back to Kriit')
@@ -286,7 +286,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
               kriitAssignmentId: assignment.createdAssignmentId,
               tahvelExternalId: externalId
             })
-            Logger.info(`✓ Successfully created assignment "${assignment.assignmentName}" with external ID: ${externalId}`)
+            Logger.debug(`✓ Successfully created assignment "${assignment.assignmentName}" with external ID: ${externalId}`)
           } else {
             results.failed.push({
               subjectExternalId,
@@ -441,7 +441,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
         Logger.debug(`Assignment created successfully in journal ${journalId}`)
         // If Tahvel returns an id in the POST response, surface it in the returned object
         if (response.id) {
-          Logger.info(`Tahvel created entry ID returned in POST response: ${response.id}`)
+          Logger.debug(`Tahvel created entry ID returned in POST response: ${response.id}`)
         }
         return { success: true, response }
       } else {
@@ -499,7 +499,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
       const createdEntry = entries.find(entry => entry.nameEt === assignment.assignmentName && entry.entryType === expectedEntryType)
 
       if (createdEntry && createdEntry.id) {
-        Logger.info(`✅ Found created assignment with external ID: ${createdEntry.id}`)
+        Logger.debug(`✅ Found created assignment with external ID: ${createdEntry.id}`)
         Logger.debug('Assignment details:', {
           id: createdEntry.id,
           nameEt: createdEntry.nameEt,
@@ -533,7 +533,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
    */
   async testSendExternalId(kriitAssignmentId, tahvelExternalId) {
     try {
-      Logger.info(`🧪 TEST: Sending external ID ${tahvelExternalId} for Kriit assignment ${kriitAssignmentId}`)
+      Logger.debug(`🧪 TEST: Sending external ID ${tahvelExternalId} for Kriit assignment ${kriitAssignmentId}`)
 
       const payload = {
         assignmentId: kriitAssignmentId,
@@ -545,10 +545,10 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
 
       const response = await this.api.kriit.post('/assignments/setAssignmentExternalId', payload)
 
-      Logger.info('🧪 TEST: Response:', response)
+      Logger.debug('🧪 TEST: Response:', response)
 
       if (response && response.status === 200) {
-        Logger.info('🧪 TEST: ✅ Success!')
+        Logger.debug('🧪 TEST: ✅ Success!')
       } else {
         Logger.error('🧪 TEST: ❌ Failed!')
       }
@@ -565,7 +565,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
    */
   async sendExternalIdsToKriit(successfulSyncs) {
     try {
-      Logger.info(`🔄 Starting to send ${successfulSyncs.length} external IDs back to Kriit`)
+      Logger.debug(`🔄 Starting to send ${successfulSyncs.length} external IDs back to Kriit`)
 
       let successCount = 0
       let failureCount = 0
@@ -580,7 +580,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
             systemId: 1 // Default system ID for Tahvel
           }
 
-          Logger.info(`📤 Sending external ID for Kriit assignment ${sync.kriitAssignmentId} → Tahvel ID ${sync.tahvelExternalId}`)
+          Logger.debug(`📤 Sending external ID for Kriit assignment ${sync.kriitAssignmentId} → Tahvel ID ${sync.tahvelExternalId}`)
           Logger.debug(`Payload:`, payload)
 
           // Send individual POST request
@@ -590,7 +590,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
 
           if (response && response.status === 200) {
             successCount++
-            Logger.info(`✅ Successfully set external ID for assignment ${sync.kriitAssignmentId}`)
+            Logger.debug(`✅ Successfully set external ID for assignment ${sync.kriitAssignmentId}`)
           } else {
             failureCount++
             Logger.warning(`❌ Unexpected response for assignment ${sync.kriitAssignmentId}:`, response)
@@ -638,13 +638,13 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
       }
 
       if (successCount > 0) {
-        Logger.info(`✨ Successfully sent ${successCount} external IDs to Kriit`)
+        Logger.debug(`✨ Successfully sent ${successCount} external IDs to Kriit`)
       }
       if (failureCount > 0) {
         Logger.error(`⚠️ Failed to send ${failureCount} external IDs to Kriit`)
       }
 
-      Logger.info(`📊 External ID sync summary: ${successCount} success, ${failureCount} failed`)
+      Logger.debug(`📊 External ID sync summary: ${successCount} success, ${failureCount} failed`)
     } catch (error) {
       Logger.error('💥 Critical error in sendExternalIdsToKriit:', error)
     }
