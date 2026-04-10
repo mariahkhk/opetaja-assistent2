@@ -126,11 +126,11 @@ export function warning(message, ...args) {
 export function error(message, ...args) {
   log(message, LogLevel.ERROR, ...args)
 
-  // Skip Sentry for expected auth errors (user not logged in / session expired)
-  const AUTH_ERROR_PATTERN = /API Error: (401|403)\b/
+  // Skip Sentry for expected HTTP errors (auth expired, not found, precondition failed)
+  const EXPECTED_ERROR_PATTERN = /API Error: (401|403|404|412)\b/
   const errorObj = args.find(a => a instanceof Error)
-  if (message instanceof Error && AUTH_ERROR_PATTERN.test(message.message)) return
-  if (errorObj && AUTH_ERROR_PATTERN.test(errorObj.message)) return
+  if (message instanceof Error && EXPECTED_ERROR_PATTERN.test(message.message)) return
+  if (errorObj && EXPECTED_ERROR_PATTERN.test(errorObj.message)) return
 
   // Forward to Sentry
   if (message instanceof Error) {
