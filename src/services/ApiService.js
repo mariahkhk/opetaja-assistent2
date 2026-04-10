@@ -312,7 +312,12 @@ class ApiService {
               throw new Error(`API Error: ${response.status} ${response.statusText}`)
             }
 
-            return await response.json()
+            const text = await response.text()
+            try {
+              return JSON.parse(text)
+            } catch {
+              return text || { success: true, status: response.status }
+            }
           },
           cacheExpiration
         )

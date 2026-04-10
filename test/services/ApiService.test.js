@@ -26,12 +26,13 @@ describe('ApiService', () => {
     })
 
     fetchMock = mock(async (url, options) => {
+      const body = { data: 'success', url, method: options.method }
       return {
         ok: true,
         status: 200,
         statusText: 'OK',
-        json: async () => ({ data: 'success', url, method: options.method }),
-        text: async () => JSON.stringify({ data: 'success' })
+        json: async () => body,
+        text: async () => JSON.stringify(body)
       }
     })
 
