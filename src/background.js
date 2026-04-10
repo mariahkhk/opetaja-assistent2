@@ -2,6 +2,10 @@
  * Background script
  */
 import Logger from './services/Logger.js'
+import { sentryService } from './services/SentryService.js'
+
+// Initialize Sentry for background context (no window event listeners)
+sentryService.initBackground()
 
 // Use both the Logger and regular console.log for extra visibility
 Logger.info('Background script loaded')
@@ -119,6 +123,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     // Return true to indicate we will send a response asynchronously
     return true
+  }
+
+  // Handle Sentry event sending (content scripts can't fetch cross-origin due to page CSP)
+  if (message.action === 'sentryEvent') {
+    const { url, publicKey, envelope } = message
+
+    // Validate URL is a Sentry ingest endpoint
+    try {
+      const parsed = new URL(url)
+      if (!parsed.hostname.endsWith('.sentry.io')) {
+        console.warn('[Background] Blocked Sentry event to non-Sentry host:', parsed.hostname)
+        return
+      }
+    } catch {
+      return
+    }
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-sentry-envelope',
+        'X-Sentry-Auth': `Sentry sentry_version=7,sentry_key=${publicKey}`
+      },
+      body: envelope
+    }).catch(err => {
+      console.warn('[Background] Failed to send Sentry event:', err.message)
+    })
+
+    // Fire-and-forget, no response needed
+    return
   }
 
   // Handle future subjects request

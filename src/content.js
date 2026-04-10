@@ -5,8 +5,12 @@ import TahvelExtension from './core/Extension.js'
 import Logger from './services/Logger.js'
 import { cacheService } from './services/CacheService.js'
 import { ApiService } from './services/ApiService.js'
+import { sentryService } from './services/SentryService.js'
 
 const VERSION = '6'
+
+// Initialize Sentry error tracking before anything else
+sentryService.init()
 
 // Print version and build time info using our new Logger
 Logger.info(`Content script loaded - version ${VERSION}`)

@@ -3,6 +3,8 @@
  * with better source line information in developer tools
  */
 
+import { sentryService } from './SentryService.js'
+
 // Store the page load timestamp
 const PAGE_LOAD_TIME = Date.now()
 
@@ -123,6 +125,18 @@ export function warning(message, ...args) {
  */
 export function error(message, ...args) {
   log(message, LogLevel.ERROR, ...args)
+
+  // Forward to Sentry
+  if (message instanceof Error) {
+    sentryService.captureException(message)
+    return
+  }
+  const errorObj = args.find(a => a instanceof Error)
+  if (errorObj) {
+    sentryService.captureException(errorObj, { message })
+  } else {
+    sentryService.captureMessage(String(message), 'error')
+  }
 }
 
 /**
