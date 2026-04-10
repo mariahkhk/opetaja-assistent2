@@ -318,7 +318,7 @@ class JournalListSyncFeature extends BaseFeature {
   /**
    * Send only outcome entries (SISSEKANNE_O) to Kriit API
    */
-  async sendOutcomeEntriesToKriit() {
+  async sendOutcomeEntriesToKriit(accessibleJournalIds) {
     if (!this.api || !this.api.kriit || !this.api.kriit.authToken) {
       Logger.error('No Kriit API token set')
       return
@@ -328,7 +328,7 @@ class JournalListSyncFeature extends BaseFeature {
       return
     }
     Logger.debug('Triggering outcome sync (outcome entries only)')
-    await sendOutcomeEntriesToKriit(this.api, this.journalLinks)
+    await sendOutcomeEntriesToKriit(this.api, this.journalLinks, accessibleJournalIds)
   }
   constructor() {
     // Define selectors for journal links - using the most reliable selector first
@@ -754,7 +754,9 @@ class JournalListSyncFeature extends BaseFeature {
       await this.proceedWithKriitApiCall(journalData)
 
       // Automatically sync outcome entries (SISSEKANNE_O) to Kriit
-      await this.sendOutcomeEntriesToKriit()
+      // Pass accessible journal IDs so OutComes only fetches journals we can access
+      const accessibleJournalIds = new Set(journalData.map(j => j.subjectExternalId).filter(Boolean))
+      await this.sendOutcomeEntriesToKriit(accessibleJournalIds)
     } catch (error) {
       Logger.error('Error fetching journal data:', error)
       this.isLoading = false

@@ -7,7 +7,7 @@ import Logger from '../../services/Logger.js'
  * @param {Array} journalLinks - List of journal link elements
  * @returns {Promise<void>}
  */
-export async function sendOutcomeEntriesToKriit(api, journalLinks) {
+export async function sendOutcomeEntriesToKriit(api, journalLinks, accessibleJournalIds) {
   if (!api || !api.kriit || !api.kriit.authToken) {
     Logger.error('No Kriit API token set')
     return
@@ -32,6 +32,9 @@ export async function sendOutcomeEntriesToKriit(api, journalLinks) {
       }
     }
     if (!id) return null
+
+    // Skip journals that aren't in the accessible set (avoids 412/404 errors)
+    if (accessibleJournalIds && !accessibleJournalIds.has(id)) return null
     const name = link.textContent.trim()
     try {
       const [journalInfo, journalEntriesWithGrades, journalStudents] = await Promise.all([
