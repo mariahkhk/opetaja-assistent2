@@ -273,13 +273,15 @@ describe('LessonCountWarningFeature', () => {
 
   describe('extractJournalInfoFromRow', () => {
     test('should extract journal ID from href', () => {
+      const mockLinkElement = {
+        getAttribute: mock(() => '/journal/12345'),
+        textContent: 'Test Journal',
+        closest: mock(() => ({ nextElementSibling: null }))
+      }
       const mockRow = {
         querySelector: mock(selector => {
-          if (selector === 'td:nth-child(2) a.linked-name') {
-            return {
-              getAttribute: mock(() => '/journal/12345'),
-              textContent: 'Test Journal'
-            }
+          if (selector === 'a[href*="/journal/"]') {
+            return mockLinkElement
           }
           return null
         }),
@@ -292,13 +294,15 @@ describe('LessonCountWarningFeature', () => {
     })
 
     test('should extract journal ID from ng-href', () => {
+      const mockLinkElement = {
+        getAttribute: mock(attr => (attr === 'ng-href' ? '/journal/67890' : null)),
+        textContent: 'Test Journal',
+        closest: mock(() => ({ nextElementSibling: null }))
+      }
       const mockRow = {
         querySelector: mock(selector => {
-          if (selector === 'td:nth-child(2) a.linked-name') {
-            return {
-              getAttribute: mock(attr => (attr === 'ng-href' ? '/journal/67890' : null)),
-              textContent: 'Test Journal'
-            }
+          if (selector === 'a[href*="/journal/"]') {
+            return mockLinkElement
           }
           return null
         }),
@@ -322,13 +326,15 @@ describe('LessonCountWarningFeature', () => {
     })
 
     test('should return null if no journal ID in href', () => {
+      const mockLinkElement = {
+        getAttribute: mock(() => '/invalid/path'),
+        textContent: 'Test Journal',
+        closest: mock(() => ({ nextElementSibling: null }))
+      }
       const mockRow = {
         querySelector: mock(selector => {
-          if (selector === 'td:nth-child(2) a.linked-name') {
-            return {
-              getAttribute: mock(() => '/invalid/path'),
-              textContent: 'Test Journal'
-            }
+          if (selector === 'a[href*="/journal/"]') {
+            return mockLinkElement
           }
           return null
         }),
@@ -341,13 +347,15 @@ describe('LessonCountWarningFeature', () => {
     })
 
     test('should extract teacher IDs from links', () => {
+      const mockLinkElement = {
+        getAttribute: mock(() => '/journal/123'),
+        textContent: 'Test Journal',
+        closest: mock(() => ({ nextElementSibling: null }))
+      }
       const mockRow = {
         querySelector: mock(selector => {
-          if (selector === 'td:nth-child(2) a.linked-name') {
-            return {
-              getAttribute: mock(() => '/journal/123'),
-              textContent: 'Test Journal'
-            }
+          if (selector === 'a[href*="/journal/"]') {
+            return mockLinkElement
           }
           return null
         }),
@@ -372,6 +380,32 @@ describe('LessonCountWarningFeature', () => {
 
       expect(info.teacherIds).toEqual([456])
       expect(info.teacherNames).toEqual(['John Doe'])
+    })
+
+    test('should extract teacher names from adjacent cell when no teacher links exist', () => {
+      const mockTeacherCell = {
+        textContent: 'Jaan Tamm, Mari Mets'
+      }
+      const mockLinkElement = {
+        getAttribute: mock(() => '#/journal/999/edit'),
+        textContent: 'Test Journal',
+        closest: mock(() => ({ nextElementSibling: mockTeacherCell }))
+      }
+      const mockRow = {
+        querySelector: mock(selector => {
+          if (selector === 'a[href*="/journal/"]') {
+            return mockLinkElement
+          }
+          return null
+        }),
+        querySelectorAll: mock(() => [])
+      }
+
+      const info = feature.extractJournalInfoFromRow(mockRow)
+
+      expect(info.id).toBe(999)
+      expect(info.teacherNames).toEqual(['Jaan Tamm', 'Mari Mets'])
+      expect(info.teacherIds).toEqual([])
     })
   })
 

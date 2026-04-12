@@ -548,8 +548,8 @@ export default class LessonCountWarningFeature extends BaseFeature {
    */
   extractJournalInfoFromRow(row) {
     try {
-      // Get journal link (2nd column)
-      const linkElement = row.querySelector('td:nth-child(2) a.linked-name')
+      // Get journal link
+      const linkElement = row.querySelector('a[href*="/journal/"]')
       if (!linkElement) {
         return null
       }
@@ -598,9 +598,10 @@ export default class LessonCountWarningFeature extends BaseFeature {
         }
       }
 
-      // If no teacher links found, try to extract teacher names from the 3rd column text
+      // If no teacher links found, try to extract teacher names from the cell after the journal link
       if (teacherIds.length === 0) {
-        const teacherCell = row.querySelector('td:nth-child(3)')
+        const linkCell = linkElement.closest('td')
+        const teacherCell = linkCell ? linkCell.nextElementSibling : null
         if (teacherCell) {
           const teacherText = teacherCell.textContent.trim()
 

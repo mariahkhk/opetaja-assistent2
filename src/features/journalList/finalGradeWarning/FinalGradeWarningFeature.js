@@ -161,7 +161,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
    */
   async processJournalRow(row, now) {
     try {
-      const linkElement = row.querySelector('td:nth-child(2) a.linked-name')
+      const linkElement = row.querySelector('a[href*="/journal/"]')
       if (!linkElement) return
 
       const href = linkElement.getAttribute('href') || linkElement.getAttribute('ng-href') || ''
