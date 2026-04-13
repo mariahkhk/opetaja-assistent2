@@ -1047,7 +1047,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         try {
           await cacheService.clearJournalCache(journalId)
         } catch (e) {
-          Logger.warning('Failed to clear journal cache', e)
+          Logger.debug('Failed to clear journal cache', e)
         }
       }
 
@@ -1120,7 +1120,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       try {
         await cacheService.clearJournalCache(journalId)
       } catch (e) {
-        Logger.warn('Failed to clear journal cache', e)
+        Logger.debug('Failed to clear journal cache', e)
       }
 
       // Show success message overlay and wait for it to be dismissed before refreshing
@@ -1148,11 +1148,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         Logger.debug(`[${this.name}] Reloading page to show newly created entry`)
         window.location.reload()
       } catch (reloadErr) {
-        Logger.warn(`[${this.name}] window.location.reload failed, falling back to table refresh`, reloadErr)
+        Logger.debug(`[${this.name}] window.location.reload failed, falling back to table refresh`, reloadErr)
         try {
           await this.#refreshTableWithRetry()
         } catch (e) {
-          Logger.warn('Failed to refresh table after create', e)
+          Logger.debug('Failed to refresh table after create', e)
         }
       }
 
@@ -1276,12 +1276,12 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
             try {
               await cacheService.clearJournalCache(journalId)
             } catch (e) {
-              Logger.warn('Failed to clear journal cache', e)
+              Logger.debug('Failed to clear journal cache', e)
             }
             try {
               await this.#refreshTableWithRetry()
             } catch (e) {
-              Logger.warn('Failed to refresh table after PUT', e)
+              Logger.debug('Failed to refresh table after PUT', e)
             }
             return putRes
           } catch (putErr) {
@@ -3846,7 +3846,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         this.#addEntryTypeHighlightCleanup()
         Logger.debug(`[${this.name}] Entry type field detected but interactive highlighting suppressed`)
       } else {
-        Logger.warn(`[${this.name}] Could not find entry type field to highlight`)
+        Logger.debug(`[${this.name}] Could not find entry type field to highlight`)
       }
     } catch (error) {
       Logger.error(`[${this.name}] Error highlighting entry type field:`, error)

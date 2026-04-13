@@ -313,7 +313,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
         if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] getFinalLessonDate result:', apiDate)
         if (apiDate) finalLessonDate = new Date(apiDate)
       } catch (e) {
-        if (Logger.isDebugMode()) Logger.warn('✨ [HighlightFinalGradesFeature] Failed to get final lesson date:', e)
+        Logger.debug('✨ [HighlightFinalGradesFeature] Failed to get final lesson date:', e)
       }
     }
     if (finalLessonDate) {

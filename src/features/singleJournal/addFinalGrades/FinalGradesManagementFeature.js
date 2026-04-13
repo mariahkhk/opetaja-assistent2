@@ -184,7 +184,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               }
             } catch (e) {
               // ignore comparison errors and proceed to include the student
-              Logger.warn('FinalGradesByOvFeature: Error comparing existing grade, will include update', e)
+              Logger.debug('FinalGradesByOvFeature: Error comparing existing grade, will include update', e)
             }
             const gradeObj = {
               code: mapped.code,
@@ -251,10 +251,10 @@ class FinalGradesByOvFeature extends BaseFeature {
                   .includes('lõpptulemus')
               button.textContent = isL ? 'Lõpptulemused saadetud' : 'Õpiväljundite hinded saadetud'
             } catch (innerErr) {
-              Logger.warn('FinalGradesByOvFeature: Ignored inner error', innerErr)
+              Logger.debug('FinalGradesByOvFeature: Ignored inner error', innerErr)
             }
           } catch (e) {
-            Logger.warn('FinalGradesByOvFeature: Failed to update button state after sync', e)
+            Logger.debug('FinalGradesByOvFeature: Failed to update button state after sync', e)
           }
         }
         if (statusDiv && statusDiv.textContent === '') statusDiv.textContent = 'Kõik õpiväljundite hinded saadetud.'
@@ -361,7 +361,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                   btn.style.background = 'rgb(21, 101, 192)'
                 }
               } catch (e) {
-                Logger.warn('FinalGradesByOvFeature: Error restoring button state', e)
+                Logger.debug('FinalGradesByOvFeature: Error restoring button state', e)
               }
             }, 3000)
           }
@@ -399,7 +399,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       const journalId = match[1]
       Logger.debug('[DEBUG] Journal ID extracted:', journalId)
       if (!journalId) {
-        Logger.warning('✨ FinalGradesByOvFeature: No journal ID found, feature will not work')
+        Logger.debug('✨ FinalGradesByOvFeature: No journal ID found, feature will not work')
         return
       }
       // Fetch entries and students to check for ÕV columns or SISSEKANNE_L
@@ -486,7 +486,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           try {
             this.#ensureLGradeDropdowns()
           } catch (e) {
-            Logger.warn('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns on load', e)
+            Logger.debug('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns on load', e)
           }
           // Attach L-specific DOM observer so the L-button is kept up-to-date on meaningful DOM changes
           try {
@@ -494,13 +494,13 @@ class FinalGradesByOvFeature extends BaseFeature {
             // store observer so it can be disconnected later if needed
             this._lObserver = lObserver
           } catch (e) {
-            Logger.warn('FinalGradesByOvFeature: Failed to attach L DOM observer', e)
+            Logger.debug('FinalGradesByOvFeature: Failed to attach L DOM observer', e)
           }
         } else {
           await this.#showResults(resultsOnLoad, button, { autoSync: false })
         }
       } catch (err) {
-        Logger.warn('FinalGradesByOvFeature: Failed to calculate grades on page load', err)
+        Logger.debug('FinalGradesByOvFeature: Failed to calculate grades on page load', err)
       }
 
       // Determine whether there are any grade changes to send and disable button if none
@@ -565,17 +565,17 @@ class FinalGradesByOvFeature extends BaseFeature {
                   .includes('lõpptulemus')
               button.textContent = isL ? 'Kõik hinded on õiged' : 'Kõik hinded on õiged'
             } catch (innerErr) {
-              Logger.warn('FinalGradesByOvFeature: Ignored inner error', innerErr)
+              Logger.debug('FinalGradesByOvFeature: Ignored inner error', innerErr)
             }
             // mark as intentionally disabled (no further re-enable)
             button._oaFinalGradesDisabled = true
             Logger.debug('✨ FinalGradesByOvFeature: No grade changes detected — disabled button')
           } catch (e) {
-            Logger.warn('FinalGradesByOvFeature: Failed to disable button', e)
+            Logger.debug('FinalGradesByOvFeature: Failed to disable button', e)
           }
         }
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Error while checking for grade changes', e)
+        Logger.debug('FinalGradesByOvFeature: Error while checking for grade changes', e)
       }
       // Remove any old event delegation to avoid duplicates
       if (window._oaFinalGradesDelegation) {
@@ -672,7 +672,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 btn.style.background = 'rgb(21, 101, 192)'
               }
             } catch (e) {
-              Logger.warn('FinalGradesByOvFeature: Error restoring button state (delegated)', e)
+              Logger.debug('FinalGradesByOvFeature: Error restoring button state (delegated)', e)
             }
           }, 3000)
         }
@@ -776,16 +776,16 @@ class FinalGradesByOvFeature extends BaseFeature {
                                 .includes('lõpptulemus')
                         button.textContent = isL ? 'Kõik hinded on õiged' : 'Kõik hinded on õiged'
                       } catch (innerErr) {
-                        Logger.warn('FinalGradesByOvFeature: Ignored inner error', innerErr)
+                        Logger.debug('FinalGradesByOvFeature: Ignored inner error', innerErr)
                       }
                     }
                     Logger.debug('✨ FinalGradesByOvFeature: Button disabled after DOM change — no changes detected')
                   }
                 } catch (e) {
-                  Logger.warn('FinalGradesByOvFeature: Failed to update button state after DOM change', e)
+                  Logger.debug('FinalGradesByOvFeature: Failed to update button state after DOM change', e)
                 }
               } catch (err) {
-                Logger.warn('FinalGradesByOvFeature: Error while re-evaluating after DOM change', err)
+                Logger.debug('FinalGradesByOvFeature: Error while re-evaluating after DOM change', err)
               }
             }, 250)
           }
@@ -793,7 +793,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           mo.observe(tableEl, { childList: true, subtree: true, attributes: true })
         }
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Failed to attach DOM observer for table changes', e)
+        Logger.debug('FinalGradesByOvFeature: Failed to attach DOM observer for table changes', e)
       }
     } catch (e) {
       Logger.error('FinalGradesByOvFeature init error', e)
@@ -915,7 +915,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 if (r.grade && r.grade.code) gradesByStudent[journalStudentId].push(r.grade.code.replace('KUTSEHINDAMINE_', ''))
               })
             } else {
-              Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_O results is not array', { journalStudentId, results })
+              Logger.debug('✨ FinalGradesByOvFeature: SISSEKANNE_O results is not array', { journalStudentId, results })
             }
           })
         }
@@ -930,7 +930,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 if (r.grade && r.grade.code) gradesByStudent[journalStudentId].push(r.grade.code.replace('KUTSEHINDAMINE_', ''))
               })
             } else {
-              Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_H results is not array', { journalStudentId, results })
+              Logger.debug('✨ FinalGradesByOvFeature: SISSEKANNE_H results is not array', { journalStudentId, results })
             }
           })
         } else if (Array.isArray(entry.journalEntryStudents)) {
@@ -1000,7 +1000,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 }
               })
             } else {
-              Logger.warning('✨ FinalGradesByOvFeature: SISSEKANNE_I results is not array', { journalStudentId, results })
+              Logger.debug('✨ FinalGradesByOvFeature: SISSEKANNE_I results is not array', { journalStudentId, results })
             }
           })
         }
@@ -1245,7 +1245,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       })
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error applying grading mode to results', e)
+      Logger.debug('FinalGradesByOvFeature: Error applying grading mode to results', e)
     }
   }
 
@@ -1341,7 +1341,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
       if (modeToApply) this.#applyGradingModeToResults(results, modeToApply)
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Failed to apply grading mode before computing diffs', e)
+      Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode before computing diffs', e)
     }
     const filteredOutput = output.filter(student => {
       if (allOvNums.length > 0) {
@@ -1484,11 +1484,11 @@ class FinalGradesByOvFeature extends BaseFeature {
                 try {
                   this.#showResults(results, button, { autoSync: false })
                 } catch (e) {
-                  Logger.warn('Failed to re-run showResults after grading mode change', e)
+                  Logger.debug('Failed to re-run showResults after grading mode change', e)
                 }
               }, 0)
             } catch (e) {
-              Logger.warn('FinalGradesByOvFeature: Error handling grading-mode change', e)
+              Logger.debug('FinalGradesByOvFeature: Error handling grading-mode change', e)
             }
           })
           // Insert the select. If API provided a default, visually emphasise the select's displayed value by making it bold
@@ -1546,7 +1546,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
               if (initialMode) this.#applyGradingModeToResults(results, initialMode)
             } catch (e) {
-              Logger.warn('FinalGradesByOvFeature: Failed to apply initial grading mode', e)
+              Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode', e)
             }
           } catch (e) {
             // fallback
@@ -1598,7 +1598,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                   const toApply = existingSelect.value || defaultMode
                   if (toApply) this.#applyGradingModeToResults(results, toApply)
                 } catch (e) {
-                  Logger.warn('FinalGradesByOvFeature: Failed to apply grading mode for existing select', e)
+                  Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode for existing select', e)
                 }
               } else {
                 existingSelect.style.fontWeight = '400'
@@ -1611,7 +1611,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           }
         }
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Failed to create/update grading-mode select', e)
+        Logger.debug('FinalGradesByOvFeature: Failed to create/update grading-mode select', e)
       }
       // --- Highlight mismatched cells in the journal table ---
       try {
@@ -1893,7 +1893,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           }
         }
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Failed to highlight mismatched cells', e)
+        Logger.debug('FinalGradesByOvFeature: Failed to highlight mismatched cells', e)
       }
       // If autoSync is false, we only compute filteredOutput and update button/UI state, do not post grades
       if (!opts.autoSync) {
@@ -1914,13 +1914,13 @@ class FinalGradesByOvFeature extends BaseFeature {
                   .includes('lõpptulemus')
               button.textContent = isL ? 'Kõik hinded on õiged' : 'Kõik hinded on õiged'
             } catch (innerErr) {
-              Logger.warn('FinalGradesByOvFeature: Ignored inner error setting button text', innerErr)
+              Logger.debug('FinalGradesByOvFeature: Ignored inner error setting button text', innerErr)
             }
             // Mark as intentionally disabled so click handlers don't re-enable
             button._oaFinalGradesDisabled = true
             Logger.debug('✨ FinalGradesByOvFeature: Button disabled on page load because no changes detected')
           } catch (e) {
-            Logger.warn('FinalGradesByOvFeature: Failed to disable button on page load', e)
+            Logger.debug('FinalGradesByOvFeature: Failed to disable button on page load', e)
           }
         }
         return filteredOutput
@@ -2266,7 +2266,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       })
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error while highlighting incorrect current grades', e)
+      Logger.debug('FinalGradesByOvFeature: Error while highlighting incorrect current grades', e)
     }
   }
 
@@ -2296,10 +2296,10 @@ class FinalGradesByOvFeature extends BaseFeature {
       try {
         this.#attachGradingModeSelectToButton(button)
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Failed to attach grading-mode select to L button', e)
+        Logger.debug('FinalGradesByOvFeature: Failed to attach grading-mode select to L button', e)
       }
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns', e)
+      Logger.debug('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns', e)
     }
 
     // Apply grading-mode selection defaults and ensure the mode is applied to computed results
@@ -2364,7 +2364,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
           if (initialMode) this.#applyGradingModeToResults(results, initialMode)
         } catch (e) {
-          Logger.warn('FinalGradesByOvFeature: Failed to apply initial grading mode for L flow', e)
+          Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode for L flow', e)
         }
 
         // Recompute highlights/UI when user changes selection without auto-syncing
@@ -2382,10 +2382,10 @@ class FinalGradesByOvFeature extends BaseFeature {
               try {
                 await this.showLGradeResults(results, button, lastEntries, { autoSync: false })
               } catch (e) {
-                Logger.warn('FinalGradesByOvFeature: Failed to refresh L UI after grading mode change', e)
+                Logger.debug('FinalGradesByOvFeature: Failed to refresh L UI after grading mode change', e)
               }
             } catch (e) {
-              Logger.warn('FinalGradesByOvFeature: Error handling grading-mode change in L flow', e)
+              Logger.debug('FinalGradesByOvFeature: Error handling grading-mode change in L flow', e)
             }
           })
         } catch (e) {
@@ -2393,7 +2393,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error while wiring grading-mode select for L flow', e)
+      Logger.debug('FinalGradesByOvFeature: Error while wiring grading-mode select for L flow', e)
     }
 
     try {
@@ -2437,7 +2437,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       try {
         this._highlightIncorrectCurrentGrades(results)
       } catch (e) {
-        Logger.warn('FinalGradesByOvFeature: Failed to update current grade highlights', e)
+        Logger.debug('FinalGradesByOvFeature: Failed to update current grade highlights', e)
       }
       // If autoSync is disabled, we only compute filteredOutput and update button state/UI
       if (!opts.autoSync) {
@@ -2456,10 +2456,10 @@ class FinalGradesByOvFeature extends BaseFeature {
               try {
                 button.textContent = 'Kõik hinded on õiged'
               } catch (inner) {
-                Logger.warn('FinalGradesByOvFeature: Ignored inner error setting button text', inner)
+                Logger.debug('FinalGradesByOvFeature: Ignored inner error setting button text', inner)
               }
             } catch (innerErr) {
-              Logger.warn('FinalGradesByOvFeature: Failed to set disabled button state', innerErr)
+              Logger.debug('FinalGradesByOvFeature: Failed to set disabled button state', innerErr)
             }
             Logger.debug('✨ FinalGradesByOvFeature: Button disabled on page load because no L changes detected')
           } else {
@@ -2476,10 +2476,10 @@ class FinalGradesByOvFeature extends BaseFeature {
                 button.textContent = 'Uuenda õpiväljundite hinded'
                 button.style.background = 'rgb(21, 101, 192)'
               } catch (innerErr) {
-                Logger.warn('FinalGradesByOvFeature: Failed to restore button text/style', innerErr)
+                Logger.debug('FinalGradesByOvFeature: Failed to restore button text/style', innerErr)
               }
             } catch (e) {
-              Logger.warn('FinalGradesByOvFeature: Failed to enable button', e)
+              Logger.debug('FinalGradesByOvFeature: Failed to enable button', e)
             }
             // Decide label: if there are existing L grades, present update action; otherwise present add action
             try {
@@ -2491,12 +2491,12 @@ class FinalGradesByOvFeature extends BaseFeature {
               }
               button.style.background = 'rgb(21, 101, 192)'
             } catch (innerErr) {
-              Logger.warn('FinalGradesByOvFeature: Failed deciding button label', innerErr)
+              Logger.debug('FinalGradesByOvFeature: Failed deciding button label', innerErr)
             }
             Logger.debug('✨ FinalGradesByOvFeature: Button enabled on page load — L changes detected')
           }
         } catch (e) {
-          Logger.warn('FinalGradesByOvFeature: Error while updating button state on page load', e)
+          Logger.debug('FinalGradesByOvFeature: Error while updating button state on page load', e)
         }
         return filteredOutput
       }
@@ -2683,7 +2683,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       })
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error ensuring L-grade dropdowns', e)
+      Logger.debug('FinalGradesByOvFeature: Error ensuring L-grade dropdowns', e)
     }
   }
 
@@ -2742,7 +2742,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       cell.innerHTML = ''
       cell.appendChild(select)
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error creating L-grade dropdown', e)
+      Logger.debug('FinalGradesByOvFeature: Error creating L-grade dropdown', e)
     }
   }
 
@@ -2818,7 +2818,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error while creating/moving grading-mode select', e)
+      Logger.debug('FinalGradesByOvFeature: Error while creating/moving grading-mode select', e)
     }
   }
 
@@ -2910,7 +2910,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             await this.showLGradeResults(newResults, button, newEntries, { autoSync: false })
             Logger.debug('✨ FinalGradesByOvFeature: Button state updated after DOM change')
           } catch (err) {
-            Logger.warn('✨ FinalGradesByOvFeature: Error while re-evaluating after DOM change', err)
+            Logger.debug('✨ FinalGradesByOvFeature: Error while re-evaluating after DOM change', err)
           }
         }, 250)
       }
@@ -2918,7 +2918,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       mo.observe(tableEl, { childList: true, subtree: true, attributes: true })
       return mo
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Failed to attach DOM observer for table changes', e)
+      Logger.debug('FinalGradesByOvFeature: Failed to attach DOM observer for table changes', e)
       return null
     }
   }
@@ -2939,7 +2939,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error while checking for existing L grades', e)
+      Logger.debug('FinalGradesByOvFeature: Error while checking for existing L grades', e)
     }
     return false
   }
@@ -2957,7 +2957,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     } catch (e) {
-      Logger.warn('FinalGradesByOvFeature: Error while checking for existing ÕV grades', e)
+      Logger.debug('FinalGradesByOvFeature: Error while checking for existing ÕV grades', e)
     }
     return false
   }
