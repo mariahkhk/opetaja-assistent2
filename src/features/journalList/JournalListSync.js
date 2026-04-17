@@ -1496,8 +1496,8 @@ class JournalListSyncFeature extends BaseFeature {
       return
     }
 
-    // Save token to chrome.storage.sync
-    chrome.storage.sync.set({ OA_kriitApiToken: token }, () => {
+    // Save token to chrome.storage.local
+    chrome.storage.local.set({ OA_kriitApiToken: token }, () => {
       // Update API service
       this.api.kriit.setAuthToken(token)
 
@@ -1513,7 +1513,7 @@ class JournalListSyncFeature extends BaseFeature {
    */
   resetKriitApiToken() {
     // Remove current token
-    chrome.storage.sync.remove(['OA_kriitApiToken'], () => {
+    chrome.storage.local.remove(['OA_kriitApiToken'], () => {
       // Prompt user for a new token
       const newToken = prompt('Please enter your Kriit API token:', '')
 

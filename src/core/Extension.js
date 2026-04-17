@@ -68,7 +68,7 @@ const tahvelExtension = {
         }
 
         // Get Kriit API URL from storage
-        chrome.storage.sync.get(['OA_kriitApiBaseUrl'], result => {
+        chrome.storage.local.get(['OA_kriitApiBaseUrl'], result => {
           // Double-check that indicator hasn't been added while we were getting storage
           if (this.indicatorAdded || userMenuButton.querySelector('.oa-indicator')) {
             this.indicatorAdded = true

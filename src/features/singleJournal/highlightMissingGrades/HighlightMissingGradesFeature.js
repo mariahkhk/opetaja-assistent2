@@ -48,7 +48,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
     }
 
     // Check if feature is enabled in settings (default: true)
-    chrome.storage.sync.get(['OA_highlightMissingGrades'], (result) => {
+    chrome.storage.local.get(['OA_highlightMissingGrades'], (result) => {
       if (result['OA_highlightMissingGrades'] === false) {
         Logger.debug('[HighlightMissingGradesFeature] Feature disabled in settings')
         return

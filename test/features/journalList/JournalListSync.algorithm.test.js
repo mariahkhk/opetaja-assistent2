@@ -1936,13 +1936,13 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('should not set invalid token', () => {
       journalListSync.setKriitApiToken('')
 
-      expect(global.chrome.storage.sync.set).not.toHaveBeenCalled()
+      expect(global.chrome.storage.local.set).not.toHaveBeenCalled()
     })
 
     test('should not set null token', () => {
       journalListSync.setKriitApiToken(null)
 
-      expect(global.chrome.storage.sync.set).not.toHaveBeenCalled()
+      expect(global.chrome.storage.local.set).not.toHaveBeenCalled()
     })
 
     test('should save valid token and refresh data', () => {
@@ -1951,7 +1951,7 @@ describe('JournalListSync - Algorithm Tests', () => {
 
       journalListSync.setKriitApiToken('valid-token-123')
 
-      expect(global.chrome.storage.sync.set).toHaveBeenCalledWith({ OA_kriitApiToken: 'valid-token-123' }, expect.any(Function))
+      expect(global.chrome.storage.local.set).toHaveBeenCalledWith({ OA_kriitApiToken: 'valid-token-123' }, expect.any(Function))
     })
   })
 
@@ -2074,7 +2074,9 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('should remove token from storage', () => {
       global.chrome = {
         storage: {
-          sync: {
+          local: {
+            get: mock(),
+            set: mock(),
             remove: mock((keys, callback) => callback())
           }
         }
@@ -2083,13 +2085,15 @@ describe('JournalListSync - Algorithm Tests', () => {
 
       journalListSync.resetKriitApiToken()
 
-      expect(chrome.storage.sync.remove).toHaveBeenCalledWith(['OA_kriitApiToken'], expect.any(Function))
+      expect(chrome.storage.local.remove).toHaveBeenCalledWith(['OA_kriitApiToken'], expect.any(Function))
     })
 
     test('should prompt for new token', () => {
       global.chrome = {
         storage: {
-          sync: {
+          local: {
+            get: mock(),
+            set: mock(),
             remove: mock((keys, callback) => callback())
           }
         }

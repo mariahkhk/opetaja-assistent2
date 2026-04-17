@@ -7,7 +7,7 @@ describe('BaseFeature', () => {
     global.chrome = {
       runtime: { lastError: null },
       storage: {
-        sync: {
+        local: {
           get: mock((keys, callback) => {
             callback({
               OA_kriitApiBaseUrl: 'https://api.kriit.test',
@@ -253,7 +253,7 @@ describe('BaseFeature', () => {
       api.kriit.baseUrl = ''
 
       let getCalled = false
-      global.chrome.storage.sync.get = mock((keys, callback) => {
+      global.chrome.storage.local.get = mock((keys, callback) => {
         getCalled = true
         callback({
           OA_kriitApiToken: 'test-token',

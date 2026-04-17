@@ -11,7 +11,6 @@ describe('fetchTeacherJournals', () => {
     global.chrome = {
       runtime: { lastError: null },
       storage: {
-        sync: { get: mock((keys, cb) => cb({})) },
         local: {
           get: mock((keys, cb) => cb({})),
           remove: mock((keys, cb) => { if (cb) cb() }),

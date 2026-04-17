@@ -24,9 +24,6 @@ describe('VersionCheckService', () => {
         }
       },
       storage: {
-        sync: {
-          get: mock((keys, cb) => { if (cb) cb({}); return Promise.resolve({}) })
-        },
         session: {
           get: mock(() => Promise.resolve({})),
           set: mock(() => Promise.resolve())

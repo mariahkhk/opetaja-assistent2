@@ -35,22 +35,17 @@ describe('HeaderSyncButtonFeature', () => {
       storage: {
         local: {
           get: mock((keys, callback) => {
-            callback({})
+            callback({
+              OA_kriitApiBaseUrl: 'https://kriit.example.com',
+              OA_kriitApiToken: 'test-token',
+              OA_kriitEnabled: true
+            })
           }),
           set: mock((items, callback) => {
             if (callback) callback()
           }),
           remove: mock((keys, callback) => {
             if (callback) callback()
-          })
-        },
-        sync: {
-          get: mock((keys, callback) => {
-            callback({
-              OA_kriitApiBaseUrl: 'https://kriit.example.com',
-              OA_kriitApiToken: 'test-token',
-              OA_kriitEnabled: true
-            })
           })
         }
       }

@@ -13,10 +13,6 @@ global.chrome = {
     local: {
       get: mock((keys, callback) => { callback({}) }),
       set: mock((items, callback) => { if (callback) callback() })
-    },
-    sync: {
-      get: mock((keys, callback) => { callback({}) }),
-      set: mock()
     }
   },
   runtime: {

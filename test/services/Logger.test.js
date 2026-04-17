@@ -26,7 +26,7 @@ describe('Logger', () => {
 
     global.chrome = {
       storage: {
-        sync: {
+        local: {
           get: mock((keys, callback) => {
             callback({ OA_debug_mode: false })
           }),
@@ -160,13 +160,13 @@ describe('Logger', () => {
     test('should enable debug mode', () => {
       enableDebugMode()
       expect(isDebugMode()).toBe(true)
-      expect(global.chrome.storage.sync.set).toHaveBeenCalledWith({ OA_debug_mode: true })
+      expect(global.chrome.storage.local.set).toHaveBeenCalledWith({ OA_debug_mode: true })
     })
 
     test('should disable debug mode', () => {
       disableDebugMode()
       expect(isDebugMode()).toBe(false)
-      expect(global.chrome.storage.sync.set).toHaveBeenCalledWith({ OA_debug_mode: false })
+      expect(global.chrome.storage.local.set).toHaveBeenCalledWith({ OA_debug_mode: false })
     })
   })
 

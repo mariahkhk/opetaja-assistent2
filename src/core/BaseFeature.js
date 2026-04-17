@@ -40,7 +40,7 @@ export const api = {
   // Kriit API instance - baseUrl will be set from user settings
   kriit: new ApiService({
     name: 'kriit',
-    baseUrl: '', // Empty by default, will be set from chrome.storage.sync
+    baseUrl: '', // Empty by default, will be set from chrome.storage.local
     defaultHeaders: {
       Accept: 'application/json'
     }
@@ -181,7 +181,7 @@ export class BaseFeature {
   }
 
   /**
-   * Initialize Kriit API with settings from chrome.storage.sync
+   * Initialize Kriit API with settings from chrome.storage.local
    */
   initializeKriitApi() {
     // Check if API is properly initialized
@@ -197,7 +197,7 @@ export class BaseFeature {
     if (!this.api.kriit.baseUrl) {
       // Try to load from storage - store promise so features can await it
       this.api._kriitInitPromise = new Promise(resolve => {
-        chrome.storage.sync.get(['OA_kriitApiBaseUrl', 'OA_kriitApiToken', 'OA_kriitEnabled'], result => {
+        chrome.storage.local.get(['OA_kriitApiBaseUrl', 'OA_kriitApiToken', 'OA_kriitEnabled'], result => {
           if (chrome.runtime?.lastError) {
             Logger.error('Failed to load Kriit settings from storage:', chrome.runtime.lastError.message)
             resolve()

@@ -76,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `/user` - Get current user info
 
 **Kriit API:**
-- Base URL: Configured by user in extension popup (stored in `chrome.storage.sync`)
+- Base URL: Configured by user in extension popup (stored in `chrome.storage.local`)
 - API Key: Also configured in popup, sent as `X-API-KEY` header
 - Common endpoints:
   - `/api/subjects/getDifferences` - Get sync differences

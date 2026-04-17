@@ -113,19 +113,19 @@ function initPopup() {
   }
 
   // Initialize debug mode checkbox
-  chrome.storage.sync.get([DEBUG_MODE_KEY], function(result) {
+  chrome.storage.local.get([DEBUG_MODE_KEY], function(result) {
     const isDebug = result[DEBUG_MODE_KEY] === true
     debugModeCheckbox.checked = isDebug
     debugToolsContainer.style.display = isDebug ? 'block' : 'none'
   })
 
   // Initialize highlight missing grades checkbox (default: enabled)
-  chrome.storage.sync.get([HIGHLIGHT_MISSING_GRADES_KEY], function(result) {
+  chrome.storage.local.get([HIGHLIGHT_MISSING_GRADES_KEY], function(result) {
     highlightMissingGradesCheckbox.checked = result[HIGHLIGHT_MISSING_GRADES_KEY] !== false
   })
 
   // Initialize Kriit API settings
-  chrome.storage.sync.get([KRIIT_ENABLED_KEY, KRIIT_API_URL_KEY, KRIIT_API_KEY_KEY], function(result) {
+  chrome.storage.local.get([KRIIT_ENABLED_KEY, KRIIT_API_URL_KEY, KRIIT_API_KEY_KEY], function(result) {
     const kriitEnabled = result[KRIIT_ENABLED_KEY] === true
     kriitEnabledCheckbox.checked = kriitEnabled
 
@@ -312,7 +312,7 @@ function toggleDebugMode(enabled) {
   const debugToolsContainer = document.getElementById('debug-tools')
   if (debugToolsContainer) debugToolsContainer.style.display = enabled ? 'block' : 'none'
 
-  chrome.storage.sync.set({ [DEBUG_MODE_KEY]: enabled }, function() {
+  chrome.storage.local.set({ [DEBUG_MODE_KEY]: enabled }, function() {
     console.log('Debug mode set to:', enabled)
 
     // Notify content script about the change
@@ -336,7 +336,7 @@ function toggleDebugMode(enabled) {
  * @param {boolean} enabled - Whether highlighting should be enabled
  */
 function toggleHighlightMissingGrades(enabled) {
-  chrome.storage.sync.set({ [HIGHLIGHT_MISSING_GRADES_KEY]: enabled }, function() {
+  chrome.storage.local.set({ [HIGHLIGHT_MISSING_GRADES_KEY]: enabled }, function() {
     console.log('Highlight missing grades set to:', enabled)
 
     chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
@@ -360,7 +360,7 @@ function toggleHighlightMissingGrades(enabled) {
  * @param {HTMLElement} settingsContainer - Container for Kriit settings
  */
 function toggleKriitEnabled(enabled, settingsContainer) {
-  chrome.storage.sync.set({ [KRIIT_ENABLED_KEY]: enabled }, function() {
+  chrome.storage.local.set({ [KRIIT_ENABLED_KEY]: enabled }, function() {
     console.log('Kriit integration set to:', enabled)
 
     // Show/hide settings container
@@ -414,7 +414,7 @@ function saveKriitSettings({ apiUrl, apiKey, statusElement, apiKeyInput, toggleB
   }
 
   // When the key field is left empty, preserve the already-stored key instead of wiping it.
-  chrome.storage.sync.get([KRIIT_API_KEY_KEY], function(existing) {
+  chrome.storage.local.get([KRIIT_API_KEY_KEY], function(existing) {
     if (chrome.runtime.lastError) {
       showError('Seadete lugemine ebaõnnestus: ' + chrome.runtime.lastError.message)
       finish()
@@ -439,7 +439,7 @@ function saveKriitSettings({ apiUrl, apiKey, statusElement, apiKeyInput, toggleB
       toStore[KRIIT_API_KEY_KEY] = apiKey
     }
 
-    chrome.storage.sync.set(toStore, function() {
+    chrome.storage.local.set(toStore, function() {
       if (chrome.runtime.lastError) {
         showError('Seadete salvestamine ebaõnnestus: ' + chrome.runtime.lastError.message)
         finish()
@@ -483,7 +483,7 @@ function deleteApiKey(apiKeyInput, toggleBtn, statusElement, deleteBtn) {
   if (!confirm('Kas oled kindel, et soovid Kriit API võtme kustutada?')) return
 
   deleteBtn.disabled = true
-  chrome.storage.sync.remove(KRIIT_API_KEY_KEY, function() {
+  chrome.storage.local.remove(KRIIT_API_KEY_KEY, function() {
     if (chrome.runtime.lastError) {
       showError('Võtme kustutamine ebaõnnestus: ' + chrome.runtime.lastError.message)
       deleteBtn.disabled = false

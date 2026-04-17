@@ -12,7 +12,7 @@ export async function loadFeatures() {
 
   // Check if Kriit is enabled
   const kriitEnabled = await new Promise(resolve => {
-    chrome.storage.sync.get(['OA_kriitEnabled'], result => {
+    chrome.storage.local.get(['OA_kriitEnabled'], result => {
       resolve(result['OA_kriitEnabled'] === true)
     })
   })

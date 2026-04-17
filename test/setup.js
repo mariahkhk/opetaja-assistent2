@@ -82,13 +82,6 @@ global.console = {
 
 global.chrome = {
   storage: {
-    sync: {
-      get: mock((keys, callback) => {
-        callback({})
-      }),
-      set: mock(),
-      remove: mock()
-    },
     local: {
       get: mock((keys, callback) => {
         callback({})
@@ -113,13 +106,6 @@ global.chrome = {
 export function restoreChromeMock() {
   global.chrome = {
     storage: {
-      sync: {
-        get: mock((keys, callback) => {
-          callback({})
-        }),
-        set: mock(),
-        remove: mock()
-      },
       local: {
         get: mock((keys, callback) => {
           callback({})

@@ -23,7 +23,7 @@ const DEBUG_MODE_KEY = 'OA_debug_mode'
 let debugModeCache = false
 
 // Initialize debug mode from storage
-chrome.storage.sync.get([DEBUG_MODE_KEY], function(result) {
+chrome.storage.local.get([DEBUG_MODE_KEY], function(result) {
   debugModeCache = result[DEBUG_MODE_KEY] === true
 })
 
@@ -40,7 +40,7 @@ export function isDebugMode() {
  */
 export function enableDebugMode() {
   debugModeCache = true
-  chrome.storage.sync.set({ [DEBUG_MODE_KEY]: true })
+  chrome.storage.local.set({ [DEBUG_MODE_KEY]: true })
   console.log('[Logger] Debug mode enabled - all log messages will be shown')
 }
 
@@ -49,7 +49,7 @@ export function enableDebugMode() {
  */
 export function disableDebugMode() {
   debugModeCache = false
-  chrome.storage.sync.set({ [DEBUG_MODE_KEY]: false })
+  chrome.storage.local.set({ [DEBUG_MODE_KEY]: false })
   console.log('[Logger] Debug mode disabled - only important log messages will be shown')
 }
 

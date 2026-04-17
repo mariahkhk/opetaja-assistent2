@@ -21,7 +21,7 @@ describe('HighlightMissingGradesFeature', () => {
     }
     global.chrome = {
       storage: {
-        sync: {
+        local: {
           get: (_keys, callback) => callback({})
         }
       },
@@ -1041,7 +1041,7 @@ describe('HighlightMissingGradesFeature', () => {
 
   describe('settings toggle', () => {
     test('should not activate when OA_highlightMissingGrades is false', () => {
-      global.chrome.storage.sync.get = (_keys, cb) => cb({ OA_highlightMissingGrades: false })
+      global.chrome.storage.local.get = (_keys, cb) => cb({ OA_highlightMissingGrades: false })
       const dom = new JSDOM('<!DOCTYPE html><html><body><div id="studentTable"></div></body></html>')
       global.document = dom.window.document
       global.MutationObserver = dom.window.MutationObserver
