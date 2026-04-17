@@ -11,6 +11,9 @@ const KRIIT_API_KEY_KEY = 'OA_kriitApiToken'
 const HIGHLIGHT_MISSING_GRADES_KEY = 'OA_highlightMissingGrades'
 const DEFAULT_KRIIT_API_URL = 'https://kriit.vikk.ee/api'
 const TAHVEL_DOMAINS = ['tahvel.edu.ee', 'tahvel.eenet.ee', 'uustahvel.eenet.ee', 'test.uustahvel.eenet.ee']
+const API_KEY_SHOW_LABEL = 'Näita'
+const API_KEY_HIDE_LABEL = 'Peida'
+const STATUS_CLEAR_DELAY_MS = 2000
 
 /**
  * Check if a URL belongs to a Tahvel instance
@@ -64,6 +67,8 @@ function initPopup() {
   const kriitSettingsContainer = document.getElementById('kriit-settings-container')
   const kriitApiUrlInput = document.getElementById('kriit-api-url')
   const kriitApiKeyInput = document.getElementById('kriit-api-key')
+  const toggleApiKeyVisibilityButton = document.getElementById('toggle-api-key-visibility')
+  const deleteApiKeyButton = document.getElementById('delete-api-key')
   const saveKriitSettingsButton = document.getElementById('save-kriit-settings')
   const saveStatusElement = document.getElementById('save-status')
   const errorLogElement = document.getElementById('error-log')
@@ -86,6 +91,8 @@ function initPopup() {
   if (!kriitSettingsContainer) throw new Error('Kriit settings container not found')
   if (!kriitApiUrlInput) throw new Error('Kriit API URL input not found')
   if (!kriitApiKeyInput) throw new Error('Kriit API key input not found')
+  if (!toggleApiKeyVisibilityButton) throw new Error('Toggle API key visibility button not found')
+  if (!deleteApiKeyButton) throw new Error('Delete API key button not found')
   if (!saveKriitSettingsButton) throw new Error('Save Kriit settings button not found')
   if (!saveStatusElement) throw new Error('Save status element not found')
   if (!errorLogElement) throw new Error('Error log element not found')
@@ -127,7 +134,12 @@ function initPopup() {
 
     // Set values
     kriitApiUrlInput.value = result[KRIIT_API_URL_KEY] || ''
-    kriitApiKeyInput.value = result[KRIIT_API_KEY_KEY] || ''
+
+    // On initial load, never pre-fill the input with the stored key — show a
+    // status hint instead. (The user-typed value is still rendered; the Näita
+    // toggle below can flip the input to type=text on demand.)
+    kriitApiKeyInput.value = ''
+    setApiKeySavedIndicator(Boolean(result[KRIIT_API_KEY_KEY]))
   })
 
   // Initialize comparison date with today's date in DD.MM.YYYY
@@ -208,11 +220,33 @@ function initPopup() {
 
   saveKriitSettingsButton.addEventListener('click', function() {
     try {
-      saveKriitSettings(kriitApiUrlInput.value, kriitApiKeyInput.value, saveStatusElement)
+      saveKriitSettings({
+        apiUrl: kriitApiUrlInput.value,
+        apiKey: kriitApiKeyInput.value,
+        statusElement: saveStatusElement,
+        apiKeyInput: kriitApiKeyInput,
+        toggleBtn: toggleApiKeyVisibilityButton,
+        saveBtn: saveKriitSettingsButton
+      })
     } catch (error) {
       console.error('Error saving Kriit settings:', error)
       showError('Failed to save Kriit settings: ' + error.message)
     }
+  })
+
+  deleteApiKeyButton.addEventListener('click', function() {
+    try {
+      deleteApiKey(kriitApiKeyInput, toggleApiKeyVisibilityButton, saveStatusElement, deleteApiKeyButton)
+    } catch (error) {
+      console.error('Error deleting Kriit API key:', error)
+      showError('Failed to delete Kriit API key: ' + error.message)
+    }
+  })
+
+  toggleApiKeyVisibilityButton.addEventListener('click', function() {
+    const showing = kriitApiKeyInput.type === 'text'
+    kriitApiKeyInput.type = showing ? 'password' : 'text'
+    toggleApiKeyVisibilityButton.textContent = showing ? API_KEY_SHOW_LABEL : API_KEY_HIDE_LABEL
   })
 
   // Add event listeners for cache statistics
@@ -349,12 +383,22 @@ function toggleKriitEnabled(enabled, settingsContainer) {
 }
 
 /**
- * Save Kriit API settings
- * @param {string} apiUrl - The API URL
- * @param {string} apiKey - The API key
- * @param {HTMLElement} statusElement - Element to show status message
+ * Save Kriit API settings.
+ *
+ * The save flow is get→set: if the user leaves the key field empty we preserve
+ * the already-stored key. Because that's two async storage calls, we disable the
+ * save button while it's in flight to prevent double-submit races, and check
+ * chrome.runtime.lastError on both callbacks so storage failures surface.
+ *
+ * @param {Object} opts
+ * @param {string} opts.apiUrl - The API URL
+ * @param {string} opts.apiKey - The API key typed into the input (may be empty)
+ * @param {HTMLElement} opts.statusElement - Element to show status message
+ * @param {HTMLInputElement} opts.apiKeyInput - The API key input element
+ * @param {HTMLButtonElement} opts.toggleBtn - The Näita/Peida toggle button
+ * @param {HTMLButtonElement} opts.saveBtn - The Salvesta button (disabled during save)
  */
-function saveKriitSettings(apiUrl, apiKey, statusElement) {
+function saveKriitSettings({ apiUrl, apiKey, statusElement, apiKeyInput, toggleBtn, saveBtn }) {
   apiUrl = apiUrl.trim()
   apiKey = apiKey.trim()
 
@@ -364,39 +408,99 @@ function saveKriitSettings(apiUrl, apiKey, statusElement) {
     return
   }
 
-  // Save settings to chrome.storage.sync
-  chrome.storage.sync.set(
-    {
-      [KRIIT_ENABLED_KEY]: true, // Enable Kriit integration when settings are saved
-      [KRIIT_API_URL_KEY]: apiUrl || DEFAULT_KRIIT_API_URL,
-      [KRIIT_API_KEY_KEY]: apiKey
-    },
-    function() {
+  saveBtn.disabled = true
+  const finish = () => {
+    saveBtn.disabled = false
+  }
+
+  // When the key field is left empty, preserve the already-stored key instead of wiping it.
+  chrome.storage.sync.get([KRIIT_API_KEY_KEY], function(existing) {
+    if (chrome.runtime.lastError) {
+      showError('Seadete lugemine ebaõnnestus: ' + chrome.runtime.lastError.message)
+      finish()
+      return
+    }
+
+    const existingKey = existing[KRIIT_API_KEY_KEY] || ''
+    const effectiveKey = apiKey || existingKey
+
+    if (!effectiveKey) {
+      showError('API võti puudub — sisesta uus võti.')
+      finish()
+      return
+    }
+
+    const effectiveUrl = apiUrl || DEFAULT_KRIIT_API_URL
+    const toStore = {
+      [KRIIT_ENABLED_KEY]: true,
+      [KRIIT_API_URL_KEY]: effectiveUrl
+    }
+    if (apiKey) {
+      toStore[KRIIT_API_KEY_KEY] = apiKey
+    }
+
+    chrome.storage.sync.set(toStore, function() {
+      if (chrome.runtime.lastError) {
+        showError('Seadete salvestamine ebaõnnestus: ' + chrome.runtime.lastError.message)
+        finish()
+        return
+      }
+
       console.log('Kriit API settings saved')
 
       // Show success message
       statusElement.textContent = 'Salvestatud!'
       setTimeout(() => {
         statusElement.textContent = ''
-      }, 2000)
+      }, STATUS_CLEAR_DELAY_MS)
 
-      // Notify content script about the settings change
-      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-        if (tabs[0] && isTahvelUrl(tabs[0].url)) {
-          chrome.tabs
-            .sendMessage(tabs[0].id, {
-              action: 'kriitSettingsUpdated',
-              enabled: true,
-              apiUrl: apiUrl,
-              apiKey: apiKey
-            })
-            .catch(error => {
-              console.error('Error sending message:', error)
-            })
-        }
-      })
+      // Clear the input, re-mask it, and show the saved-key indicator. effectiveKey is
+      // guaranteed truthy here by the early return above.
+      resetApiKeyInput(apiKeyInput, toggleBtn)
+      setApiKeySavedIndicator(true)
+
+      // Notify content script about the settings change. Include apiKey only when the user
+      // typed one, mirroring the storage write above — a URL-only save must not mutate the
+      // content script's in-memory token. Use the same effectiveUrl that was written to
+      // storage so the message and storage stay in sync.
+      const payload = { enabled: true, apiUrl: effectiveUrl }
+      if (apiKey) payload.apiKey = apiKey
+      notifyKriitSettingsUpdated(payload)
+
+      finish()
+    })
+  })
+}
+
+/**
+ * Delete the stored Kriit API key.
+ * @param {HTMLInputElement} apiKeyInput - The API key input element
+ * @param {HTMLButtonElement} toggleBtn - The Näita/Peida toggle button
+ * @param {HTMLElement} statusElement - Element to show status message
+ * @param {HTMLButtonElement} deleteBtn - The Kustuta button (disabled during remove)
+ */
+function deleteApiKey(apiKeyInput, toggleBtn, statusElement, deleteBtn) {
+  if (!confirm('Kas oled kindel, et soovid Kriit API võtme kustutada?')) return
+
+  deleteBtn.disabled = true
+  chrome.storage.sync.remove(KRIIT_API_KEY_KEY, function() {
+    if (chrome.runtime.lastError) {
+      showError('Võtme kustutamine ebaõnnestus: ' + chrome.runtime.lastError.message)
+      deleteBtn.disabled = false
+      return
     }
-  )
+
+    resetApiKeyInput(apiKeyInput, toggleBtn)
+    setApiKeySavedIndicator(false)
+
+    statusElement.textContent = 'Võti kustutatud'
+    setTimeout(() => {
+      statusElement.textContent = ''
+    }, STATUS_CLEAR_DELAY_MS)
+
+    notifyKriitSettingsUpdated({ apiKey: '' })
+    deleteBtn.disabled = false
+  })
 }
 
 /**
@@ -861,6 +965,43 @@ function downloadCapturedRequests() {
       link.click()
       setTimeout(() => URL.revokeObjectURL(link.href), 5000)
     })
+  })
+}
+
+/**
+ * Toggle the "API key saved" indicator below the API key input.
+ * @param {boolean} hasKey - True when a key is stored.
+ */
+function setApiKeySavedIndicator(hasKey) {
+  const apiKeyStatus = document.getElementById('kriit-api-key-status')
+  if (!apiKeyStatus) return
+  apiKeyStatus.style.display = hasKey ? 'flex' : 'none'
+}
+
+/**
+ * Clear the API key input and return the visibility toggle to its masked/show state.
+ * @param {HTMLInputElement} apiKeyInput
+ * @param {HTMLButtonElement} toggleBtn
+ */
+function resetApiKeyInput(apiKeyInput, toggleBtn) {
+  apiKeyInput.value = ''
+  apiKeyInput.type = 'password'
+  toggleBtn.textContent = API_KEY_SHOW_LABEL
+}
+
+/**
+ * Post a kriitSettingsUpdated message to the active Tahvel tab, if any.
+ * Missing/non-Tahvel tabs are silently skipped; delivery errors are logged.
+ * @param {Object} payload - Message fields (action is set automatically).
+ */
+function notifyKriitSettingsUpdated(payload) {
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    if (!tabs[0] || !isTahvelUrl(tabs[0].url)) return
+    chrome.tabs
+      .sendMessage(tabs[0].id, { action: 'kriitSettingsUpdated', ...payload })
+      .catch(error => {
+        console.error('Error sending message:', error)
+      })
   })
 }
 

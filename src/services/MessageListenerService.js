@@ -56,7 +56,9 @@ export function setupKriitMessageListener(context) {
         context.api.kriit.setBaseUrl(message.apiUrl)
       }
 
-      if (message.apiKey) {
+      // A string apiKey (including '') is treated as authoritative; only skip
+      // when the field is absent so URL-only updates do not disturb the token.
+      if (typeof message.apiKey === 'string') {
         context.api.kriit.setAuthToken(message.apiKey)
       }
 
@@ -71,6 +73,12 @@ export function setupKriitMessageListener(context) {
         context.isEnabled = true
         context.removeSyncBanner()
         context.fetchJournalData()
+      } else if (!context.api.kriit.authToken && context.api.kriit.enabled) {
+        // Token was just cleared (e.g. via popup Kustuta). Surface the missing-key banner.
+        Logger.debug('Kriit settings updated but no token available - showing missing key banner')
+        context.isEnabled = false
+        context.removeSyncBanner()
+        context.showMissingApiKeyBanner()
       }
     }
   })

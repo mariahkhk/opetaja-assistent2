@@ -171,6 +171,34 @@
         font-size: 12px;
         display: none;
       }
+      .api-key-status {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: -4px;
+        margin-bottom: 8px;
+        font-size: 11px;
+        color: #2e7d32;
+      }
+      .api-key-status .btn {
+        padding: 2px 6px;
+        font-size: 11px;
+      }
+      .api-key-row {
+        display: flex;
+        gap: 4px;
+        width: 100%;
+      }
+      .api-key-row .text-input {
+        flex: 1;
+        margin-bottom: 0;
+      }
+      .api-key-row .btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
@@ -218,7 +246,22 @@
         </div>
         <div class="setting-item">
           <label class="setting-label" for="kriit-api-key">API võti</label>
-          <input type="text" id="kriit-api-key" placeholder="Sisesta Kriit API võti" class="text-input" />
+          <div class="api-key-row">
+            <input
+              type="password"
+              id="kriit-api-key"
+              placeholder="Sisesta Kriit API võti"
+              class="text-input"
+              autocomplete="new-password"
+              data-lpignore="true"
+              data-1p-ignore
+            />
+            <button type="button" id="toggle-api-key-visibility" class="btn secondary-btn">Näita</button>
+          </div>
+        </div>
+        <div id="kriit-api-key-status" class="api-key-status">
+          <span>✓ Võti salvestatud. Sisesta uus võti, et see asendada.</span>
+          <button type="button" id="delete-api-key" class="btn secondary-btn">Kustuta</button>
         </div>
         <div class="setting-item" style="margin-top: 12px">
           <button id="save-kriit-settings" class="btn primary-btn">Salvesta</button>
