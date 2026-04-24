@@ -22,6 +22,15 @@ export const LogLevel = {
 const DEBUG_MODE_KEY = 'OA_debug_mode'
 let debugModeCache = false
 
+// Error messages that are expected operational signals, not bugs worth Sentry alerts.
+// - HTTP 401/403/404/412 status responses (any origin) are suppressed.
+// - Parse errors (empty / invalid JSON) are suppressed only for Tahvel hosts, since Tahvel
+//   legitimately returns HTML during session expiry; Kriit/other parse failures are real bugs
+//   and must still reach Sentry.
+// Anchored with ^ so only errors whose message starts with "API Error: " are suppressed;
+// wrapper strings that merely contain this text still reach Sentry.
+export const EXPECTED_ERROR_PATTERN = /^API Error: (?:(401|403|404|412)\b|(empty response|invalid JSON response) from https?:\/\/(?:tahvel\.edu\.ee|test\.tahvel\.eenet\.ee)\/hois_back\/)/
+
 // Initialize debug mode from storage
 chrome.storage.local.get([DEBUG_MODE_KEY], function(result) {
   debugModeCache = result[DEBUG_MODE_KEY] === true
@@ -126,8 +135,7 @@ export function warning(message, ...args) {
 export function error(message, ...args) {
   log(message, LogLevel.ERROR, ...args)
 
-  // Skip Sentry for expected HTTP errors (auth expired, not found, precondition failed)
-  const EXPECTED_ERROR_PATTERN = /API Error: (401|403|404|412)\b/
+  // Skip Sentry for expected HTTP errors (auth expired, not found, precondition failed, parse failures)
   const errorObj = args.find(a => a instanceof Error)
   if (message instanceof Error && EXPECTED_ERROR_PATTERN.test(message.message)) return
   if (errorObj && EXPECTED_ERROR_PATTERN.test(errorObj.message)) return

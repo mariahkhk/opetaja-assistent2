@@ -1,12 +1,15 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import { ApiService } from '../../src/services/ApiService.js'
+import { cacheService } from '../../src/services/CacheService.js'
+import { EXPECTED_ERROR_PATTERN } from '../../src/services/Logger.js'
+import { parseJsonResponse } from '../../src/lib/parseJsonResponse.js'
 
 describe('ApiService', () => {
   let apiService
   let fetchMock
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Setup DOM (needed by Tahvel PUT requests that read document.cookie)
     const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'https://tahvel.edu.ee/' })
     global.window = dom.window
@@ -17,6 +20,9 @@ describe('ApiService', () => {
     ApiService.requestQueue = []
     ApiService.concurrencyLimit = 10
     ApiService.delayBetweenRequestsMs = 0
+    ApiService.capturedRequests = []
+
+    await cacheService.clearCache()
 
     apiService = new ApiService({
       name: 'test-api',
@@ -262,6 +268,45 @@ describe('ApiService', () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(2)
     })
+
+    test('should return success sentinel forwarding HTTP status for POST with empty body', async () => {
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 202,
+        statusText: 'Accepted',
+        text: async () => ''
+      }))
+
+      const result = await apiService.post('/ack', { id: 1 })
+      expect(result).toEqual({ success: true, status: 202 })
+    })
+
+    test('should treat whitespace-only POST body as empty and return sentinel', async () => {
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => '\r\n'
+      }))
+
+      const result = await apiService.post('/ack-ws', {})
+      expect(result).toEqual({ success: true, status: 200 })
+    })
+
+    // Audit: Grep of `this.api.\(tahvel\|kriit\)\.\(post\|put\)` across src/ confirms every
+    // live caller either discards the returned value or reads it as an object (.success / .id /
+    // destructure). None treat the response as a plaintext string. Locking in the throw
+    // contract here prevents accidental reintroduction of the silent-HTML-fallback bug.
+    test('should throw for POST that returns non-empty non-JSON body', async () => {
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => '<html>session-expired</html>'
+      }))
+
+      await expect(apiService.post('/some-endpoint', {})).rejects.toThrow('API Error: invalid JSON response')
+    })
   })
 
   describe('PUT requests', () => {
@@ -463,6 +508,54 @@ describe('ApiService', () => {
 
       expect(fetchMock).toHaveBeenCalledTimes(1)
     })
+
+    test('should throw for cached GET with empty body and not poison cache', async () => {
+      const emptyFetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => ''
+      }))
+      global.fetch = emptyFetch
+
+      await expect(apiService.get('/empty-cached')).rejects.toThrow('API Error: empty response')
+      await expect(apiService.get('/empty-cached')).rejects.toThrow('API Error: empty response')
+      expect(emptyFetch).toHaveBeenCalledTimes(2)
+    })
+
+    test('should throw for cached GET with non-JSON body and not poison cache', async () => {
+      const htmlFetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => '<html>Login page</html>'
+      }))
+      global.fetch = htmlFetch
+
+      await expect(apiService.get('/html-cached')).rejects.toThrow('API Error: invalid JSON response')
+      await expect(apiService.get('/html-cached')).rejects.toThrow('API Error: invalid JSON response')
+      expect(htmlFetch).toHaveBeenCalledTimes(2)
+    })
+
+    test('should reject both concurrent callers when body is empty and fetch only once', async () => {
+      const concurrentFetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => ''
+      }))
+      global.fetch = concurrentFetch
+
+      const results = await Promise.allSettled([
+        apiService.get('/concurrent-empty'),
+        apiService.get('/concurrent-empty')
+      ])
+
+      expect(results.every(r => r.status === 'rejected')).toBe(true)
+      expect(results[0].reason.message).toMatch(/API Error: empty response/)
+      expect(results[1].reason.message).toMatch(/API Error: empty response/)
+      expect(concurrentFetch).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('Error handling', () => {
@@ -474,25 +567,96 @@ describe('ApiService', () => {
       await expect(apiService.get('/endpoint', {}, { cache: false })).rejects.toThrow('Network error')
     })
 
-    test('should handle non-JSON responses', async () => {
+    test('should throw for uncached GET with non-JSON body', async () => {
       global.fetch = mock(async () => ({
         ok: true,
         status: 200,
         text: async () => 'Plain text response'
       }))
 
-      const result = await apiService.get('/text-endpoint', {}, { cache: false })
-      expect(result).toBe('Plain text response')
+      await expect(apiService.get('/text-endpoint', {}, { cache: false })).rejects.toThrow('API Error: invalid JSON response')
     })
 
-    test('should handle empty response for non-PUT requests', async () => {
+    test('should throw for uncached GET with empty body', async () => {
       global.fetch = mock(async () => ({
         ok: true,
         status: 200,
         text: async () => ''
       }))
 
-      const result = await apiService.get('/empty', {}, { cache: false })
+      await expect(apiService.get('/empty', {}, { cache: false })).rejects.toThrow('API Error: empty response')
+    })
+
+    test('should throw for uncached GET with whitespace-only body', async () => {
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        text: async () => ' '
+      }))
+
+      await expect(apiService.get('/ws', {}, { cache: false })).rejects.toThrow('API Error: empty response')
+    })
+  })
+
+  describe('parseJsonResponse', () => {
+    test('throws empty-response error for empty string', () => {
+      expect(() => parseJsonResponse('', 'https://x.example/path')).toThrow('API Error: empty response from https://x.example/path')
+    })
+
+    test('throws empty-response error for whitespace-only text', () => {
+      expect(() => parseJsonResponse('\r\n \t', 'https://x.example/path')).toThrow('API Error: empty response')
+    })
+
+    test('returns parsed value for valid JSON', () => {
+      expect(parseJsonResponse('{"a":1}', 'https://x.example/path')).toEqual({ a: 1 })
+      expect(parseJsonResponse('null', 'https://x.example/path')).toBe(null)
+      expect(parseJsonResponse('true', 'https://x.example/path')).toBe(true)
+    })
+
+    test('throws invalid-JSON error with cause for unparseable text', () => {
+      let thrown
+      try { parseJsonResponse('<html>not json</html>', 'https://x.example/path?token=secret') }
+      catch (e) { thrown = e }
+      expect(thrown).toBeInstanceOf(Error)
+      expect(thrown.message).toMatch(/^API Error: invalid JSON response from https:\/\/x\.example\/path:/)
+      expect(thrown.message).not.toContain('token=secret')
+      expect(thrown.cause).toBeInstanceOf(SyntaxError)
+    })
+
+    test('throws with typed message when urlString is not a string', () => {
+      expect(() => parseJsonResponse('{}', null)).toThrow('non-string url (object)')
+      expect(() => parseJsonResponse('{}', undefined)).toThrow('non-string url (undefined)')
+      expect(() => parseJsonResponse('{}', 42)).toThrow('non-string url (number)')
+    })
+
+    test('throws with typed message when text is not a string', () => {
+      expect(() => parseJsonResponse(null, '/foo')).toThrow('non-string text (object)')
+      expect(() => parseJsonResponse(undefined, '/foo')).toThrow('non-string text (undefined)')
+      expect(() => parseJsonResponse(42, '/foo')).toThrow('non-string text (number)')
+    })
+
+    test('strips #fragment from url in error messages', () => {
+      let thrown
+      try { parseJsonResponse('', 'https://x.example/path#secret') }
+      catch (e) { thrown = e }
+      expect(thrown.message).toBe('API Error: empty response from https://x.example/path')
+    })
+  })
+
+  describe('DELETE requests via request()', () => {
+    test('should return success sentinel for DELETE with empty 200 body', async () => {
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => ''
+      }))
+
+      const result = await apiService.request({
+        baseUrl: 'https://api.example.com',
+        endpoint: '/resource/1',
+        method: 'DELETE'
+      })
       expect(result).toEqual({ success: true, status: 200 })
     })
   })
@@ -542,5 +706,35 @@ describe('ApiService', () => {
       expect(results[1].status).toBe('rejected')
       expect(results[2].status).toBe('fulfilled')
     })
+  })
+})
+
+describe('Logger EXPECTED_ERROR_PATTERN', () => {
+  test('matches HTTP status errors and Tahvel-host hois_back parse errors', () => {
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 401 Unauthorized')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 403 Forbidden')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 404 Not Found')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 412 Precondition Failed')).toBe(true)
+    // CacheService re-throw format: just "API Error: <status>" with no trailing text
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 404')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 412')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://tahvel.edu.ee/hois_back/user')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://test.tahvel.eenet.ee/hois_back/user')).toBe(true)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: invalid JSON response from https://test.tahvel.eenet.ee/hois_back/journals/123: Unexpected token < in JSON at position 0')).toBe(true)
+  })
+
+  test('does NOT match unrelated errors, non-Tahvel hosts, or non-hois_back Tahvel paths', () => {
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 500 Internal Server Error')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: 502 Bad Gateway')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('Network error')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('Wrapper: API Error: 401 Unauthorized')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('Something invalid JSON response from nowhere')).toBe(false)
+    // Kriit and other non-Tahvel parse failures must reach Sentry
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://kriit.example/api/sync')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: invalid JSON response from http://localhost:3000/api/sync')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from /foo')).toBe(false)
+    // Only /hois_back/ paths on Tahvel hosts are suppressed; non-hois_back paths reach Sentry
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://tahvel.edu.ee/spa/assets/main.js')).toBe(false)
+    expect(EXPECTED_ERROR_PATTERN.test('API Error: invalid JSON response from https://test.tahvel.eenet.ee/some/other/path')).toBe(false)
   })
 })

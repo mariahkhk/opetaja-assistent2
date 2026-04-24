@@ -4,6 +4,7 @@
 
 import Logger from './Logger.js'
 import { cacheService } from './CacheService.js'
+import { parseJsonResponse } from '../lib/parseJsonResponse.js'
 
 /**
  * ApiService class for making API requests
@@ -313,11 +314,7 @@ class ApiService {
             }
 
             const text = await response.text()
-            try {
-              return JSON.parse(text)
-            } catch {
-              return text || { success: true, status: response.status }
-            }
+            return parseJsonResponse(text, urlString)
           },
           cacheExpiration
         )
@@ -390,18 +387,12 @@ class ApiService {
       const responseText = await response.text()
       let result
 
-      // For PUT requests, empty response is often valid (indicates success)
-      if (method === 'PUT' && responseText === '') {
-        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] PUT request returned empty response - treating as success`)
+      // For non-GET methods, an empty response is a valid "accepted, no content" signal
+      if (method !== 'GET' && responseText.trim() === '') {
+        if (Logger.isDebugMode()) Logger.debug(`[${this.name}] ${method} request returned empty response - treating as success`)
         result = { success: true, status: response.status }
       } else {
-        // Try to parse as JSON, fall back to text if that fails
-        try {
-          result = JSON.parse(responseText)
-        } catch (parseError) {
-          if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Response is not JSON, returning as text`)
-          result = responseText || { success: true, status: response.status }
-        }
+        result = parseJsonResponse(responseText, urlString)
       }
 
       ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, responseData: result, source: 'network' })

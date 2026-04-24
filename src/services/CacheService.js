@@ -178,8 +178,15 @@ const cacheService = {
   /**
    * Get data from cache or fetch it if not available.
    *
-   * Negative results ({ _errorStatus }) are cached to avoid repeated requests
-   * but re-thrown on retrieval so consumers' catch blocks still work.
+   * Negative results ({ _errorStatus }) returned from fetchFn are cached to
+   * avoid repeated requests, but re-thrown on retrieval so consumers' catch
+   * blocks still work.
+   *
+   * **Throws from fetchFn are NOT cached.** When fetchFn rejects (e.g.
+   * ApiService's parseJsonResponse throws on empty/invalid-JSON bodies), the
+   * next call re-fetches. This is intentional to avoid persisting garbage
+   * responses; the trade-off is that a persistently-failing endpoint will hit
+   * the network on every call until the underlying cause resolves.
    *
    * @param {string} key - Cache key
    * @param {Function} fetchFn - Function to fetch data if not in cache
@@ -316,6 +323,9 @@ const cacheService = {
     Object.keys(memoryCache).forEach(key => {
       delete memoryCache[key]
     })
+    Object.keys(pendingFetches).forEach(key => {
+      delete pendingFetches[key]
+    })
 
     const storageKeysCount = (await cacheGetAllKeys()).length
     await cacheClearAll()
@@ -339,6 +349,14 @@ const cacheService = {
         delete memoryCache[key]
       }
     }
+
+    // Drop in-flight promises for the same scope so a post-edit fetch doesn't
+    // repopulate cache with pre-edit data (matches the clearCache contract).
+    Object.keys(pendingFetches).forEach(key => {
+      if (this.isJournalRelatedCache(key, journalId)) {
+        delete pendingFetches[key]
+      }
+    })
 
     // Clear Cache API entries
     const allKeys = await cacheGetAllKeys()
