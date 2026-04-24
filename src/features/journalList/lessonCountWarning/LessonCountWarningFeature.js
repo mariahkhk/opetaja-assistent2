@@ -455,8 +455,6 @@ export default class LessonCountWarningFeature extends BaseFeature {
 
       if (currentHost.includes('test.tahvel')) {
         baseUrl = 'https://test.tahvel.eenet.ee/hois_back'
-      } else if (currentHost.includes('uustahvel')) {
-        baseUrl = 'https://uustahvel.eenet.ee/hois_back'
       }
 
       // Construct full URL for journal details endpoint

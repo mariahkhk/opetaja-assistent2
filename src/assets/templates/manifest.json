@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.tahvel.edu.ee/*", "*://*.tahvel.eenet.ee/*", "*://test.uustahvel.eenet.ee/*", "*://*.uustahvel.eenet.ee/*"],
+      "matches": ["*://tahvel.edu.ee/*", "*://test.tahvel.eenet.ee/*"],
       "js": ["content.js"]
     }
   ],

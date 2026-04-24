@@ -67,7 +67,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Base URL (dynamic based on environment):
   - Production: `https://tahvel.edu.ee/hois_back`
   - Test: `https://test.tahvel.eenet.ee/hois_back`
-  - UusTahvel: `https://uustahvel.eenet.ee/hois_back`
 - Authentication: Uses browser cookies (user must be logged into Tahvel)
 - Common endpoints:
   - `/journals/{id}` - Get journal details

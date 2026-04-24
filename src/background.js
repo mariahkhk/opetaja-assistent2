@@ -19,9 +19,7 @@ async function notifyTahvelTabsOfUpdate(version) {
   const tabs = await chrome.tabs.query({
     url: [
       '*://tahvel.edu.ee/*',
-      '*://test.tahvel.eenet.ee/*',
-      '*://uustahvel.eenet.ee/*',
-      '*://test.uustahvel.eenet.ee/*'
+      '*://test.tahvel.eenet.ee/*'
     ]
   })
 
@@ -187,13 +185,10 @@ async function getFutureSubjects(comparisonDate) {
       throw new Error('Aktiivne sakk ei ole saadaval')
     }
 
-    // Check if the tab is on Tahvel
-    // Treat 'tahvel.edu.ee', 'tahvel.eenet.ee', and 'uustahvel.eenet.ee' (including test subdomain) as valid Tahvel hosts
+    // Check if the tab is on Tahvel (production or test instance)
     if (
       !activeTab.url.includes('tahvel.edu.ee') &&
-      !activeTab.url.includes('tahvel.eenet.ee') &&
-      !activeTab.url.includes('uustahvel.eenet.ee') &&
-      !activeTab.url.includes('test.uustahvel.eenet.ee')
+      !activeTab.url.includes('test.tahvel.eenet.ee')
     ) {
       throw new Error('Palun avage Tahvel lehekülg')
     }

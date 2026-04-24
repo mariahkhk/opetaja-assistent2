@@ -11,18 +11,9 @@ import { ApiService } from '../services/ApiService.js'
  */
 function getTahvelBaseUrl() {
   const hostname = window.location.hostname
-  // Support official test Tahvel and the UusTahvel test/staging instances
   if (hostname.includes('test.tahvel.eenet.ee')) {
     return 'https://test.tahvel.eenet.ee/hois_back'
   }
-
-  if (hostname.includes('uustahvel.eenet.ee') || hostname.includes('test.uustahvel.eenet.ee')) {
-    // UusTahvel (including test subdomain) hosts the hois_back API on the same
-    // origin. Use the exact current hostname so requests go to the same server
-    // the page was loaded from (avoids rewriting test.uustahvel -> uustahvel).
-    return `${window.location.protocol}//${hostname}/hois_back`
-  }
-
   // Default to production tahvel
   return 'https://tahvel.edu.ee/hois_back'
 }

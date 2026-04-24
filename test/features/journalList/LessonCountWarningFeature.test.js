@@ -185,22 +185,6 @@ describe('LessonCountWarningFeature', () => {
 
       expect(cacheService.get).toHaveBeenCalledWith('GET_https://test.tahvel.eenet.ee/hois_back/journals/123')
     })
-
-    test('should detect uustahvel environment', async () => {
-      global.window = { location: { hostname: 'uustahvel.eenet.ee' } }
-      cacheService.get = mock(() =>
-        Promise.resolve({
-          id: 123,
-          lessonHours: {
-            capacityHours: [{ capacity: 'MAHT_a', usedHours: 7 }]
-          }
-        })
-      )
-
-      await feature.getLessonCountFromCache(123)
-
-      expect(cacheService.get).toHaveBeenCalledWith('GET_https://uustahvel.eenet.ee/hois_back/journals/123')
-    })
   })
 
   describe('parseStudyYear', () => {
