@@ -35,24 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 })
 
-// Helper to parse DD.MM.YYYY to Date
-function parseEuDate(str) {
-  if (!/^[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/.test(str)) return null
-  const [day, month, year] = str.split('.').map(Number)
-  const d = new Date(year, month - 1, day)
-  // Check for invalid dates (e.g. 32.13.2025)
-  if (d.getFullYear() !== year || d.getMonth() !== month - 1 || d.getDate() !== day) return null
-  return d
-}
-
-// Format date for display
-function formatDisplayDate(date) {
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = (date.getMonth() + 1).toString().padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}.${month}.${year}`
-}
-
 /**
  * Initialize the popup
  */
@@ -73,11 +55,6 @@ function initPopup() {
   const errorLogElement = document.getElementById('error-log')
   const viewCacheDetailsButton = document.getElementById('view-cache-details')
   const refreshCacheStatsButton = document.getElementById('refresh-cache-stats')
-  const showFutureSubjectsButton = document.getElementById('show-future-subjects')
-  const subjectsContainer = document.getElementById('subjects-container')
-  const comparisonDateInput = document.getElementById('comparison-date')
-  const findTeachersButton = document.getElementById('find-teachers')
-  const teachersContainer = document.getElementById('teachers-container')
   const debugToolsContainer = document.getElementById('debug-tools')
   const downloadApiRequestsButton = document.getElementById('download-api-requests')
 
@@ -95,11 +72,6 @@ function initPopup() {
   if (!saveKriitSettingsButton) throw new Error('Save Kriit settings button not found')
   if (!saveStatusElement) throw new Error('Save status element not found')
   if (!errorLogElement) throw new Error('Error log element not found')
-  if (!showFutureSubjectsButton) throw new Error('Show future subjects button not found')
-  if (!subjectsContainer) throw new Error('Subjects container not found')
-  if (!comparisonDateInput) throw new Error('Comparison date input not found')
-  if (!findTeachersButton) throw new Error('Find teachers button not found')
-  if (!teachersContainer) throw new Error('Teachers container not found')
   if (!debugToolsContainer) throw new Error('Debug tools container not found')
   if (!downloadApiRequestsButton) throw new Error('Download API requests button not found')
 
@@ -139,45 +111,6 @@ function initPopup() {
     // toggle below can flip the input to type=text on demand.)
     kriitApiKeyInput.value = ''
     setApiKeySavedIndicator(Boolean(result[KRIIT_API_KEY_KEY]))
-  })
-
-  // Initialize comparison date with today's date in DD.MM.YYYY
-  const today = new Date()
-  comparisonDateInput.value = formatDisplayDate(today)
-
-  // On load, initialize comparison date from storage if present
-  chrome.storage.local.get(['OA_comparisonDate'], function(result) {
-    const dateStr = result['OA_comparisonDate']
-    if (dateStr && parseEuDate(dateStr)) {
-      comparisonDateInput.value = dateStr
-    } else {
-      const today = new Date()
-      comparisonDateInput.value = formatDisplayDate(today)
-      chrome.storage.local.set({ OA_comparisonDate: comparisonDateInput.value })
-    }
-  })
-
-  // Add event listener for date change/blur to validate, save, and reset if empty
-  comparisonDateInput.addEventListener('blur', function() {
-    const val = comparisonDateInput.value.trim()
-    if (!val) {
-      // If empty, reset to today and save
-      const today = new Date()
-      const todayStr = formatDisplayDate(today)
-      comparisonDateInput.value = todayStr
-      chrome.storage.local.set({ OA_comparisonDate: todayStr })
-      comparisonDateInput.style.borderColor = ''
-      showError('')
-      return
-    }
-    if (!parseEuDate(val)) {
-      comparisonDateInput.style.borderColor = 'red'
-      showError('Kuupäev peab olema kujul DD.MM.YYYY')
-    } else {
-      comparisonDateInput.style.borderColor = ''
-      showError('')
-      chrome.storage.local.set({ OA_comparisonDate: val })
-    }
   })
 
   // Add event listeners
@@ -267,16 +200,6 @@ function initPopup() {
     }
   })
 
-  // Add event listeners for subjects
-  showFutureSubjectsButton.addEventListener('click', function() {
-    try {
-      showFutureSubjects()
-    } catch (error) {
-      console.error('Error showing future subjects:', error)
-      showError('Failed to show future subjects: ' + error.message)
-    }
-  })
-
   // Add event listener for API request download
   downloadApiRequestsButton.addEventListener('click', function() {
     try {
@@ -284,16 +207,6 @@ function initPopup() {
     } catch (error) {
       console.error('Error downloading API requests:', error)
       showError('Failed to download API requests: ' + error.message)
-    }
-  })
-
-  // Add event listeners for teachers
-  findTeachersButton.addEventListener('click', function() {
-    try {
-      findTeachers()
-    } catch (error) {
-      console.error('Error finding teachers:', error)
-      showError('Failed to find teachers: ' + error.message)
     }
   })
 
@@ -613,259 +526,6 @@ function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-/**
- * Format age in minutes to a human-readable string
- * @param {number} minutes - Age in minutes
- * @returns {string} Formatted age
- */
-function formatAge(minutes) {
-  if (minutes < 1) return 'äsja'
-  if (minutes < 60) return minutes + ' min'
-  if (minutes < 24 * 60) return Math.round(minutes / 60) + ' h'
-  return Math.round(minutes / (60 * 24)) + ' päeva'
-}
-
-/**
- * Show future subjects with upcoming lessons
- */
-function showFutureSubjects() {
-  const subjectsContainer = document.getElementById('subjects-container')
-  const subjectsLoading = document.getElementById('subjects-loading')
-  const subjectsContent = document.getElementById('subjects-content')
-  const comparisonDateInput = document.getElementById('comparison-date')
-
-  // Show the container and loading state
-  subjectsContainer.style.display = 'block'
-  subjectsLoading.style.display = 'block'
-  subjectsContent.style.display = 'none'
-
-  // Get the selected comparison date in DD.MM.YYYY and convert to ISO
-  const comparisonDate = comparisonDateInput.value.trim()
-  let isoDate = ''
-  if (comparisonDate) {
-    const d = parseEuDate(comparisonDate)
-    if (!d) {
-      subjectsLoading.style.display = 'none'
-      subjectsContent.innerHTML = '<div style="color: red;">Vigane kuupäev. Kasuta DD.MM.YYYY</div>'
-      subjectsContent.style.display = 'block'
-      return
-    }
-    isoDate = d.toISOString().split('T')[0]
-  } else {
-    const d = new Date()
-    isoDate = d.toISOString().split('T')[0]
-  }
-
-  // Send message to background script to fetch future subjects
-  chrome.runtime.sendMessage(
-    {
-      action: 'getFutureSubjects',
-      comparisonDate: isoDate
-    },
-    function(response) {
-      subjectsLoading.style.display = 'none'
-
-      if (!response || response.status !== 'success') {
-        subjectsContent.innerHTML = '<div style="color: red;">Viga: ' + (response?.message || 'Tundmatu viga') + '</div>'
-        subjectsContent.style.display = 'block'
-        return
-      }
-
-      displaySubjects(response.data, isoDate)
-      subjectsContent.style.display = 'block'
-    }
-  )
-}
-
-/**
- * Display subjects in the container
- * @param {Array} subjects - Array of subject objects
- * @param {string} comparisonDate - The comparison date in YYYY-MM-DD format
- */
-function displaySubjects(subjects, comparisonDate) {
-  const subjectsContent = document.getElementById('subjects-content')
-
-  if (!subjects || subjects.length === 0) {
-    subjectsContent.innerHTML = '<div style="color: #666;">Tulevasi tunde ei leitud.</div>'
-    return
-  }
-
-  // Use the provided comparison date or today's date
-  const compareDate = comparisonDate ? new Date(comparisonDate) : new Date()
-  compareDate.setHours(0, 0, 0, 0)
-
-  // Group subjects by name and count future lessons
-  const subjectStats = {}
-
-  subjects.forEach(lesson => {
-    const lessonDate = new Date(lesson.date)
-    lessonDate.setHours(0, 0, 0, 0)
-
-    if (lessonDate >= compareDate) {
-      const subjectName = lesson.nameEt || lesson.name || 'Nimetu aine'
-      if (!subjectStats[subjectName]) {
-        subjectStats[subjectName] = {
-          count: 0,
-          nextLesson: lessonDate,
-          lessons: [],
-          teachers: new Set()
-        }
-      }
-      subjectStats[subjectName].count++
-      subjectStats[subjectName].lessons.push(lesson)
-
-      // Track teachers (if available in the lesson data)
-      if (lesson.teacherName) {
-        subjectStats[subjectName].teachers.add(lesson.teacherName)
-      }
-
-      // Keep track of the next lesson date
-      if (lessonDate < subjectStats[subjectName].nextLesson) {
-        subjectStats[subjectName].nextLesson = lessonDate
-      }
-    }
-  })
-
-  // Sort subjects by next lesson date
-  const sortedSubjects = Object.entries(subjectStats).sort(([, a], [, b]) => a.nextLesson - b.nextLesson)
-
-  // Create HTML
-  const selectedDateStr = formatDisplayDate(compareDate)
-  let html = `<div style="margin-bottom: 10px;"><strong>Kõigi õpetajate tulevaste tundide ained (alates ${selectedDateStr}):</strong></div>`
-
-  if (sortedSubjects.length === 0) {
-    html += `<div style="color: #666;">Tulevasi tunde ei leitud alates ${selectedDateStr}.</div>`
-  } else {
-    html += `<div style="margin-bottom: 10px; font-size: 12px; color: #666;">
-      Kokku ${sortedSubjects.length} erinevat ainet
-    </div>`
-
-    html += '<div style="display: flex; flex-direction: column; gap: 8px;">'
-
-    sortedSubjects.forEach(([subjectName, stats]) => {
-      const nextLessonStr = formatDisplayDate(stats.nextLesson)
-      const plural = stats.count === 1 ? 'tund' : 'tundi'
-      const teacherCount = stats.teachers.size
-      const teacherText = teacherCount > 0 ? ` • ${teacherCount} õpetajat` : ''
-
-      html += `
-        <div style="
-          border: 1px solid #ddd; 
-          border-radius: 4px; 
-          padding: 8px; 
-          background-color: white;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        ">
-          <div style="font-weight: bold; margin-bottom: 4px;">${subjectName}</div>
-          <div style="font-size: 11px; color: #666;">
-            ${stats.count} ${plural} • Järgmine: ${nextLessonStr}${teacherText}
-          </div>
-        </div>
-      `
-    })
-
-    html += '</div>'
-  }
-
-  subjectsContent.innerHTML = html
-}
-
-/**
- * Find and display all teachers with their IDs
- */
-function findTeachers() {
-  const teachersContainer = document.getElementById('teachers-container')
-  const teachersLoading = document.getElementById('teachers-loading')
-  const teachersContent = document.getElementById('teachers-content')
-
-  if (!teachersContainer || !teachersLoading || !teachersContent) {
-    console.error('Teachers container elements not found')
-    return
-  }
-
-  // Show container and loading state
-  teachersContainer.style.display = 'block'
-  teachersLoading.style.display = 'block'
-  teachersContent.style.display = 'none'
-
-  // Send message to content script to get teachers
-  chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    if (!tabs[0]) {
-      showError('No active tab found')
-      return
-    }
-
-    if (!isTahvelUrl(tabs[0].url)) {
-      showError('Palun mine Tahvli lehele, et kasutada seda funktsiooni')
-      teachersContainer.style.display = 'none'
-      return
-    }
-
-    chrome.tabs
-      .sendMessage(tabs[0].id, {
-        action: 'findTeachers'
-      })
-      .then(response => {
-        if (response && response.success) {
-          displayTeachers(response.teachers)
-        } else {
-          showError(response ? response.error : 'Failed to get teachers')
-          teachersContainer.style.display = 'none'
-        }
-      })
-      .catch(error => {
-        console.error('Error sending message:', error)
-        showError('Failed to communicate with content script: ' + error.message)
-        teachersContainer.style.display = 'none'
-      })
-  })
-}
-
-/**
- * Display teachers in the teachers container
- * @param {Array} teachers - Array of teacher objects
- */
-function displayTeachers(teachers) {
-  const teachersLoading = document.getElementById('teachers-loading')
-  const teachersContent = document.getElementById('teachers-content')
-
-  if (!teachersLoading || !teachersContent) return
-
-  teachersLoading.style.display = 'none'
-  teachersContent.style.display = 'block'
-
-  if (!teachers || teachers.length === 0) {
-    teachersContent.innerHTML = '<div>Õpetajaid ei leitud</div>'
-    return
-  }
-
-  // Sort teachers by name
-  teachers.sort((a, b) => a.name.localeCompare(b.name))
-
-  // Create HTML for teachers
-  let html = '<div style="margin-bottom: 8px; font-weight: bold;">Leitud õpetajad:</div>'
-
-  teachers.forEach(teacher => {
-    html += `
-      <div style="
-        margin-bottom: 6px; 
-        padding: 6px 8px; 
-        border: 1px solid #ddd;
-        border-radius: 4px; 
-        background-color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-      ">
-        <div style="font-weight: bold; margin-bottom: 2px;">${teacher.name}</div>
-        <div style="font-size: 11px; color: #666;">
-          ID: ${teacher.id}
-        </div>
-      </div>
-    `
-  })
-
-  teachersContent.innerHTML = html
 }
 
 /**
