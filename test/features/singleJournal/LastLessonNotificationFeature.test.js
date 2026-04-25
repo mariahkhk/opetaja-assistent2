@@ -135,6 +135,24 @@ describe('LastLessonNotificationFeature', () => {
     })
   })
 
+  describe('activate error handling', () => {
+    test('should not log expected 412 journal info response as activation error', async () => {
+      const errorMock = mock(() => {})
+      global.console.error = errorMock
+      const error = new Error('API Error: 412')
+      error.status = 412
+      feature.api = {
+        tahvel: {
+          get: mock(() => Promise.reject(error))
+        }
+      }
+
+      await feature.activate()
+
+      expect(errorMock).not.toHaveBeenCalled()
+    })
+  })
+
   describe('independent work date calculations', () => {
     test('should calculate days difference between dates', () => {
       const lastLesson = new Date('2024-11-07')

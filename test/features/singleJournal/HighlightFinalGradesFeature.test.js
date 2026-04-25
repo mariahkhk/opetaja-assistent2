@@ -286,6 +286,21 @@ describe('HighlightFinalGradesFeature', () => {
       const result = await feature.getFinalLessonDate(123)
       expect(result).toBe('2024-11-15')
     })
+
+    test('should cache unavailable final lesson lookups during repeated table updates', async () => {
+      let lookupCount = 0
+      feature.getFinalLessonDate = mock(async () => {
+        lookupCount++
+        return null
+      })
+
+      const firstResult = await feature._getFinalLessonDateForRun(123)
+      const secondResult = await feature._getFinalLessonDateForRun(123)
+
+      expect(firstResult).toBeNull()
+      expect(secondResult).toBeNull()
+      expect(lookupCount).toBe(1)
+    })
   })
 
   describe('findColumnIndices', () => {

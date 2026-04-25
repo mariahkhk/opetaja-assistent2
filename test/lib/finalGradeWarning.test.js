@@ -244,5 +244,25 @@ describe('finalGradeWarning shared utility', () => {
       const result = await getFinalLessonDate(123, mockApi)
       expect(result).toBe('2025-11-15')
     })
+
+    test('should return null for expected 412 journal info response', async () => {
+      const mockApi = {
+        tahvel: {
+          get: mock((url, params, options) => {
+            if (url === '/journals/123') {
+              expect(options.suppressErrorStatuses).toContain(412)
+              const error = new Error('API Error: 412')
+              error.status = 412
+              return Promise.reject(error)
+            }
+            return Promise.resolve([])
+          })
+        }
+      }
+
+      const result = await getFinalLessonDate(123, mockApi)
+
+      expect(result).toBeNull()
+    })
   })
 })

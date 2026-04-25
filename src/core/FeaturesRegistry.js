@@ -121,6 +121,16 @@ export async function loadFeatures() {
     Logger.error('Error loading HighlightMissingGradesFeature:', error)
   }
 
+  // Load journal grade cell highlighting feature (always enabled)
+  try {
+    const HighlightGradeCellsFeature = (await import('../features/singleJournal/highlightGradeCells/HighlightGradeCellsFeature.js')).default
+    const highlightGradeCellsFeature = new HighlightGradeCellsFeature()
+    allAvailableFeatures.singleJournal.push(highlightGradeCellsFeature)
+    Logger.debug('Feature "HighlightGradeCellsFeature" created')
+  } catch (error) {
+    Logger.error('Error loading HighlightGradeCellsFeature:', error)
+  }
+
   // Load highlight final grades feature (always enabled)
   try {
     const HighlightFinalGradesFeature = (await import('../features/singleJournal/highlightFinalGrades/HighlightFinalGradesFeature.js')).default

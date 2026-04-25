@@ -178,11 +178,14 @@ class ApiService {
       headers = {},
       params = {},
       cache = false,
-      cacheExpiration = cacheService.EXPIRATION.MEDIUM
+      cacheExpiration = cacheService.EXPIRATION.MEDIUM,
+      suppressErrorStatuses = []
     } = config
 
     let urlString = endpoint
     let captured = false
+    const suppressedErrorStatuses = new Set(suppressErrorStatuses.map(status => Number(status)))
+    const getErrorStatus = error => error?.status || Number(error?.message?.match(/API Error:\s*(\d+)/)?.[1])
 
     try {
       // Resolve the full URL
@@ -366,7 +369,7 @@ class ApiService {
           // noinspection JSUnresolvedVariable
           if (errorJson?._errors && Array.isArray(errorJson._errors)) {
             errorDetails = errorJson._errors.map(err => err.code || err.message || JSON.stringify(err)).join(', ')
-            Logger.error(`[${this.name}] Parsed error details:`, errorDetails)
+            if (!suppressedErrorStatuses.has(response.status)) Logger.error(`[${this.name}] Parsed error details:`, errorDetails)
           } else if (errorJson.error || errorJson.message) {
             errorDetails = errorJson.error || errorJson.message
           }
@@ -377,10 +380,12 @@ class ApiService {
           }
         }
 
-        // noinspection ExceptionCaughtLocallyJS
         ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, source: 'network', error: `API Error: ${response.status} ${errorDetails || response.statusText}` })
         captured = true
-        throw new Error(`API Error: ${response.status} ${errorDetails ? `(${errorDetails})` : response.statusText}`)
+        // noinspection ExceptionCaughtLocallyJS
+        const apiError = new Error(`API Error: ${response.status} ${errorDetails ? `(${errorDetails})` : response.statusText}`)
+        apiError.status = response.status
+        throw apiError
       }
 
       // First, get the response as text
@@ -402,7 +407,7 @@ class ApiService {
       if (!captured) {
         ApiService._recordCapture({ method, url: urlString, requestBody: data, source: 'network', error: error.message })
       }
-      Logger.error(`[${this.name}] ${method} Error:`, error)
+      if (!suppressedErrorStatuses.has(getErrorStatus(error))) Logger.error(`[${this.name}] ${method} Error:`, error)
       throw error
     }
   }
@@ -418,7 +423,7 @@ class ApiService {
    */
   async get(endpoint, params = {}, options = {}) {
     // Default options
-    const { cache = undefined, cacheExpiration = undefined, forceRefresh = false } = options
+    const { cache = undefined, cacheExpiration = undefined, forceRefresh = false, suppressErrorStatuses = [] } = options
 
     // Smart defaults for specific endpoints. Do not override explicit caller choices.
     let finalCache = typeof cache === 'undefined' ? true : cache
@@ -440,7 +445,8 @@ class ApiService {
       data: null,
       headers: {},
       cache: finalCache && !forceRefresh,
-      cacheExpiration: finalCacheExpiration
+      cacheExpiration: finalCacheExpiration,
+      suppressErrorStatuses
     })
   }
 

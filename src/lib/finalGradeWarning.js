@@ -7,6 +7,14 @@
 import Logger from '../services/Logger.js'
 import { getSchoolId } from './schoolId.js'
 
+function getApiErrorStatus(error) {
+  return error?.status || Number(error?.message?.match(/API Error:\s*(\d+)/)?.[1])
+}
+
+function isExpectedTahvelStatus(error, statuses) {
+  return statuses.includes(getApiErrorStatus(error))
+}
+
 /**
  * Determine warning level based on proximity to final lesson date.
  * @param {Date} now - Current date (normalized to midnight)
@@ -55,7 +63,12 @@ export function getStudyYearRange(info = null) {
  */
 export async function getFinalLessonDate(journalId, api, info = null) {
   if (!info) {
-    info = await api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5 })
+    try {
+      info = await api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5, suppressErrorStatuses: [412] })
+    } catch (error) {
+      if (isExpectedTahvelStatus(error, [412])) return null
+      throw error
+    }
   }
 
   const schoolId = await getSchoolId(api, info)
@@ -76,11 +89,17 @@ export async function getFinalLessonDate(journalId, api, info = null) {
     }
   }
 
-  const journalEntries = await api.tahvel.get(
-    `/journals/${journalId}/journalEntriesByDate`,
-    { allStudents: true },
-    { cache: true, cacheExpiration: 6e4 }
-  )
+  let journalEntries = []
+  try {
+    journalEntries = await api.tahvel.get(
+      `/journals/${journalId}/journalEntriesByDate`,
+      { allStudents: false },
+      { cache: true, cacheExpiration: 6e4, suppressErrorStatuses: [403, 412] }
+    )
+  } catch (error) {
+    if (isExpectedTahvelStatus(error, [403, 412])) return null
+    throw error
+  }
   if (Array.isArray(journalEntries) && journalEntries.length > 0) {
     const validEntries = journalEntries.filter(e => e.entryDate)
     if (validEntries.length > 0) {

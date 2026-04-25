@@ -3,6 +3,8 @@ import { styleService } from '../../../services/StyleService.js'
 import Logger from '../../../services/Logger.js'
 import { getWarningLevel, getFinalLessonDate as getFinalLessonDateShared, getStudyYearRange } from '../../../lib/finalGradeWarning.js'
 
+const FINAL_LESSON_LOOKUP_CACHE_TTL = 6e4
+
 class HighlightFinalGradesFeature extends BaseFeature {
   constructor() {
     super('highlightFinalGrades', /#\/journal\//)
@@ -14,6 +16,8 @@ class HighlightFinalGradesFeature extends BaseFeature {
     this._tableRetryTimeout = null
     this._tableRetryCount = 0
     this._bannerObserver = null
+    this._finalLessonLookupCache = new Map()
+    this._finalLessonLookupPromises = new Map()
   }
 
   injectFinalGradeCSS() {
@@ -107,6 +111,26 @@ class HighlightFinalGradesFeature extends BaseFeature {
 
   async getFinalLessonDate(journalId) {
     return getFinalLessonDateShared(journalId, this.api)
+  }
+
+  async _getFinalLessonDateForRun(journalId) {
+    const cacheKey = String(journalId)
+    const cached = this._finalLessonLookupCache.get(cacheKey)
+    if (cached && Date.now() - cached.timestamp < FINAL_LESSON_LOOKUP_CACHE_TTL) return cached.value
+
+    if (this._finalLessonLookupPromises.has(cacheKey)) return this._finalLessonLookupPromises.get(cacheKey)
+
+    const lookupPromise = this.getFinalLessonDate(journalId)
+      .then(value => {
+        this._finalLessonLookupCache.set(cacheKey, { value, timestamp: Date.now() })
+        return value
+      })
+      .finally(() => {
+        this._finalLessonLookupPromises.delete(cacheKey)
+      })
+
+    this._finalLessonLookupPromises.set(cacheKey, lookupPromise)
+    return lookupPromise
   }
 
   findColumnIndices(table) {
@@ -309,7 +333,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
 
     if (!finalLessonDate && journalId) {
       try {
-        const apiDate = await this.getFinalLessonDate(journalId)
+        const apiDate = await this._getFinalLessonDateForRun(journalId)
         if (Logger.isDebugMode()) Logger.info('✨ [HighlightFinalGradesFeature] getFinalLessonDate result:', apiDate)
         if (apiDate) finalLessonDate = new Date(apiDate)
       } catch (e) {
@@ -475,6 +499,8 @@ class HighlightFinalGradesFeature extends BaseFeature {
       this._tableRetryTimeout = null
     }
     this._tableRetryCount = 0
+    this._finalLessonLookupCache.clear()
+    this._finalLessonLookupPromises.clear()
     this.removeFinalGradeBanner()
   }
 }

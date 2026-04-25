@@ -6,6 +6,14 @@ import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { getSchoolId } from '../../../lib/schoolId.js'
 
+function getApiErrorStatus(error) {
+  return error?.status || Number(error?.message?.match(/API Error:\s*(\d+)/)?.[1])
+}
+
+function isExpectedTahvelStatus(error, statuses) {
+  return statuses.includes(getApiErrorStatus(error))
+}
+
 /**
  * LastLessonNotificationFeature
  * Notifies the teacher about the last lesson date if all lessons are not yet in the past.
@@ -36,6 +44,11 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       await this.#showLastLessonNotification()
       // Table creation is now handled by DiscrepanciesTable
     } catch (error) {
+      if (isExpectedTahvelStatus(error, [403, 412])) {
+        if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Expected Tahvel response, skipping banner:', error.message)
+        this._removeBanner()
+        return
+      }
       console.error('[LastLessonNotificationFeature] Error in activate:', error)
     }
   }
@@ -301,7 +314,13 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] #fetchData called with journalId:', journalId)
 
     // Fetch journal info to get schoolId and teacherId
-    const info = await this.api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5 })
+    let info
+    try {
+      info = await this.api.tahvel.get(`/journals/${journalId}`, {}, { cache: true, cacheExpiration: 864e5, suppressErrorStatuses: [412] })
+    } catch (error) {
+      if (isExpectedTahvelStatus(error, [412])) return { timetable: [], journalEntries: [], journalInfo: null }
+      throw error
+    }
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Journal info:', info)
 
     if (!info) {
@@ -338,11 +357,17 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Filtered timetable events for journal:', timetable)
 
     // Fetch journal entries
-    const journalEntries = await this.api.tahvel.get(
-      `/journals/${journalId}/journalEntriesByDate`,
-      { allStudents: true },
-      { cache: true, cacheExpiration: 6e4 }
-    )
+    let journalEntries = []
+    try {
+      journalEntries = await this.api.tahvel.get(
+        `/journals/${journalId}/journalEntriesByDate`,
+        { allStudents: false },
+        { cache: true, cacheExpiration: 6e4, suppressErrorStatuses: [403, 412] }
+      )
+    } catch (error) {
+      if (isExpectedTahvelStatus(error, [403, 412])) journalEntries = []
+      else throw error
+    }
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] Journal entries:', journalEntries)
 
     return { timetable, journalEntries: journalEntries ?? [], journalInfo: info }

@@ -31,7 +31,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
 
     // Set up message listener for real-time toggle from popup
     if (!this._messageListener) {
-      this._messageListener = (message) => {
+      this._messageListener = message => {
         if (message.action === 'highlightMissingGradesChanged') {
           if (!message.enabled) {
             this.#removeAllHighlights()
@@ -48,7 +48,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
     }
 
     // Check if feature is enabled in settings (default: true)
-    chrome.storage.local.get(['OA_highlightMissingGrades'], (result) => {
+    chrome.storage.local.get(['OA_highlightMissingGrades'], result => {
       if (result['OA_highlightMissingGrades'] === false) {
         Logger.debug('[HighlightMissingGradesFeature] Feature disabled in settings')
         return

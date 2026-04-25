@@ -2,7 +2,7 @@ import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import { ApiService } from '../../src/services/ApiService.js'
 import { cacheService } from '../../src/services/CacheService.js'
-import { EXPECTED_ERROR_PATTERN } from '../../src/services/Logger.js'
+import Logger, { EXPECTED_ERROR_PATTERN } from '../../src/services/Logger.js'
 import { parseJsonResponse } from '../../src/lib/parseJsonResponse.js'
 
 describe('ApiService', () => {
@@ -214,6 +214,28 @@ describe('ApiService', () => {
         expect(true).toBe(false) // Should not reach here
       } catch (error) {
         expect(error.status || error.message).toBeTruthy()
+      }
+    })
+
+    test('should suppress logging for configured GET error statuses', async () => {
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 412,
+        statusText: 'Precondition Failed',
+        text: async () => ''
+      }))
+
+      try {
+        await apiService.get('/precondition', {}, { cache: false, suppressErrorStatuses: [412] })
+        expect(true).toBe(false)
+      } catch (error) {
+        expect(error.status).toBe(412)
+        expect(loggerError).not.toHaveBeenCalled()
+      } finally {
+        Logger.error = originalError
       }
     })
 
