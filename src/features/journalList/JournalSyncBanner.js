@@ -37,23 +37,23 @@ class DifferenceRenderer {
 
         const values = domService.createAndInsertElement('div', { classList: ['values'] }, '', row)
         if (diff.studentName) {
-          domService.createAndInsertElement('span', { classList: ['student-name'] }, `${diff.studentName}:`, values)
+          this.createTextElement('span', { classList: ['student-name'] }, `${diff.studentName}:`, values)
         }
 
         // For new assignments, show entryDate then dueDate (omit when missing)
         if (diff.type === 'new') {
           const datesContainer = domService.createAndInsertElement('div', { classList: ['new-assignment-dates'] }, '', values)
           if (diff.entryDate) {
-            domService.createAndInsertElement('span', { classList: ['date-entry'] }, `Sissekanne: ${diff.entryDate}`, datesContainer)
+            this.createTextElement('span', { classList: ['date-entry'] }, `Sissekanne: ${diff.entryDate}`, datesContainer)
           }
           if (diff.dueDate) {
             // show due date only if present
-            domService.createAndInsertElement('span', { classList: ['date-due'] }, `Tähtaeg: ${diff.dueDate}`, datesContainer)
+            this.createTextElement('span', { classList: ['date-due'] }, `Tähtaeg: ${diff.dueDate}`, datesContainer)
           }
         } else {
           const valueBadge = domService.createAndInsertElement('span', { classList: ['value-badge'] }, '', values)
-          domService.createAndInsertElement('span', { classList: ['value-old'] }, diff.oldValue, valueBadge)
-          domService.createAndInsertElement('span', { classList: ['value-new'] }, diff.newValue, valueBadge)
+          this.createTextElement('span', { classList: ['value-old'] }, diff.oldValue, valueBadge)
+          this.createTextElement('span', { classList: ['value-new'] }, diff.newValue, valueBadge)
         }
       })
     }
@@ -300,7 +300,9 @@ class DifferenceRenderer {
         assignmentName: assignmentName,
         studentName: '',
         oldValue: getEntryTypeName(diff.Tahvel),
-        newValue: getEntryTypeName(diff.kriit)
+        newValue: getEntryTypeName(diff.kriit),
+        journalId: diff.subjectExternalId,
+        assignmentId: diff.assignmentExternalId
       })
     })
 
@@ -372,7 +374,7 @@ class DifferenceRenderer {
 
   createSubjectContainer(container, subjectGroupKey) {
     const subjectContainer = domService.createAndInsertElement('div', {}, '', container)
-    domService.createAndInsertElement('h3', {}, subjectGroupKey, subjectContainer)
+    this.createTextElement('h3', {}, subjectGroupKey, subjectContainer)
     return subjectContainer
   }
 
@@ -400,7 +402,7 @@ class DifferenceRenderer {
   }
 
   createBadge(row, text, className) {
-    return domService.createAndInsertElement(
+    return this.createTextElement(
       'span',
       {
         classList: ['badge', className]
@@ -408,6 +410,12 @@ class DifferenceRenderer {
       text,
       row
     )
+  }
+
+  createTextElement(tagName, attributes, text, parent) {
+    const element = domService.createAndInsertElement(tagName, attributes, '', parent)
+    element.textContent = text ?? ''
+    return element
   }
 }
 
@@ -814,8 +822,9 @@ export class JournalSyncBannerService {
 
     // Add error title - use different titles based on error type
     let errorTitle = 'Viga'
+    const normalizedError = String(error || '').toLowerCase()
 
-    if (error && error.includes('403')) {
+    if (error && normalizedError.includes('403')) {
       if (error.includes('Permission denied') || error.includes('rights to modify')) {
         errorTitle = 'Õiguste viga'
       } else {
@@ -823,16 +832,17 @@ export class JournalSyncBannerService {
       }
     } else if (error && error.includes('No journal links found')) {
       errorTitle = 'Päevikute leidmise viga'
-    } else if (error && error.includes('API')) {
+    } else if (error && normalizedError.includes('api')) {
       errorTitle = 'API viga'
-    } else if (error && error.includes('sync')) {
+    } else if (error && (normalizedError.includes('sync') || normalizedError.includes('sünkroniseerimine'))) {
       errorTitle = 'Sünkroniseerimise viga'
     }
 
     domService.createAndInsertElement('h1', {}, errorTitle, banner)
 
-    // Add error message
-    domService.createAndInsertElement('p', {}, error, banner)
+    // Add error message as text, not HTML. Assignment names can come from Tahvel/Kriit.
+    const message = domService.createAndInsertElement('p', {}, '', banner)
+    message.textContent = error
 
     // Add appropriate action buttons and help text based on error type
     this._addSyncErrorActions(banner, error, options)
@@ -849,7 +859,8 @@ export class JournalSyncBannerService {
    */
   _addSyncErrorActions(banner, error, options) {
     const actions = domService.createAndInsertElement('div', { classList: ['actions'] }, '', banner)
-    if (error && error.includes('403')) {
+    const normalizedError = String(error || '').toLowerCase()
+    if (error && normalizedError.includes('403')) {
       if (error.includes('Permission denied') || error.includes('rights to modify')) {
         // Permission error for journal modification
         domService.createAndInsertElement(
@@ -959,7 +970,7 @@ export class JournalSyncBannerService {
       } else {
         // There are new assignments; do not show the all-in-sync info banner. Let the differences banner be shown.
       }
-    } else if (error && (error.includes('sync') || error.includes('sünkroniseerimine'))) {
+    } else if (error && (normalizedError.includes('sync') || normalizedError.includes('sünkroniseerimine'))) {
       // Sync error
       let helpText = 'Sünkroniseerimisel tekkis viga. Täpsemad veateated on saadaval konsoolist (F12).'
 

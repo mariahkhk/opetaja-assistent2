@@ -123,6 +123,15 @@ describe('DifferenceRenderer', () => {
       expect(result.classList.contains('badge-new')).toBe(true)
       expect(result.textContent).toBe('Test')
     })
+
+    test('should render badge content as text instead of HTML', () => {
+      const row = document.createElement('div')
+      const result = differenceRenderer.createBadge(row, '<img src=x onerror="window.__xss = true">', 'badge-assignment')
+
+      expect(result.textContent).toContain('<img src=x')
+      expect(result.querySelector('img')).toBe(null)
+      expect(window.__xss).toBeUndefined()
+    })
   })
 
   describe('collectAndGroupDifferences', () => {
@@ -378,6 +387,37 @@ describe('DifferenceRenderer', () => {
       differenceRenderer.render(container, [], [], [], [], [], {})
       expect(container.children.length).toBe(0)
     })
+
+    test('should render difference row content as text instead of HTML', () => {
+      dom.reconfigure({ url: 'https://tahvel.edu.ee/#/journals' })
+      const htmlValue = '<img src=x onerror="window.__xss = true">'
+      const nextHtmlValue = '<img src=y onerror="window.__xss = true">'
+      const gradeDiffs = [
+        {
+          subjectName: htmlValue,
+          assignments: [
+            {
+              assignmentExternalId: 'a1',
+              assignmentName: htmlValue,
+              results: [
+                {
+                  studentName: htmlValue,
+                  studentPersonalCode: '12345678901',
+                  currentGrade: htmlValue,
+                  grade: nextHtmlValue
+                }
+              ]
+            }
+          ]
+        }
+      ]
+
+      differenceRenderer.render(container, [], gradeDiffs, [], [], [], [], {})
+
+      expect(container.textContent).toContain('<img src=x')
+      expect(container.querySelector('img')).toBe(null)
+      expect(window.__xss).toBeUndefined()
+    })
   })
 })
 
@@ -418,6 +458,22 @@ describe('JournalSyncBannerService', () => {
       service.stylesLoaded = false
       service.loadSyncStyles()
       expect(service.stylesLoaded).toBe(true)
+    })
+  })
+
+  describe('showSyncErrorBanner', () => {
+    test('should render error message as text instead of HTML', () => {
+      const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+      global.window = dom.window
+      global.document = dom.window.document
+      service.stylesLoaded = true
+
+      service.showSyncErrorBanner('Sünkroniseerimine ebaõnnestus: <img src=x onerror="window.__xss = true">')
+
+      const message = document.querySelector('.ta-sync-error p')
+      expect(message.textContent).toContain('<img src=x')
+      expect(message.querySelector('img')).toBe(null)
+      expect(window.__xss).toBeUndefined()
     })
   })
 
