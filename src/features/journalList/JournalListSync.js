@@ -14,6 +14,8 @@ import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
 import { styleService } from '../../services/StyleService.js'
 import { cacheService } from '../../services/CacheService.js'
+import { ApiService } from '../../services/ApiService.js'
+import { buildDiffSummary } from '../../lib/kriitSyncCheck.js'
 import { setupKriitMessageListener } from '../../services/MessageListenerService.js'
 import { bannerService } from '../../services/BannerService.js'
 import { differenceRenderer, journalSyncBannerService } from './JournalSyncBanner.js'
@@ -1182,47 +1184,42 @@ class JournalListSyncFeature extends BaseFeature {
           }
         }
 
-        // Use cacheService to get or fetch student details
-        const cacheKey = `student_${journalStudent.studentId}_details`
+        // Two cache tiers for student details:
+        //   - status (isActive/isDeleted/isGraduated): no PII, persisted on disk encrypted
+        //   - pii (personalCode/name): memory-only
+        // ApiService's pendingRequests dedupe means the inner /students/<id>
+        // call still fires only once across both fetchFns.
+        const statusKey = `student_${journalStudent.studentId}_status`
+        const piiKey = `student_${journalStudent.studentId}_pii`
+        const ONE_DAY = 24 * 60 * 60 * 1000
 
-        // Define the fetch function to get student details if not in cache
-        const fetchStudentDetails = async() => {
-          try {
-            Logger.debug(`Making API call for student ${journalStudent.studentId}`)
-            const details = await this.getStudentDetails(journalStudent.studentId)
+        const fetchStatus = async() => {
+          const details = await this.getStudentDetails(journalStudent.studentId)
+          if (!details || !details.status) return null
+          return {
+            isActive: details.status === 'OPPURSTAATUS_O',
+            isDeleted: details.status === 'OPPURSTAATUS_K',
+            isGraduated: details.status === 'OPPURSTAATUS_L'
+          }
+        }
 
-            if (details && details.person && details.person.idcode) {
-              // OPPURSTAATUS_O means active (studying)
-              // OPPURSTAATUS_A means on academic leave (not active)
-              // OPPURSTAATUS_K means 'katkestanud' (exmatriculated)
-              // OPPURSTAATUS_L means 'lõpetanud' (graduated)
-              const isActive = details.status === 'OPPURSTAATUS_O'
-              const isDeleted = details.status === 'OPPURSTAATUS_K'
-              const isGraduated = details.status === 'OPPURSTAATUS_L'
-
-              return {
-                personalCode: details.person.idcode,
-                name: journalStudent.fullname || `${journalStudent.firstname} ${journalStudent.lastname}`,
-                isActive: isActive,
-                isDeleted: isDeleted,
-                isGraduated: isGraduated
-              }
-            }
-            return null
-          } catch (error) {
-            Logger.error(`Error fetching details for student ${journalStudent.studentId}:`, error)
-            return null
+        const fetchPii = async() => {
+          const details = await this.getStudentDetails(journalStudent.studentId)
+          if (!details || !details.person || !details.person.idcode) return null
+          return {
+            personalCode: details.person.idcode,
+            name: journalStudent.fullname || `${journalStudent.firstname} ${journalStudent.lastname}`
           }
         }
 
         // Create the fetch promise and store it in pending requests
         const fetchPromise = (async() => {
           try {
-            const studentData = await cacheService.getOrFetch(
-              cacheKey,
-              fetchStudentDetails,
-              24 * 60 * 60 * 1000 // 24 hours
-            )
+            const [status, pii] = await Promise.all([
+              cacheService.getOrFetch(statusKey, fetchStatus, ONE_DAY, true, true),
+              cacheService.getOrFetch(piiKey, fetchPii, ONE_DAY, true, false)
+            ])
+            const studentData = (status && pii) ? { ...pii, ...status } : null
 
             if (studentData) {
               // Store the mapping from journalStudentId to studentId for API cache lookups
@@ -1766,15 +1763,19 @@ class JournalListSyncFeature extends BaseFeature {
           return
         }
 
-        // Persist the payload hash, differences and new assignments to cache so
-        // header buttons and page refreshes can read them without re-running the
-        // full Kriit diff pipeline.
+        // The payload hash is just a checksum (no PII) — safe to persist so we
+        // can detect "same payload" across reloads. The differences and new
+        // assignments are aggregated student-level diffs (high PII) and stay
+        // in memory only. A counts-only summary is persisted so the header
+        // sync button can render its "pending syncs" state on page load.
         try {
+          const newAssignmentsForCache = window.journalListSync.newAssignments || {}
           await cacheService.set('journalList_lastPayloadHash', payloadHash)
-          await cacheService.set('journalList_lastDifferences', this.differences)
-          await cacheService.set('journalList_lastNewAssignments', window.journalListSync.newAssignments || {})
+          await cacheService.set('journalList_lastDifferences', this.differences, 0, false)
+          await cacheService.set('journalList_lastNewAssignments', newAssignmentsForCache, 0, false)
+          await cacheService.set('journalList_diffSummary', buildDiffSummary(this.differences, newAssignmentsForCache), 0, true)
         } catch (err) {
-          Logger.warning('Failed to persist journal list cache:', err.message)
+          Logger.warning('Failed to update journal list cache:', err.message)
         }
       } catch (error) {
         Logger.error('Error calling Kriit API:', error)
@@ -2918,10 +2919,13 @@ class JournalListSyncFeature extends BaseFeature {
   async getInactiveStudentsCache() {
     const cacheKey = 'inactive_students_all'
 
+    // Memory-only: keyed by personal code, contains names — must not persist.
     const result = await cacheService.getOrFetch(
       cacheKey,
       () => this.fetchInactiveStudents(),
-      24 * 60 * 60 * 1000 // 24 hours
+      24 * 60 * 60 * 1000, // 24 hours (memory cache lifetime)
+      true,
+      false
     )
 
     // Ensure we always return a valid structure
@@ -5277,7 +5281,11 @@ async function fetchCachedData(api, endpoint, expiration = ONE_DAY_MS) {
   // Create a cache key from the endpoint
   const cacheKey = `${encodeURIComponent(endpoint.replace(/^\//, ''))}`
 
-  // Use cacheService.getOrFetch to handle caching
+  // This is a secondary cache layer keyed by the URL-encoded endpoint, so
+  // the inner ApiService routing for high-PII endpoints can't see it. Apply
+  // the same check ourselves to force memory-only.
+  const persist = !ApiService._isHighPiiEndpoint(endpoint)
+
   try {
     return await cacheService.getOrFetch(
       cacheKey,
@@ -5289,7 +5297,9 @@ async function fetchCachedData(api, endpoint, expiration = ONE_DAY_MS) {
           return null
         }
       },
-      expiration
+      expiration,
+      true,
+      persist
     )
   } catch (error) {
     Logger.warning(`Error using cacheService for ${endpoint}: ${error.message}`)

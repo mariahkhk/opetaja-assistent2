@@ -82,10 +82,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - `/api/assignments` - Assignment management
 
 **Caching:**
-- API responses are cached via `CacheService`
+- API responses are cached via `CacheService` (in-memory + Cache API for persistence)
 - Cache keys based on endpoint + params
 - Configurable expiration times (default: 24h for static data, 1min for dynamic)
-- Cache stored in `chrome.storage.local`
+- **All persisted entries are AES-256-GCM encrypted at rest.** Key is generated per install and stored in `chrome.storage.local` under `OA_cryptoCacheKey` (extension-scoped — Tahvel page scripts and other extensions cannot reach it). Wraps `cacheStore`/`cacheRead` (`src/services/CacheService.js`); public API unchanged. Cache URLs themselves are HMAC-SHA256(salt, rawKey) under `OA_cryptoCacheSalt` so other extensions enumerating `cache.keys()` see only opaque hex.
+- **Decrypt failures (corrupt/tampered/legacy plaintext entries) are treated as a cache miss** — `cacheRead` returns `null` and `getOrFetch` refetches; never throws to the caller.
+- **Automatic eviction** runs every 6 h via `chrome.alarms` (registered in `src/background.js`) and additionally on `chrome.tabs.onActivated`/`onUpdated` for Tahvel tabs. Each tick calls `cacheService.evictExpired()` to drop entries past their per-key TTL. The cache deliberately persists across browser restarts and active Tahvel logouts; full wipes happen only on extension version bumps (`wipeOnVersionChange`) and when the user clicks "Tühjenda vahemälu" in the popup.
+- **Wipe on extension update**: `wipeOnVersionChange()` fires on every content-script load and clears the entire Cache API + any legacy `OA_cache_*` chrome.storage entries when `chrome.runtime.getManifest().version` differs from `OA_lastSeenExtensionVersion`. Cache-format and sanitiser changes flush transparently on release.
+- **Manifest permissions:** `alarms` (for the eviction job) and `unlimitedStorage` (the Cache API stays).
+
+**Kriit network transport:**
+- Kriit URL must be HTTPS (`http://localhost` and `http://127.0.0.1` allowed for dev). Validation in `saveKriitSettings` (`src/popup.js`).
+- Debug-mode capture buffer scrubs request/response bodies for known-PII Kriit endpoints (`/subjects/getDifferences`, `/grades/markSynchronized`, `/assignments/setAssignmentExternalId`, `/outcomes/sync`) to `[REDACTED-PII]` — see `ApiService._bodyContainsPII` (`src/services/ApiService.js`).
 
 ## Testing
 

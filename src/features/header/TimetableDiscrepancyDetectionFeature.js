@@ -119,12 +119,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
    */
   async #checkForDiscrepancies() {
     try {
-      // Try cache first (fast path), fall back to Tahvel API
-      let journals = await this.#getAllJournalsFromCache()
-
-      if (!journals || journals.length === 0) {
-        journals = await this.#fetchJournalsFromApi()
-      }
+      const journals = await this.#fetchJournalsFromApi()
 
       if (!journals || journals.length === 0) {
         window.timetableDiscrepancies.hasDiscrepancies = false
@@ -151,45 +146,9 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
   }
 
   /**
-   * Get all journals from cache by scanning cache keys
-   * @private
-   */
-  async #getAllJournalsFromCache() {
-    try {
-      // Get all items from chrome.storage.local
-      const allItems = await new Promise(resolve => {
-        chrome.storage.local.get(null, items => {
-          resolve(items)
-        })
-      })
-
-      const journals = []
-
-      // Look for journal API responses in cache
-      // Cache keys are prefixed with 'OA_cache_' and contain the API endpoint
-      const journalKeyPattern = /OA_cache_GET_https?:\/\/[^/]+\/hois_back\/journals\/(\d+)$/
-
-      for (const key of Object.keys(allItems)) {
-        const match = key.match(journalKeyPattern)
-        if (match) {
-          const cachedItem = allItems[key]
-          if (cachedItem && cachedItem.data && cachedItem.data.id) {
-            journals.push(cachedItem.data)
-          }
-        }
-      }
-
-      return journals
-    } catch (error) {
-      Logger.error(`[${this.name}] Error getting journals from cache:`, error)
-      return []
-    }
-  }
-
-  /**
-   * Fetch journals from Tahvel API when the cache is empty.
-   * Fetches the journal list and full journal info for each, which also
-   * populates the API cache for other features (JournalListSync, etc.).
+   * Fetch the teacher's journal list and full journal info for each.
+   * Goes through the API service so cached entries are served without
+   * a network hit.
    * @private
    * @returns {Promise<Array>} Array of journal objects
    */

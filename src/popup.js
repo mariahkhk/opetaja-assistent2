@@ -4,7 +4,6 @@
 
 // Constants
 const DEBUG_MODE_KEY = 'OA_debug_mode'
-const CACHE_PREFIX = 'OA_cache_'
 const KRIIT_ENABLED_KEY = 'OA_kriitEnabled'
 const KRIIT_API_URL_KEY = 'OA_kriitApiBaseUrl'
 const KRIIT_API_KEY_KEY = 'OA_kriitApiToken'
@@ -402,10 +401,18 @@ function saveKriitSettings({ apiUrl, apiKey, statusElement, apiKeyInput, toggleB
   apiUrl = apiUrl.trim()
   apiKey = apiKey.trim()
 
-  // Validate URL
-  if (apiUrl && !apiUrl.startsWith('http')) {
-    alert('API URL peab algama http:// või https://')
-    return
+  // Validate URL — require HTTPS so student PII is not transmitted over plaintext.
+  // http://localhost and http://127.0.0.1 are allowed for local development.
+  if (apiUrl) {
+    const isHttps = apiUrl.startsWith('https://')
+    const isLocalDev = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(apiUrl)
+    if (!isHttps && !isLocalDev) {
+      alert(
+        'API URL peab algama https:// (http:// on lubatud ainult localhost-i jaoks). ' +
+        'Õpilaste andmed liiguvad selle aadressi kaudu — krüpteeritud ühendus on kohustuslik.'
+      )
+      return
+    }
   }
 
   saveBtn.disabled = true
@@ -565,41 +572,11 @@ function updateCacheDetailsContent(stats) {
   // Generate HTML for the details
   let html = '<h3>Vahemälu sisu:</h3>'
 
-  // Add table of largest items
-  if (stats.storage.items.length > 0) {
-    html += '<table style="width: 100%; border-collapse: collapse;">'
-    html += '<tr><th style="text-align: left;">Kirje</th><th style="text-align: right;">Suurus</th><th style="text-align: right;">Vanus</th></tr>'
-
-    // Show only top 10 items
-    const topItems = stats.storage.items.slice(0, 10)
-
-    topItems.forEach(item => {
-      // Format key name to be shorter
-      let displayKey = item.key
-      if (displayKey.includes('/')) {
-        const parts = displayKey.split('/')
-        displayKey = parts[parts.length - 1]
-        if (displayKey.includes('?')) {
-          displayKey = displayKey.split('?')[0]
-        }
-      }
-
-      // Format size and age
-      const size = formatSize(item.size)
-      const age = formatAge(item.ageInMinutes)
-
-      html += `<tr>
-        <td style="border-bottom: 1px solid #eee; padding: 4px 0;" title="${item.key}">${displayKey}</td>
-        <td style="border-bottom: 1px solid #eee; padding: 4px 0; text-align: right;">${size}</td>
-        <td style="border-bottom: 1px solid #eee; padding: 4px 0; text-align: right;">${age}</td>
-      </tr>`
-    })
-
-    html += '</table>'
-
-    if (stats.storage.items.length > 10) {
-      html += `<div style="text-align: center; margin-top: 8px; font-style: italic;">+ ${stats.storage.items.length - 10} muud kirjet</div>`
-    }
+  // Disk-cache aggregate only — disk URLs are HMAC-hashed for privacy, so
+  // per-item names aren't recoverable without the salt. Show count + size.
+  if (stats.storage.count > 0) {
+    html += `<div style="margin: 4px 0;">Kettal: ${stats.storage.count} kirjet, ${formatSize(stats.storage.size)} kokku</div>`
+    html += `<div style="font-size: 11px; color: #888; margin-bottom: 8px;">(privaatsuse huvides on kettakirjete nimed räsitud — kirjete nimekirja ei kuvata)</div>`
   } else {
     html += '<div>Vahemälu on tühi</div>'
   }
@@ -895,31 +872,43 @@ function displayTeachers(teachers) {
  * Clear all cache items
  */
 function clearCache() {
-  // Clean up any legacy OA_cache_ entries from chrome.storage.local
-  chrome.storage.local.get(null, function(items) {
-    const oldKeys = Object.keys(items).filter(key => key.startsWith(CACHE_PREFIX))
-    if (oldKeys.length > 0) {
-      chrome.storage.local.remove(oldKeys)
-    }
+  // Sweep any leftover legacy `OA_cache_*` chrome.storage.local entries
+  // unconditionally — popup has extension-context access, no Tahvel tab
+  // required. wipeOnVersionChange handles this on update, but a sideloaded
+  // dev install or a partial migration can leave entries that the user
+  // wants gone via the popup.
+  chrome.storage.local.get(null, items => {
+    const oldKeys = Object.keys(items).filter(k => k.startsWith('OA_cache_'))
+    if (oldKeys.length === 0) return
+    chrome.storage.local.remove(oldKeys, () => {
+      if (chrome.runtime.lastError) {
+        console.warn('Legacy cache sweep failed:', chrome.runtime.lastError.message)
+      }
+    })
   })
 
-  // Notify content script to clear Cache API (cache lives in page origin)
+  // Notify content script to clear Cache API (cache lives in page origin).
+  // Without an open Tahvel tab, the encrypted entries on disk can't be reached
+  // — surface the error instead of falsely confirming success.
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
-    if (tabs[0]) {
-      chrome.tabs
-        .sendMessage(tabs[0].id, {
-          action: 'cacheClearedFromPopup'
-        })
-        .then(() => {
-          alert('Vahemälu tühjendatud.')
-          loadCacheStatistics()
-        })
-        .catch(error => {
-          console.error('Error sending message:', error)
-          alert('Vahemälu tühjendatud.')
-          loadCacheStatistics()
-        })
+    if (!tabs[0] || !isTahvelUrl(tabs[0].url)) {
+      showError('Ava Tahvli leht ja proovi uuesti.')
+      return
     }
+    chrome.tabs
+      .sendMessage(tabs[0].id, { action: 'cacheClearedFromPopup' })
+      .then(response => {
+        if (response && response.success === false) {
+          showError('Vahemälu tühjendamine ebaõnnestus: ' + (response.error || 'tundmatu viga'))
+          return
+        }
+        alert('Vahemälu tühjendatud.')
+        loadCacheStatistics()
+      })
+      .catch(error => {
+        console.error('Error sending message:', error)
+        showError('Vahemälu tühjendamine ebaõnnestus: ' + error.message)
+      })
   })
 }
 

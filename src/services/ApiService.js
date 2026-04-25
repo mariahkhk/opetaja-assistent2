@@ -6,6 +6,12 @@ import Logger from './Logger.js'
 import { cacheService } from './CacheService.js'
 import { parseJsonResponse } from '../lib/parseJsonResponse.js'
 
+// Endpoints whose responses are sanitised before caching. Shared between the
+// `_isCachedSanitisedEndpoint` predicate (used by `_recordCapture`) and the
+// `_sanitiseForCache` switch — keeping the regexes in one place avoids drift.
+const TIMETABLE_EVENTS_RE = /(?:^|\/)timetableevents\//i
+const USER_ENDPOINT_RE = /(?:^|\/)user\/?(?:\?|$)/i
+
 /**
  * ApiService class for making API requests
  */
@@ -61,21 +67,152 @@ class ApiService {
     return sanitized
   }
 
+  /**
+   * Endpoints whose request/response bodies contain student/teacher PII
+   * (personal codes, names, grades). When debug mode is on, the bodies must
+   * be scrubbed so PII does not land in the in-memory capture buffer or in
+   * the file produced by the popup's "download captured requests" button.
+   */
+  static _bodyContainsPII(url) {
+    if (!url) return false
+    return [
+      '/subjects/getDifferences',
+      '/grades/markSynchronized',
+      '/assignments/setAssignmentExternalId',
+      '/outcomes/sync'
+    ].some(suffix => url.includes(suffix))
+  }
+
+  /**
+   * Endpoints that return student names and personal codes. These responses
+   * are cached in memory for the current page session but MUST NOT persist
+   * to the on-disk Cache API — names + idcodes together are the data we
+   * most need to keep off disk.
+   *
+   * Grade endpoints (e.g. /journalEntriesByDate) are NOT in this list:
+   * they index grades by Tahvel-internal numeric studentId, with no names
+   * or idcodes in the payload, so they can persist encrypted with the rest.
+   */
+  static _isHighPiiEndpoint(url) {
+    if (!url) return false
+    // Patterns match both full URLs (https://tahvel.edu.ee/hois_back/students/789)
+    // and bare endpoint paths (/students/789) used by the secondary cache layer
+    // in JournalListSync.fetchCachedData. Bare-resource patterns end with
+    // `(?:\?|$)` so sub-paths like /students/789/somesubresource don't auto-
+    // route to memory-only — only enumerate explicit sub-paths that need it.
+    return [
+      /(?:^|\/)journals\/\d+\/journalStudents\/?(?:\?|$)/i,
+      /(?:^|\/)journals\/\d+\/students\/?(?:\?|$)/i,
+      /(?:^|\/)students\/\d+\/?(?:\?|$)/i,
+      /(?:^|\/)students\/?(?:\?|$)/i,
+      /(?:^|\/)teachers\/\d+\/?(?:\?|$)/i,
+      /(?:^|\/)teachers\/?(?:\?|$)/i
+    ].some(pattern => pattern.test(url))
+  }
+
+  /**
+   * Endpoints whose responses are cached only after `_sanitiseForCache`
+   * strips embedded name/idcode strings. Shared by `_recordCapture` so the
+   * debug capture buffer applies the same redaction (otherwise a `/user`
+   * or `/timetableevents/...` response with idcodes would land plaintext in
+   * the downloaded capture file even though the cache itself stores the
+   * sanitised version).
+   */
+  static _isCachedSanitisedEndpoint(url) {
+    if (!url) return false
+    // Use the same `(?:^|/)` boundary form as `_isHighPiiEndpoint` so the
+    // predicate matches both full URLs and bare endpoint paths. `/user/`
+    // (trailing slash) also matches, in case any caller normalises that way.
+    return TIMETABLE_EVENTS_RE.test(url) || USER_ENDPOINT_RE.test(url)
+  }
+
+  /**
+   * Union of every PII-classification predicate. Used by capture-buffer
+   * redaction and Logger error redaction so all three classes (Kriit body
+   * PII, Tahvel high-PII, Tahvel sanitised endpoints) get the same
+   * treatment without three copies of the boolean union drifting apart.
+   */
+  static _isPiiUrl(url) {
+    return ApiService._bodyContainsPII(url) ||
+      ApiService._isHighPiiEndpoint(url) ||
+      ApiService._isCachedSanitisedEndpoint(url)
+  }
+
+  /**
+   * Strip per-endpoint PII fields from an API response before it lands in
+   * the cache. Keeps the rest of the response intact so features still get
+   * the data they need, while idcode-bearing audit fields ("Name (idcode)")
+   * don't reach disk.
+   *
+   * Currently scrubs:
+   *   - /timetableevents/* — strips `insertedBy` and `changedBy` from every
+   *     event. Tahvel embeds other teachers' "Name (idcode)" strings there.
+   *   - /user — strips `name` (which contains the user's own idcode in
+   *     Tahvel's identity model). The actually-used fields (`school.id`,
+   *     `person.id`, `roleCode`) are preserved.
+   */
+  static _sanitiseForCache(url, data) {
+    if (!url || !data) return data
+    if (TIMETABLE_EVENTS_RE.test(url)) {
+      if (Array.isArray(data?.timetableEvents)) {
+        return {
+          ...data,
+          timetableEvents: data.timetableEvents.map(ev => {
+            const sanitised = { ...ev }
+            delete sanitised.insertedBy
+            delete sanitised.changedBy
+            return sanitised
+          })
+        }
+      }
+      // Shape mismatch — log so a future Tahvel response shape change doesn't
+      // silently persist insertedBy/changedBy strings (which embed
+      // "Name (idcode)" of other teachers) to disk encrypted.
+      Logger.warning('[ApiService] /timetableevents response shape unexpected; persisting unsanitised')
+    }
+    if (USER_ENDPOINT_RE.test(url) && typeof data === 'object' && data !== null) {
+      // Allowlist: only the fields consumers actually read from /user.
+      // Denylist (strip `name`) was fragile — any future Tahvel API addition
+      // (email, firstName, person.idcode, etc.) would silently land on disk.
+      // Allowlist fails closed; consumers verified via grep for `userInfo.*`
+      // reads at content.js, schoolId.js, Extension.js, LessonCountWarning,
+      // TimetableDiscrepancyDetection.
+      return {
+        school: data.school,
+        person: data.person ? { id: data.person.id } : undefined,
+        roleCode: data.roleCode
+      }
+    }
+    return data
+  }
+
   static _recordCapture({ method, url, requestHeaders, requestBody, responseStatus, responseData, source, error }) {
     if (!Logger.isDebugMode()) return
     if (ApiService.capturedRequests.length >= ApiService.MAX_CAPTURE_SIZE) {
       ApiService.capturedRequests.shift()
     }
+    const piiEndpoint = ApiService._isPiiUrl(url)
+    // Strip the query string for PII endpoints — Tahvel teacher search builds
+    // URLs like `/teachers?...&name=<TeacherName>&...` whose query carries the
+    // exact PII the body redaction is meant to keep out of the capture buffer.
+    // Also mask numeric Tahvel-internal IDs in path segments — combined with
+    // a Tahvel UI screenshot a /students/789 URL can re-identify a student.
+    // Also redact the error field (Tahvel error messages echo failing
+    // resource names/idcodes) on the same predicate.
+    let safeUrl = url
+    if (piiEndpoint && url) {
+      safeUrl = url.split('?')[0].replace(/\/(students|teachers|journals)\/\d+/g, '/$1/<id>')
+    }
     ApiService.capturedRequests.push({
       timestamp: new Date().toISOString(),
       method,
-      url,
+      url: safeUrl,
       requestHeaders: ApiService._sanitizeHeaders(requestHeaders),
-      requestBody,
+      requestBody: piiEndpoint ? '[REDACTED-PII]' : requestBody,
       responseStatus: responseStatus ?? null,
-      responseData,
+      responseData: piiEndpoint ? '[REDACTED-PII]' : responseData,
       source: source || 'network',
-      error: error || null
+      error: piiEndpoint && error ? '[REDACTED-PII]' : (error || null)
     })
   }
 
@@ -301,6 +438,9 @@ class ApiService {
       // Handle caching for GET requests
       if (method === 'GET' && cache) {
         const cacheKey = `${method}_${urlString}`
+        // High-PII endpoints (student rosters, grade entries) stay in memory
+        // only — never persisted to the on-disk Cache API.
+        const persist = !ApiService._isHighPiiEndpoint(urlString)
 
         const cachedResult = await cacheService.getOrFetch(
           cacheKey,
@@ -317,10 +457,18 @@ class ApiService {
             }
 
             const text = await response.text()
-            return parseJsonResponse(text, urlString)
+            const parsed = parseJsonResponse(text, urlString)
+            return ApiService._sanitiseForCache(urlString, parsed)
           },
-          cacheExpiration
+          cacheExpiration,
+          true,
+          persist
         )
+        // Pass cachedResult through; _recordCapture's predicate (the union
+        // of _bodyContainsPII / _isHighPiiEndpoint / _isCachedSanitisedEndpoint)
+        // applies the same redaction as the network path, so a non-PII cache
+        // hit still has a body in the captured-requests file (useful for
+        // debugging stale-cache issues).
         ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseData: cachedResult, source: 'cache' })
         captured = true
         return cachedResult
@@ -362,6 +510,13 @@ class ApiService {
 
         // Try to parse error text as JSON
         let errorDetails = ''
+        // Tahvel error responses can echo the failing resource (student/
+        // teacher names, idcodes). Redact errorDetails before it reaches
+        // Logger (Sentry), the capture buffer, OR the thrown apiError —
+        // outer catch logs error.message via Logger.error which forwards to
+        // Sentry, so the apiError must carry the redacted form too.
+        const piiEndpoint = ApiService._isPiiUrl(urlString)
+        let isTahvelErrorsFormat = false
         try {
           const errorJson = JSON.parse(errorText)
 
@@ -369,7 +524,7 @@ class ApiService {
           // noinspection JSUnresolvedVariable
           if (errorJson?._errors && Array.isArray(errorJson._errors)) {
             errorDetails = errorJson._errors.map(err => err.code || err.message || JSON.stringify(err)).join(', ')
-            if (!suppressedErrorStatuses.has(response.status)) Logger.error(`[${this.name}] Parsed error details:`, errorDetails)
+            isTahvelErrorsFormat = true
           } else if (errorJson.error || errorJson.message) {
             errorDetails = errorJson.error || errorJson.message
           }
@@ -380,10 +535,19 @@ class ApiService {
           }
         }
 
-        ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, source: 'network', error: `API Error: ${response.status} ${errorDetails || response.statusText}` })
+        const safeErrorDetails = piiEndpoint && errorDetails ? '[REDACTED-PII]' : errorDetails
+        if (isTahvelErrorsFormat && !suppressedErrorStatuses.has(response.status)) {
+          Logger.error(`[${this.name}] Parsed error details:`, safeErrorDetails)
+        }
+
+        // Tahvel reverse proxies could in principle echo a request parameter
+        // into response.statusText (rare but legal in HTTP) — apply the same
+        // redaction to the statusText fallback for PII endpoints.
+        const safeStatusText = piiEndpoint ? '[REDACTED-PII]' : response.statusText
+        ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, source: 'network', error: `API Error: ${response.status} ${safeErrorDetails || safeStatusText}` })
         captured = true
         // noinspection ExceptionCaughtLocallyJS
-        const apiError = new Error(`API Error: ${response.status} ${errorDetails ? `(${errorDetails})` : response.statusText}`)
+        const apiError = new Error(`API Error: ${response.status} ${safeErrorDetails ? `(${safeErrorDetails})` : safeStatusText}`)
         apiError.status = response.status
         throw apiError
       }
@@ -398,6 +562,13 @@ class ApiService {
         result = { success: true, status: response.status }
       } else {
         result = parseJsonResponse(responseText, urlString)
+        // Apply the sanitiser on every GET — not just the cached path —
+        // so cache:false callers receive the same allowlisted shape as
+        // cache:true. Without this, /user returns raw with `name` (idcode)
+        // for direct callers and a different shape for cached ones.
+        if (method === 'GET') {
+          result = ApiService._sanitiseForCache(urlString, result)
+        }
       }
 
       ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, responseData: result, source: 'network' })
@@ -407,7 +578,15 @@ class ApiService {
       if (!captured) {
         ApiService._recordCapture({ method, url: urlString, requestBody: data, source: 'network', error: error.message })
       }
-      if (!suppressedErrorStatuses.has(getErrorStatus(error))) Logger.error(`[${this.name}] ${method} Error:`, error)
+      if (!suppressedErrorStatuses.has(getErrorStatus(error))) {
+        // parseJsonResponse and other thrown messages can carry the URL with
+        // numeric Tahvel IDs in the path. Logger.error forwards to Sentry —
+        // redact when the URL is a high-PII endpoint, mirroring the inner
+        // catch's safeErrorDetails treatment.
+        const piiEndpoint = ApiService._isPiiUrl(urlString)
+        const safeError = piiEndpoint ? new Error(`[REDACTED-PII Error on ${method}]`) : error
+        Logger.error(`[${this.name}] ${method} Error:`, safeError)
+      }
       throw error
     }
   }

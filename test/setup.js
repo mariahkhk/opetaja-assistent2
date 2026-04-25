@@ -58,13 +58,51 @@ function createCacheApiMock() {
 
 global.caches = createCacheApiMock()
 global.Request = globalThis.Request || class Request { constructor(url) { this.url = url } }
+// Case-insensitive Headers shim to mirror real Fetch API Headers (which lower-
+// cases keys). Without this, `headers.get('X-Cache-IV')` then
+// `headers['x-cache-iv']` reads in production code wouldn't round-trip.
+class CaseInsensitiveHeaders {
+  constructor(init = {}) {
+    this._map = new Map()
+    for (const [k, v] of Object.entries(init || {})) {
+      this._map.set(String(k).toLowerCase(), String(v))
+    }
+  }
+  get(key) {
+    const v = this._map.get(String(key).toLowerCase())
+    return v === undefined ? null : v
+  }
+  set(key, value) { this._map.set(String(key).toLowerCase(), String(value)) }
+  has(key) { return this._map.has(String(key).toLowerCase()) }
+  delete(key) { return this._map.delete(String(key).toLowerCase()) }
+  forEach(fn) { for (const [k, v] of this._map) fn(v, k) }
+  entries() { return this._map.entries() }
+  keys() { return this._map.keys() }
+  values() { return this._map.values() }
+  *[Symbol.iterator]() { yield* this._map }
+}
+
 global.Response = globalThis.Response || class Response {
   constructor(body, init = {}) {
     this._body = body
-    this.headers = new Map(Object.entries(init.headers || {}))
+    this._consumed = false
+    this.headers = new CaseInsensitiveHeaders(init.headers || {})
   }
-  async text() { return this._body }
-  async json() { return JSON.parse(this._body) }
+  async text() {
+    if (this._consumed) throw new TypeError('Body already read')
+    this._consumed = true
+    return this._body
+  }
+  async json() {
+    if (this._consumed) throw new TypeError('Body already read')
+    this._consumed = true
+    return JSON.parse(this._body)
+  }
+  clone() {
+    const init = { headers: {} }
+    this.headers.forEach((v, k) => { init.headers[k] = v })
+    return new Response(this._body, init)
+  }
 }
 
 // Mock console for Logger service
@@ -80,51 +118,47 @@ global.console = {
   trace: () => {}
 }
 
-global.chrome = {
-  storage: {
-    local: {
-      get: mock((keys, callback) => {
-        callback({})
-      }),
-      set: mock(),
-      remove: mock(),
-      getBytesInUse: mock((keys, callback) => {
-        callback(0)
-      })
-    }
-  },
-  runtime: {
-    onMessage: {
-      addListener: mock()
-    },
-    sendMessage: mock(),
-    getManifest: mock(() => ({}))
-  }
-}
-
-// Export a function to restore the default chrome mock
-export function restoreChromeMock() {
-  global.chrome = {
+function createChromeMock() {
+  const store = {}
+  return {
     storage: {
       local: {
         get: mock((keys, callback) => {
-          callback({})
+          if (keys === null || keys === undefined) return callback({ ...store })
+          if (typeof keys === 'string') return callback(keys in store ? { [keys]: store[keys] } : {})
+          if (Array.isArray(keys)) {
+            const out = {}
+            for (const k of keys) if (k in store) out[k] = store[k]
+            return callback(out)
+          }
+          callback({ ...store })
         }),
-        set: mock(),
-        remove: mock(),
-        getBytesInUse: mock((keys, callback) => {
-          callback(0)
-        })
+        set: mock((items, callback) => {
+          Object.assign(store, items)
+          if (callback) callback()
+        }),
+        remove: mock((keys, callback) => {
+          const list = Array.isArray(keys) ? keys : [keys]
+          for (const k of list) delete store[k]
+          if (callback) callback()
+        }),
+        getBytesInUse: mock((_keys, callback) => callback(0)),
+        _store: store
       }
     },
     runtime: {
-      onMessage: {
-        addListener: mock()
-      },
+      onMessage: { addListener: mock() },
       sendMessage: mock(),
       getManifest: mock(() => ({}))
     }
   }
+}
+
+global.chrome = createChromeMock()
+
+// Export a function to restore the default chrome mock
+export function restoreChromeMock() {
+  global.chrome = createChromeMock()
 }
 
 // Export a function to restore the default DOM

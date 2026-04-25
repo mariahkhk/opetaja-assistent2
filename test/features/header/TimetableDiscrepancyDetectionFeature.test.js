@@ -338,41 +338,8 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     })
   })
 
-  describe('cache scanning', () => {
-    it('should scan chrome.storage.local for cached journals', async () => {
-      const mockJournal1 = {
-        id: 101,
-        lessonHours: {
-          capacityHours: [
-            { capacity: 'MAHT_a', usedHours: 5 }
-          ]
-        },
-        journalTeachers: [{ id: 123 }]
-      }
-
-      mockChrome.storage.local.get = mock((keys, callback) => {
-        callback({
-          'OA_cache_GET_https://tahvel.edu.ee/hois_back/journals/101': {
-            data: mockJournal1,
-            timestamp: Date.now()
-          }
-        })
-      })
-
-      await feature.onActivate()
-
-      // Check that chrome.storage.local.get was called
-      expect(mockChrome.storage.local.get).toHaveBeenCalled()
-    })
-  })
-
-  describe('API fallback when cache is empty', () => {
-    it('should fetch journals from API when cache returns no journals', async () => {
-      // Cache returns empty
-      mockChrome.storage.local.get = mock((keys, callback) => {
-        callback({})
-      })
-
+  describe('journal fetching from API', () => {
+    it('should fetch journals from API and check for discrepancies', async () => {
       // API returns journal list then journal info
       const mockJournal = {
         id: 101,
@@ -397,7 +364,6 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
 
       await feature.onActivate()
 
-      // Should have called /journals endpoint as fallback
       const journalsCalls = feature.api.tahvel.get.mock.calls.filter(
         call => call[0] === '/journals'
       )
@@ -406,11 +372,7 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
   })
 
   describe('discrepancy detection logic', () => {
-    it('should set hasDiscrepancies to false when no journals in cache or API', async () => {
-      mockChrome.storage.local.get = mock((keys, callback) => {
-        callback({}) // Empty cache
-      })
-
+    it('should set hasDiscrepancies to false when no journals returned', async () => {
       await feature.onActivate()
 
       // Wait for initial check to complete

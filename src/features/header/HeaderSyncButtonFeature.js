@@ -103,11 +103,16 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
       // Only proceed if Kriit integration is enabled
       if (!this.api.kriit || !this.api.kriit.enabled) return
 
-      // Fast path: try cached results first
+      // Fast path: try cached results first.
+      // Memory-cache hit (same session): use the full PII-bearing data.
+      // Persistent cache hit (next page load): only the sanitised summary
+      // survived — populate enough of window.journalListSync for the
+      // visibility check to fire so the badge appears immediately.
       const ONE_DAY = 24 * 60 * 60 * 1000
-      const [cachedDifferences, cachedNewAssignments] = await Promise.all([
+      const [cachedDifferences, cachedNewAssignments, cachedSummary] = await Promise.all([
         cacheService.get('journalList_lastDifferences', ONE_DAY),
-        cacheService.get('journalList_lastNewAssignments', ONE_DAY)
+        cacheService.get('journalList_lastNewAssignments', ONE_DAY),
+        cacheService.get('journalList_diffSummary', ONE_DAY)
       ])
 
       if (cachedDifferences || cachedNewAssignments) {
@@ -118,6 +123,18 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
         return
       }
 
+      if (cachedSummary && (cachedSummary.hasDifferences || cachedSummary.hasNewAssignments)) {
+        // Set a hint flag rather than fake placeholder arrays — JournalSyncBanner
+        // and TahvelNewAssignmentSync iterate `differences` / `newAssignments`
+        // by content, and seeded `{}` placeholders rendered as 'Päevik undefined'
+        // rows during the placeholder window. The header's own visibility check
+        // (#hasPendingSyncs) ORs this flag in so the badge still fires.
+        if (!window.journalListSync) window.journalListSync = {}
+        window.journalListSync._summaryHasPending = true
+        Logger.debug('[HeaderSyncButtonFeature] Hydrated badge from persisted summary; full sync will run')
+        // Fall through to run full sync — we want the real data populated soon.
+      }
+
       // No cached results — run full sync check
       if (!this.isActive) return
       const result = await runKriitSyncCheck(this.api)
@@ -126,6 +143,9 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
         if (!window.journalListSync) window.journalListSync = {}
         window.journalListSync.differences = result.differences
         window.journalListSync.newAssignments = result.newAssignments
+        // Real data has arrived — drop the placeholder hint so the
+        // visibility check uses the actual data going forward.
+        delete window.journalListSync._summaryHasPending
       }
     } catch (error) {
       Logger.debug('[HeaderSyncButtonFeature] Background sync failed:', error.message)
@@ -275,6 +295,12 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
 
     if (!syncState) {
       return false
+    }
+
+    // Hydrated-from-summary fast path: the persisted summary indicated work
+    // exists, but the full data is still being rebuilt. Show the badge.
+    if (syncState._summaryHasPending) {
+      return true
     }
 
     // Check for differences

@@ -7,7 +7,7 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "permissions": ["storage", "tabs", "unlimitedStorage"],
+  "permissions": ["storage", "tabs", "unlimitedStorage", "alarms"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

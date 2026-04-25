@@ -618,6 +618,74 @@ describe('ApiService', () => {
 
       await expect(apiService.get('/ws', {}, { cache: false })).rejects.toThrow('API Error: empty response')
     })
+
+    test('uncached /user GET applies allowlist sanitiser', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      const userResponse = {
+        name: '30000000001',
+        person: { id: 227928, idcode: '40000000002' },
+        school: { id: 9 },
+        roleCode: 'ROLL_O',
+        email: 'should-not-leak@example.test'
+      }
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify(userResponse)
+      }))
+
+      const result = await apiService.get('/user', {}, { cache: false })
+      expect(result.name).toBeUndefined()
+      expect(result.email).toBeUndefined()
+      expect(result.school).toEqual({ id: 9 })
+      expect(result.person).toEqual({ id: 227928 })
+      expect(result.roleCode).toBe('ROLL_O')
+      expect(JSON.stringify(result)).not.toContain('30000000001')
+      expect(JSON.stringify(result)).not.toContain('40000000002')
+    })
+
+    test('thrown apiError.message redacts PII for high-PII endpoints (POST path)', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      const errorBody = { _errors: [{ message: 'Test PersonD 30000000001 not found' }] }
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => JSON.stringify(errorBody)
+      }))
+
+      let thrown = null
+      try {
+        await apiService.post('/students/789', { x: 1 })
+      } catch (error) {
+        thrown = error
+      }
+      expect(thrown).toBeTruthy()
+      expect(thrown.message).toContain('[REDACTED-PII]')
+      expect(thrown.message).not.toContain('PersonD')
+      expect(thrown.message).not.toContain('30000000001')
+    })
+
+    test('thrown apiError.message keeps details for non-PII endpoints (POST path)', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      const errorBody = { _errors: [{ message: 'Server problem' }] }
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => JSON.stringify(errorBody)
+      }))
+
+      let thrown = null
+      try {
+        await apiService.post('/journals?onlyMyJournals=true', { x: 1 })
+      } catch (error) {
+        thrown = error
+      }
+      expect(thrown).toBeTruthy()
+      expect(thrown.message).toContain('Server problem')
+      expect(thrown.message).not.toContain('[REDACTED-PII]')
+    })
   })
 
   describe('parseJsonResponse', () => {
@@ -758,5 +826,144 @@ describe('Logger EXPECTED_ERROR_PATTERN', () => {
     // Only /hois_back/ paths on Tahvel hosts are suppressed; non-hois_back paths reach Sentry
     expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://tahvel.edu.ee/spa/assets/main.js')).toBe(false)
     expect(EXPECTED_ERROR_PATTERN.test('API Error: invalid JSON response from https://test.tahvel.eenet.ee/some/other/path')).toBe(false)
+  })
+
+  describe('_recordCapture PII redaction', () => {
+    const PII_BODY = { name: 'Test PersonA', personalCode: '30000000001' }
+
+    beforeEach(() => {
+      global.chrome = {
+        storage: { local: { set: mock(() => {}), get: mock((_, cb) => cb({})) } },
+        runtime: { sendMessage: mock(() => {}) }
+      }
+      Logger.enableDebugMode()
+      ApiService.capturedRequests = []
+    })
+
+    afterEach(() => {
+      Logger.disableDebugMode()
+      ApiService.capturedRequests = []
+      global.chrome = undefined
+    })
+
+    const piiUrls = [
+      'https://kriit.example.com/api/subjects/getDifferences',
+      'https://tahvel.edu.ee/hois_back/journals/123/journalStudents',
+      'https://tahvel.edu.ee/hois_back/students/789',
+      'https://tahvel.edu.ee/hois_back/students?status=active',
+      'https://tahvel.edu.ee/hois_back/teachers/22816',
+      'https://tahvel.edu.ee/hois_back/timetableevents/timetableByTeacher/9?from=...',
+      'https://tahvel.edu.ee/hois_back/user'
+    ]
+
+    for (const url of piiUrls) {
+      test(`redacts requestBody and responseData for ${url}`, () => {
+        ApiService._recordCapture({
+          method: 'GET',
+          url,
+          requestHeaders: {},
+          requestBody: PII_BODY,
+          responseStatus: 200,
+          responseData: PII_BODY,
+          source: 'network'
+        })
+        const captured = ApiService.capturedRequests.at(-1)
+        expect(captured.requestBody).toBe('[REDACTED-PII]')
+        expect(captured.responseData).toBe('[REDACTED-PII]')
+        expect(JSON.stringify(captured)).not.toContain('PersonA')
+        expect(JSON.stringify(captured)).not.toContain('30000000001')
+      })
+    }
+
+    test('strips query string from captured URL on PII endpoints', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/teachers?isActive=true&lang=ET&name=Test+PersonD&page=0',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 200,
+        responseData: PII_BODY,
+        source: 'network'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.url).toBe('https://tahvel.edu.ee/hois_back/teachers')
+      expect(captured.url).not.toContain('name=')
+      expect(captured.url).not.toContain('PersonD')
+    })
+
+    test('masks numeric Tahvel IDs in captured URL on PII endpoints', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/students/789',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 200,
+        responseData: PII_BODY,
+        source: 'network'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.url).toBe('https://tahvel.edu.ee/hois_back/students/<id>')
+      expect(captured.url).not.toContain('789')
+    })
+
+    test('masks IDs in nested PII path (journals/<id>/journalStudents)', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/journals/123/journalStudents?allStudents=true',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 200,
+        responseData: PII_BODY,
+        source: 'network'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.url).toBe('https://tahvel.edu.ee/hois_back/journals/<id>/journalStudents')
+      expect(captured.url).not.toContain('123')
+    })
+
+    test('redacts error field on PII endpoints', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/students/789',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 404,
+        source: 'network',
+        error: 'API Error: 404 (student Test PersonD 30000000001 not found)'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.error).toBe('[REDACTED-PII]')
+      expect(JSON.stringify(captured)).not.toContain('PersonD')
+      expect(JSON.stringify(captured)).not.toContain('30000000001')
+    })
+
+    test('preserves error field on non-PII endpoints', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/journals?onlyMyJournals=true',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 500,
+        source: 'network',
+        error: 'API Error: 500 server problem'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.error).toBe('API Error: 500 server problem')
+    })
+
+    test('does not redact non-PII endpoint bodies', () => {
+      ApiService._recordCapture({
+        method: 'GET',
+        url: 'https://tahvel.edu.ee/hois_back/journals?onlyMyJournals=true',
+        requestHeaders: {},
+        requestBody: null,
+        responseStatus: 200,
+        responseData: { content: [{ id: 1 }] },
+        source: 'network'
+      })
+      const captured = ApiService.capturedRequests.at(-1)
+      expect(captured.responseData).toEqual({ content: [{ id: 1 }] })
+    })
+
   })
 })

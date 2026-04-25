@@ -95,12 +95,16 @@ async function _runKriitSyncCheckImpl(api) {
   const differences = normalizeDifferences(response)
   const newAssignments = normalizeNewAssignments(response)
 
-  // Cache results for fast retrieval on future page loads
+  // Cache results: full PII-bearing data lives in memory only; a sanitised
+  // counts-only summary is persisted so the header sync button can render
+  // its "pending syncs" state on page load without re-running the full
+  // pipeline.
   try {
-    await cacheService.set('journalList_lastDifferences', differences)
-    await cacheService.set('journalList_lastNewAssignments', newAssignments)
+    await cacheService.set('journalList_lastDifferences', differences, 0, false)
+    await cacheService.set('journalList_lastNewAssignments', newAssignments, 0, false)
+    await cacheService.set('journalList_diffSummary', buildDiffSummary(differences, newAssignments), 0, true)
   } catch (err) {
-    Logger.debug('[kriitSyncCheck] Failed to persist cache:', err.message)
+    Logger.debug('[kriitSyncCheck] Failed to set cache:', err.message)
   }
 
   return { differences, newAssignments }
@@ -136,6 +140,30 @@ export function normalizeNewAssignments(response) {
   return (response && response.data && response.data.newAssignments) ||
     (response && response.newAssignments) ||
     {}
+}
+
+/**
+ * Build a sanitised summary of Kriit sync results for persistence.
+ *
+ * The full `differences` and `newAssignments` arrays carry student names
+ * and personal codes — they stay memory-only. The summary only keeps
+ * counts, which is enough for the header sync button to decide whether
+ * to render its "pending syncs" indicator on page load. No PII.
+ *
+ * @param {Array} differences
+ * @param {Object} newAssignments
+ * @returns {Object} { totalDifferences, totalNewAssignments, hasDifferences, hasNewAssignments, lastSyncedAt }
+ */
+export function buildDiffSummary(differences, newAssignments) {
+  const diffArray = Array.isArray(differences) ? differences : []
+  const newAssignmentsKeys = newAssignments && typeof newAssignments === 'object' ? Object.keys(newAssignments) : []
+  return {
+    totalDifferences: diffArray.length,
+    totalNewAssignments: newAssignmentsKeys.length,
+    hasDifferences: diffArray.length > 0,
+    hasNewAssignments: newAssignmentsKeys.length > 0,
+    lastSyncedAt: Date.now()
+  }
 }
 
 /**
@@ -805,6 +833,7 @@ async function getTeacherPersonalCodeCached(api, teacher) {
   const fetchPromise = (async() => {
     try {
       const cacheServiceKey = `${encodeURIComponent(endpoint.replace(/^\//, ''))}`
+      // Memory-only — /teachers?name=… returns idcodes; must not persist.
       const teacherSearchResult = await cacheService.getOrFetch(
         cacheServiceKey,
         async() => {
@@ -815,7 +844,9 @@ async function getTeacherPersonalCodeCached(api, teacher) {
             return null
           }
         },
-        ONE_WEEK_MS
+        ONE_WEEK_MS,
+        true,
+        false
       )
 
       if (teacherSearchResult?.content && Array.isArray(teacherSearchResult.content) && teacherSearchResult.content.length > 0) {
@@ -922,10 +953,15 @@ async function fetchInactiveStudents(api) {
 async function getInactiveStudentsCache(api) {
   const cacheKey = 'inactive_students_all'
 
+  // Memory-only: this map is keyed by student personal codes and contains
+  // names, so it must not persist to the on-disk Cache API. Re-fetched on
+  // each new page load.
   const result = await cacheService.getOrFetch(
     cacheKey,
     () => fetchInactiveStudents(api),
-    ONE_DAY_MS
+    ONE_DAY_MS,
+    true,
+    false
   )
 
   if (!result || typeof result !== 'object') {

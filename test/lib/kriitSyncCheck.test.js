@@ -7,7 +7,8 @@ import {
   createStudentMap,
   extractAssignmentsFromEntries,
   getAssignmentNameFromEntry,
-  clearKriitSyncCaches
+  clearKriitSyncCaches,
+  buildDiffSummary
 } from '../../src/lib/kriitSyncCheck.js'
 import { cacheService } from '../../src/services/CacheService.js'
 
@@ -496,6 +497,48 @@ describe('kriitSyncCheck', () => {
       expect(result.length).toBe(2)
       expect(result[0].groupName).toBe('G1')
       expect(result[1].groupName).toBe('G2')
+    })
+  })
+
+  describe('buildDiffSummary', () => {
+    it('contains only counts and flags — no PII', () => {
+      const differences = [
+        { studentPersonalCode: '30000000001', studentName: 'Test PersonA', journalId: 1 },
+        { studentPersonalCode: '40000000002', studentName: 'Test PersonB', journalId: 2 }
+      ]
+      const newAssignments = { '101': { name: 'HW1' }, '102': { name: 'HW2' } }
+      const summary = buildDiffSummary(differences, newAssignments)
+
+      expect(summary.totalDifferences).toBe(2)
+      expect(summary.totalNewAssignments).toBe(2)
+      expect(summary.hasDifferences).toBe(true)
+      expect(summary.hasNewAssignments).toBe(true)
+      expect(typeof summary.lastSyncedAt).toBe('number')
+
+      const json = JSON.stringify(summary)
+      expect(json).not.toContain('PersonA')
+      expect(json).not.toContain('PersonB')
+      expect(json).not.toContain('30000000001')
+      expect(json).not.toContain('40000000002')
+      expect(json).not.toContain('HW1')
+    })
+
+    it('reports false flags for empty inputs', () => {
+      expect(buildDiffSummary([], {})).toMatchObject({
+        totalDifferences: 0,
+        totalNewAssignments: 0,
+        hasDifferences: false,
+        hasNewAssignments: false
+      })
+    })
+
+    it('handles null/undefined inputs gracefully', () => {
+      expect(buildDiffSummary(null, null)).toMatchObject({
+        totalDifferences: 0,
+        totalNewAssignments: 0,
+        hasDifferences: false,
+        hasNewAssignments: false
+      })
     })
   })
 })

@@ -52,9 +52,105 @@ chrome.runtime.onUpdateAvailable.addListener(details => {
   notifyTahvelTabsOfUpdate(details?.version || null)
 })
 
+// --- Cache maintenance alarm ---
+// Every 6 h: ask each open Tahvel tab to evict cache entries past their
+// per-key TTL. The content script does the actual work because it runs in
+// the tahvel.edu.ee origin where the Cache API lives.
+const CACHE_ALARM_NAME = 'cache-maintenance'
+
+// Throttle to one broadcast per minute so the new tabs.onActivated/onUpdated
+// listeners don't trigger an eviction sweep on every Tahvel navigation.
+// Persisted to chrome.storage.session so the throttle survives MV3 SW
+// restarts (the SW dies after ~30s idle and re-runs the module body on
+// next event, which would reset a module-scoped variable to 0).
+const BROADCAST_MIN_INTERVAL_MS = 60 * 1000
+const BROADCAST_TS_KEY = 'OA_lastBroadcast'
+
+async function broadcastCacheMaintenance() {
+  const now = Date.now()
+  let last = 0
+  try {
+    const stored = await chrome.storage.session.get(BROADCAST_TS_KEY)
+    last = stored?.[BROADCAST_TS_KEY] || 0
+  } catch {
+    // chrome.storage.session may be unavailable; fall through with last=0.
+  }
+  if (now - last < BROADCAST_MIN_INTERVAL_MS) return
+  try { await chrome.storage.session.set({ [BROADCAST_TS_KEY]: now }) } catch {}
+  try {
+    const tabs = await chrome.tabs.query({
+      url: ['*://tahvel.edu.ee/*', '*://test.tahvel.eenet.ee/*']
+    })
+    for (const tab of tabs) {
+      chrome.tabs.sendMessage(tab.id, { action: 'cacheMaintenanceTick' }).catch(() => {
+        // Tab may not have content script loaded yet, ignore
+      })
+    }
+  } catch (error) {
+    Logger.debug('Cache maintenance broadcast failed:', error.message)
+  }
+}
+
+// Gate creation on alarms.get — alarms.create cancels-and-replaces, and the
+// MV3 service worker re-runs this module body on every wake, so an unguarded
+// create() would reset the 6 h timer indefinitely under continuous use.
+chrome.alarms.get(CACHE_ALARM_NAME, existing => {
+  if (!existing) {
+    chrome.alarms.create(CACHE_ALARM_NAME, { periodInMinutes: 360 })
+  }
+})
+
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === CACHE_ALARM_NAME) {
+    broadcastCacheMaintenance()
+  }
+})
+
+chrome.runtime.onInstalled.addListener(broadcastCacheMaintenance)
+chrome.runtime.onStartup.addListener(broadcastCacheMaintenance)
+
+// Also fire when a Tahvel tab becomes active or finishes loading so eviction
+// runs promptly when the user returns to Tahvel after extended idle. No new
+// permissions required (uses `tabs`).
+function isTahvelTabUrl(url) {
+  if (!url) return false
+  return url.includes('tahvel.edu.ee') || url.includes('test.tahvel.eenet.ee')
+}
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  try {
+    const tab = await chrome.tabs.get(tabId)
+    if (isTahvelTabUrl(tab?.url)) broadcastCacheMaintenance()
+  } catch {
+    // Tab may have closed between activation and lookup; ignore.
+  }
+})
+
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && isTahvelTabUrl(tab?.url)) {
+    broadcastCacheMaintenance()
+  }
+})
+
 // Set up listener for inter-process communication
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   Logger.debug('Received message in background:', message)
+
+  // Fan out crypto key rotation to all open Tahvel tabs so each content script
+  // drops its in-memory key handle — otherwise tabs that didn't initiate the
+  // rotation keep encrypting under the removed key.
+  if (message.action === 'cryptoKeyRotated') {
+    chrome.tabs.query({
+      url: ['*://tahvel.edu.ee/*', '*://test.tahvel.eenet.ee/*']
+    }).then(tabs => {
+      for (const tab of tabs) {
+        if (tab.id === sender.tab?.id) continue
+        chrome.tabs.sendMessage(tab.id, { action: 'cryptoKeyRotated' }).catch(() => {})
+      }
+    }).catch(() => {})
+    // No response expected; do not return true so the channel closes.
+    return false
+  }
 
   // Handle Kriit API requests to bypass mixed content restrictions
   if (message.action === 'kriitApiRequest') {

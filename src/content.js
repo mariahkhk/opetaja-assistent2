@@ -4,6 +4,7 @@
 import TahvelExtension from './core/Extension.js'
 import Logger from './services/Logger.js'
 import { cacheService } from './services/CacheService.js'
+import { cryptoService } from './services/CryptoService.js'
 import { ApiService } from './services/ApiService.js'
 import { sentryService } from './services/SentryService.js'
 
@@ -31,11 +32,32 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({ success: true })
   } else if (message.action === 'cacheClearedFromPopup') {
     Logger.info('Cache cleared from popup')
+    // Task-defer (NOT microtask) the reload — Chrome IPC needs a task
+    // boundary to flush sendResponse to the popup before the script context
+    // tears down. Promise.resolve().then(...) drains in the same task as
+    // sendResponse and the popup's .catch() then surfaces a "channel closed"
+    // error even though the cache was cleared.
     cacheService.clearCache().then(() => {
-      window.location.reload()
-    }).catch(() => {
-      window.location.reload()
+      sendResponse({ success: true })
+      setTimeout(() => window.location.reload(), 50)
+    }).catch(error => {
+      sendResponse({ success: false, error: error.message })
+      setTimeout(() => window.location.reload(), 50)
     })
+    return true
+  } else if (message.action === 'cryptoKeyRotated') {
+    // Another tab cleared the cache + rotated keys. Drop our resolved key
+    // handles so subsequent encrypts/hashes regenerate against the fresh
+    // keys. Don't reload — that would trash unsaved form state in tabs the
+    // user isn't actively interacting with. Pre-rotation entries on disk
+    // become undecryptable but cacheRead treats decrypt failure as a miss.
+    cryptoService._reset()
+    sendResponse({ success: true })
+  } else if (message.action === 'cacheMaintenanceTick') {
+    // Cache persists across browser restarts and active logouts; only TTL
+    // expiry, version bumps, and the popup's "Tühjenda vahemälu" button
+    // clear it. Each tick evicts entries past their per-key TTL.
+    cacheService.evictExpired().catch(error => Logger.warning('Cache eviction failed:', error.message))
     sendResponse({ success: true })
   } else if (message.action === 'getCacheStats') {
     cacheService.getStats().then(stats => {

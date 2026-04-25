@@ -1,8 +1,39 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { cacheService } from '../../src/services/CacheService.js'
+import { cryptoService } from '../../src/services/CryptoService.js'
+import { restoreChromeMock } from '../setup.js'
+
+/**
+ * Test helper: put an entry into the raw Cache API in the same encrypted
+ * format CacheService uses internally. Tests use this when they need to
+ * seed an entry with a specific timestamp / TTL that the public API does
+ * not let them set.
+ *
+ * The `url` param is the legacy `https://cache/<rawKey>` form for ergonomic
+ * test reading; this helper hashes the rawKey portion via cryptoService.hash
+ * so the seed lands at the same URL CacheService would write to.
+ */
+async function putEncrypted(cache, url, data, headers) {
+  const rawKey = url.replace('https://cache/', '')
+  const hashed = await cryptoService.hash(rawKey)
+  const realUrl = `https://cache/${hashed}`
+  const { iv, ct } = await cryptoService.encrypt(JSON.stringify(data))
+  await cache.put(
+    new Request(realUrl),
+    new Response(ct, {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'X-Cache-IV': iv,
+        ...headers
+      }
+    })
+  )
+}
 
 describe('CacheService', () => {
   beforeEach(async () => {
+    restoreChromeMock()
+    cryptoService._reset()
     if (global.caches._clear) global.caches._clear()
     await cacheService.clearCache()
   })
@@ -78,12 +109,9 @@ describe('CacheService', () => {
       // Store directly via Cache API (bypassing memory)
       const cache = await caches.open('oa2-api-cache')
       const ts = Date.now()
-      await cache.put(
-        new Request('https://cache/OA_cache_directKey'),
-        new Response(JSON.stringify('direct-value'), {
-          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(ts) }
-        })
-      )
+      await putEncrypted(cache, 'https://cache/OA_cache_directKey', 'direct-value', {
+        'X-Cache-Timestamp': String(ts)
+      })
 
       // First get should read from Cache API and populate memory
       const val = await cacheService.get('directKey')
@@ -197,13 +225,17 @@ describe('CacheService', () => {
     test('persists data to Cache API (survives memory cache clear)', async () => {
       await cacheService.getOrFetch('persist', async () => 'persisted', 60000)
 
-      // Simulate page navigation: clear only memory cache by clearing and restoring
-      // We'll read directly from Cache API to verify persistence
+      // Verify persistence by reading directly from the encrypted Cache API entry.
+      // The URL is HMAC(salt, 'OA_cache_persist'); reproduce it the same way.
+      const hashed = await cryptoService.hash('OA_cache_persist')
       const cache = await caches.open('oa2-api-cache')
-      const response = await cache.match(new Request('https://cache/OA_cache_persist'))
+      const response = await cache.match(new Request(`https://cache/${hashed}`))
       expect(response).toBeTruthy()
-      const data = await response.json()
-      expect(data).toBe('persisted')
+      const iv = response.headers.get('X-Cache-IV')
+      expect(iv).toBeTruthy()
+      const ct = await response.text()
+      const plaintext = await cryptoService.decrypt({ iv, ct })
+      expect(JSON.parse(plaintext)).toBe('persisted')
     })
 
     test('uses Cache API when memory cache is expired', async () => {
@@ -216,12 +248,9 @@ describe('CacheService', () => {
 
       // Store directly in Cache API with recent timestamp
       const cache = await caches.open('oa2-api-cache')
-      await cache.put(
-        new Request('https://cache/OA_cache_memExpire'),
-        new Response(JSON.stringify('from-storage'), {
-          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(Date.now()) }
-        })
-      )
+      await putEncrypted(cache, 'https://cache/OA_cache_memExpire', 'from-storage', {
+        'X-Cache-Timestamp': String(Date.now())
+      })
 
       let fetchCalled = false
       const result = await cacheService.getOrFetch('memExpire', async () => { fetchCalled = true; return 'fresh' }, 60000)
@@ -284,12 +313,10 @@ describe('CacheService', () => {
       // Re-store with old timestamp (6 minutes ago, beyond 5-min negative TTL cap)
       const cache = await caches.open('oa2-api-cache')
       const oldTimestamp = Date.now() - 6 * 60 * 1000
-      await cache.put(
-        new Request('https://cache/OA_cache_negTtl'),
-        new Response(JSON.stringify({ _errorStatus: 404 }), {
-          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTimestamp), 'X-Cache-Expiration': String(5 * 60 * 1000) }
-        })
-      )
+      await putEncrypted(cache, 'https://cache/OA_cache_negTtl', { _errorStatus: 404 }, {
+        'X-Cache-Timestamp': String(oldTimestamp),
+        'X-Cache-Expiration': String(5 * 60 * 1000)
+      })
 
       let fetchCalled = false
       const result = await cacheService.getOrFetch('negTtl', async () => { fetchCalled = true; return 'fresh' }, 24 * 60 * 60 * 1000)
@@ -305,12 +332,10 @@ describe('CacheService', () => {
       // Store a normal result in Cache API with timestamp 6 min ago
       const cache = await caches.open('oa2-api-cache')
       const oldTimestamp = Date.now() - 6 * 60 * 1000
-      await cache.put(
-        new Request('https://cache/OA_cache_normal'),
-        new Response(JSON.stringify({ id: 1 }), {
-          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTimestamp), 'X-Cache-Expiration': String(24 * 60 * 60 * 1000) }
-        })
-      )
+      await putEncrypted(cache, 'https://cache/OA_cache_normal', { id: 1 }, {
+        'X-Cache-Timestamp': String(oldTimestamp),
+        'X-Cache-Expiration': String(24 * 60 * 60 * 1000)
+      })
 
       let fetchCalled = false
       const result = await cacheService.getOrFetch('normal', async () => { fetchCalled = true; return 'new' }, 24 * 60 * 60 * 1000)
@@ -462,12 +487,9 @@ describe('CacheService', () => {
       // Insert old entry directly into Cache API
       const cache = await caches.open('oa2-api-cache')
       const oldTs = Date.now() - 25 * 60 * 60 * 1000 // 25 hours ago
-      await cache.put(
-        new Request('https://cache/OA_cache_oldEntry'),
-        new Response(JSON.stringify('old'), {
-          headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTs) }
-        })
-      )
+      await putEncrypted(cache, 'https://cache/OA_cache_oldEntry', 'old', {
+        'X-Cache-Timestamp': String(oldTs)
+      })
 
       // Insert fresh entry
       await cacheService.set('freshEntry', 'fresh')
@@ -497,12 +519,9 @@ describe('CacheService', () => {
       const oldTs = Date.now() - 25 * 60 * 60 * 1000
 
       for (let i = 0; i < 5; i++) {
-        await cache.put(
-          new Request(`https://cache/OA_cache_old${i}`),
-          new Response(JSON.stringify(`old${i}`), {
-            headers: { 'Content-Type': 'application/json', 'X-Cache-Timestamp': String(oldTs) }
-          })
-        )
+        await putEncrypted(cache, `https://cache/OA_cache_old${i}`, `old${i}`, {
+          'X-Cache-Timestamp': String(oldTs)
+        })
       }
       await cacheService.set('keepMe', 'fresh')
 
