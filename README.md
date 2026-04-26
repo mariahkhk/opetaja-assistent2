@@ -9,37 +9,33 @@ repetitive tasks, providing better data visualization, and integrating with exte
 provides a nice overview of all ungraded assignments across all journals on a single web page). This helps reduce manual
 effort and ensures data consistency across systems.
 
-### Features:
+### Features
 
-#### Implemented:
-- **Journal List Sync**: Comprehensive synchronization between Tahvel and Kriit systems
-  - Compares grades between Tahvel and Kriit and highlights discrepancies
-  - Syncs assignments, students, and their personal codes
-  - Displays interactive banners showing differences that need to be synced
-  - Handles student status validation (active/inactive)
-  - Provides detailed sync progress and error reporting
-- **Popup Interface**: Extension popup with settings and cache management
-  - Debug mode toggle for enhanced logging
-  - Kriit integration settings (API URL and key configuration)
-  - Cache statistics and management tools
-  - Real-time cache size monitoring and cleanup
-- **Visual Indicators**: Extension activity indicator in the Tahvel interface
-- **Caching System**: Intelligent caching to prevent redundant API calls
-- **Error Handling**: Comprehensive error logging and user feedback
-- **Lesson Discrepancies**: Detects and displays discrepancies between the timetable and journal entries for lessons, and validates lesson capacity types.
-  - Highlights missing or mismatched lessons between the timetable and journal.
-  - Performs background and table-based validation of lesson capacity (e.g., “auditoorne”/“independent work”).
-  - Integrates with the UI to allow fixing issues directly from the discrepancies table.
+**Journal list page:**
+- **Kriit sync**: Two-way synchronization between Tahvel and Kriit. Compares grades, due dates, students, and personal codes; surfaces discrepancies in an interactive banner with one-click fixes.
+- **Sync notifier**: Highlights journals where Kriit and Tahvel have diverged so the teacher can act before the next lesson.
+- **Outcomes sync**: Pushes Tahvel curriculum outcome assessments to Kriit and skips inaccessible journals gracefully.
+- **New assignment sync**: Mirrors freshly created Tahvel assignments to Kriit in the background.
+- **Final grade warning**: Flags journals where the study period has ended but final grades are still missing.
+- **Lesson count warning**: Flags journals where the planned lesson count and timetable disagree.
 
-#### Planned (TODO):
-- **Single Journal Features**: Features for individual journal pages
-  - Missing Lessons Overview: Identify lessons in timetable but missing from journal
-  - Assignment Sync for Single Journal: Sync assignments with external systems
-  - Final Grading: Automatically calculate and apply final grades
-  - Journal Enhancements: Improve journal interface with better visualization
-- **Enhanced Journal List Indicators**: Additional visual indicators for various issues
+**Single journal page:**
+- **Lesson discrepancies table**: Compares timetable against journal entries, validates lesson capacity types (auditoorne / independent work), and lets the teacher add or correct entries inline.
+- **Last lesson notification**: Strobing yellow banner showing the date of the final lesson so teachers don't forget independent-work entries.
+- **Highlight missing grades**: Marks empty grade cells red once an independent-work due date has passed.
+- **Highlight grade cells**: Color-codes grade cells by result so teachers can scan a journal at a glance.
+- **Final grade tools**: Highlights students who already qualify for a final grade, and offers a one-click "add final grades" management UI.
 
-*Note: Additional features are under active development.*
+**Header (all Tahvel pages):**
+- **Sync button**: Manual Kriit-sync trigger surfaced in the Tahvel header.
+- **Timetable discrepancy detection**: Background check that surfaces issues without requiring the teacher to open each journal.
+
+**Cross-cutting:**
+- **Encrypted cache**: All persisted API responses are AES-256-GCM encrypted at rest with a per-install key stored in `chrome.storage.local`. Cache keys are HMAC-hashed so other extensions enumerating the Cache API see only opaque hex. Eviction runs every 6 h via `chrome.alarms`.
+- **Update notification**: Shows a banner when a new extension version is installed.
+- **Sentry error reporting**: Captures crash reports filtered for known PII; expected 401/403/404/412 responses are excluded.
+- **Privacy-aware popup**: Settings stay in `chrome.storage.local` (never synced to Google's servers); the saved Kriit API key is never loaded into the popup field — a separate indicator shows whether one is stored — and the URL is HTTPS-only (with a `localhost` exception for development).
+- **Debug mode**: Toggleable via the popup; logs are tagged with "✨" for easy filtering, and request/response bodies for known-PII Kriit endpoints are scrubbed to `[REDACTED-PII]` in the debug buffer.
 
 ### Architecture:
 
@@ -55,30 +51,56 @@ This extension uses a Feature-Based Module System with Services Layer architectu
 
 ```
 src/
-├── background.js                 # Service worker for extension reloading
-├── content.js                    # Main entry point
-├── assets/                       # Static assets and build scripts
-│   ├── icons/                       # SVG icons for the extension
-│   ├── scripts/                     # Build and watch scripts
-│   ├── styles/                      # CSS for feature components
-│   └── templates/                   # Templates for manifest and icons
-├── core/                         # Core extension infrastructure
-│   ├── Extension.js                 # Main extension controller
-│   ├── BaseFeature.js               # Base class for all features
-│   └── FeaturesRegistry.js          # Central registry of all features
-├── features/                     # Feature modules
-│   ├── journalList/                 # Features for journal list page
-│   │   ├── JournalListSync.js          # Journal list sync implementation
-│   │   └── README.md                   # Documentation for planned features
-│   └── singleJournal/               # Features for single journal page
-│       └── README.md                   # Documentation for planned features
-└── services/                     # Shared services
-    ├── ApiService.js                # API communication
-    ├── CacheService.js              # Data caching utilities
-    ├── DomService.js                # DOM manipulation utilities
-    ├── Logger.js                    # Logging and debugging utilities
-    ├── NavigationService.js         # URL/navigation handling
-    └── StyleService.js              # CSS injection utilities
+├── background.js                          # Service worker (cache eviction alarm, reload helper)
+├── content.js                             # Main content-script entry point
+├── popup.js                               # Extension popup logic
+├── assets/                                # Build inputs
+│   ├── icons/                             # SVG icon assets (incompleteScore.svg)
+│   ├── scripts/                           # Build and watch scripts (build.js, watch.js)
+│   ├── styles/                            # CSS for injected UI
+│   └── templates/                         # manifest.json template, icon.svg
+├── core/
+│   ├── Extension.js                       # Main controller
+│   ├── BaseFeature.js                     # Lifecycle base class for features
+│   └── FeaturesRegistry.js                # Registers all features
+├── features/
+│   ├── header/                            # Features active on every Tahvel page
+│   │   ├── HeaderSyncButtonFeature.js
+│   │   └── TimetableDiscrepancyDetectionFeature.js
+│   ├── journalList/                       # Features for the journal list page
+│   │   ├── JournalListSync.js
+│   │   ├── JournalSyncBanner.js
+│   │   ├── KriitSyncNotifier.js
+│   │   ├── OutComes.js
+│   │   ├── TahvelNewAssignmentSync.js
+│   │   ├── finalGradeWarning/FinalGradeWarningFeature.js
+│   │   └── lessonCountWarning/LessonCountWarningFeature.js
+│   └── singleJournal/                     # Features for an individual journal page
+│       ├── addFinalGrades/                # FinalGradeHighlighter + FinalGradesManagementFeature
+│       ├── highlightFinalGrades/          # HighlightFinalGradesFeature
+│       ├── highlightGradeCells/           # HighlightGradeCellsFeature (color-by-result)
+│       ├── highlightMissingGrades/        # HighlightMissingGradesFeature
+│       ├── lastLessonNotification/        # LastLessonNotificationFeature
+│       └── lessonDiscrepancies/           # DiscrepanciesTable + LessonDiscrepanciesFeature
+│                                          # + IndependentWorkCapacityFeature + LessonTimes.json
+├── lib/                                   # Pure helpers shared across features
+│   ├── fetchTeacherJournals.js
+│   ├── finalGradeWarning.js
+│   ├── kriitSyncCheck.js
+│   ├── parseJsonResponse.js
+│   └── schoolId.js
+└── services/                              # Shared singletons
+    ├── ApiService.js                      # HTTP client for Tahvel & Kriit
+    ├── BannerService.js                   # In-page banner UI
+    ├── CacheService.js                    # AES-256-GCM encrypted Cache API wrapper
+    ├── CryptoService.js                   # Per-install key + HMAC helpers
+    ├── DomService.js                      # DOM helpers (waitForElement, etc.)
+    ├── Logger.js                          # "✨"-prefixed structured logging
+    ├── MessageListenerService.js          # chrome.runtime message routing
+    ├── NavigationService.js               # SPA navigation detection
+    ├── SentryService.js                   # PII-filtered error reporting
+    ├── StyleService.js                    # CSS injection
+    └── VersionCheckService.js             # New-version notifications
 ```
 
 ## Development
@@ -131,7 +153,7 @@ This project uses several tools to maintain consistent code style:
 - **EditorConfig**: Ensures consistent editor settings across different IDEs
 - **ESLint**: Enforces code quality and style rules
 
-Code is automatically formatted and linted when you run `bun start`. You can also run these commands manually:
+Code is formatted and linted on the initial `bun start` invocation. The watcher only rebuilds — it does not re-lint, so run the commands below before pushing:
 
 ```bash
 # Check for linting issues
@@ -144,23 +166,45 @@ bun run lint:fix
 bun run format
 ```
 
-## Production Build
+### Tests and git hooks
 
-For a production build:
+Run the test suite:
+
+```bash
+bun test
+```
+
+[Husky](https://typicode.github.io/husky/) is installed automatically via the `prepare` script in `package.json`. The `pre-push` hook runs `bun run lint` and `bun test`; `git push` is blocked if either fails, so fix them locally first.
+
+> If you install dependencies in a directory that isn't a Git working tree (e.g. a downloaded zip), the `prepare` script will fail trying to set up Husky. Clone via `git clone` instead.
+
+## Production Build
 
 ```bash
 bun run build
 ```
 
-This will:
+`bun run build` lints the source, then runs `src/assets/scripts/build.js --prod`, which:
 
-1. Clean the dist directory
-2. Build and minify the JavaScript files
-3. Copy static assets and manifest.json
-4. Output production-ready files to the `dist` directory
-5. Open your browser and navigate to the extensions page
-    - Chrome: `chrome://extensions/`
-    - Edge: `edge://extensions/`
-    - Other Chromium browsers: Check your browser's extension management page
-6. Enable "Developer mode"
-7. Click "Load unpacked" and select the `dist` directory
+1. Cleans `dist/`
+2. Bundles and minifies `content.js`, `background.js`, and `popup.js`
+3. Converts `src/assets/templates/icon.svg` to PNGs (48 px and 128 px)
+4. Copies `manifest.json` (with the version synced from `package.json`), `popup.html`, `icon.svg`, `JournalSyncBannerService.css`, and `LessonTimes.json` into `dist/`
+
+The build script does **not** install the extension in your browser — to load the freshly built `dist/`, follow the same "Load the extension" steps as in the [Development Workflow](#development-workflow) above.
+
+## Privacy & Security
+
+The extension only reads data already accessible to the signed-in teacher in Tahvel. Nothing is sent to third parties — settings live in `chrome.storage.local` (which never syncs to Google), all persisted cache entries are AES-256-GCM encrypted, and outbound traffic only ever goes to Tahvel and the teacher's configured Kriit server (HTTPS-only, with a `localhost` exception for development).
+
+Crash reports go through Sentry with PII filtered out before transmission. Full details are in [`privacy_policy.md`](./privacy_policy.md) (Estonian).
+
+## Repository
+
+Source code: <https://github.com/kriit-eu/opetaja-assistent2>
+
+Issues and feature requests: <https://github.com/kriit-eu/opetaja-assistent2/issues>
+
+## License
+
+Released under the [MIT License](./LICENSE).

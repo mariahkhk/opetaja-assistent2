@@ -38,11 +38,10 @@
 
 - **Code Style:**
   - Modern ES modules, 2-space indent, camelCase for variables, PascalCase for classes.
-  - No comments—prefer self-documenting code (see `.augment-guidelines`).
+  - Prefer self-documenting code—comments only when the *why* is non-obvious.
+  - Private methods use `#` prefix (`#extractJournalId()`).
   - Eliminate duplication, merge similar logic, and avoid deep nesting.
-  - Use only services for DOM/network; never access directly in features.
-- **Legacy Code:**
-  - `old-code/` is read-only for reference—never edit or add files there.
+  - Use services for DOM/network/cache; never access them directly in features.
 - **Feature Examples:**
   - See `src/features/journalList/JournalListSync.js` for a complete feature module.
   - See `src/features/singleJournal/lessonDiscrepancies/LessonDiscrepanciesFeature.js` for advanced validation and logging patterns.
@@ -55,4 +54,4 @@
 
 ---
 
-For more, see `README.md`, `CLAUDE.md`, and `.augment-guidelines` for detailed rules and architecture.
+For more, see `README.md`, `CLAUDE.md`, and `doc/project-documentation.md`.

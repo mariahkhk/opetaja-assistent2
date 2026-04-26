@@ -90,11 +90,15 @@ The original "Õpetaja Assistent" provided basic functionality, but this second 
 
 **Educational Terms:**
 
-- **SISSEKANNE_H**: Assignment entry type (homework/assignment)
-- **SISSEKANNE_I**: Assignment entry type (in-class work)
-- **SISSEKANNE_O**: Outcome entry type (curriculum learning outcomes)
+- **SISSEKANNE_T**: Lesson entry (auditoorne tund) — default classroom-contact type
+- **SISSEKANNE_I**: Independent-work entry (iseseisev töö)
+- **SISSEKANNE_P**: Practical-work entry (praktiline töö)
+- **SISSEKANNE_E**: Additional classroom-contact entry type
+- **SISSEKANNE_H**: Graded-assignment entry (hinneline ülesanne)
+- **SISSEKANNE_L**: Final-grade entry (lõpptulemus)
+- **SISSEKANNE_O**: Curriculum learning-outcome entry (õpiväljund)
 - **Personal Code**: Estonian national identification number (isikukood)
-- **Student Status**: Active/inactive status of students in the system
+- **Student Status**: Active/inactive status of students in the system (`OPPURSTAATUS_O` = active)
 - **Lesson Capacity**: Type of lesson (auditory, independent work, etc.)
 
 **Technical Abbreviations:**
@@ -555,10 +559,14 @@ The system manages several key data entities that represent the educational doma
 **Assignment/Journal Entry**
 
 - **Primary Key**: id (integer)
-- **Types**:
-  - SISSEKANNE_H (homework/assignment)
-  - SISSEKANNE_I (in-class work)
-  - SISSEKANNE_O (curriculum outcomes)
+- **Types** (Tahvel `entryType` codes):
+  - SISSEKANNE_T (lesson — default classroom-contact type)
+  - SISSEKANNE_I (independent work)
+  - SISSEKANNE_P (practical work)
+  - SISSEKANNE_E (additional classroom-contact type)
+  - SISSEKANNE_H (graded assignment)
+  - SISSEKANNE_L (final grade — lõpptulemus)
+  - SISSEKANNE_O (curriculum learning outcome)
 - **Attributes**:
   - name, description, dueDate
   - maxPoints, weightFactor

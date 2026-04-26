@@ -2,196 +2,75 @@
 
 ## Summary
 
-**Date:** October 4, 2025  
-**Total Tests:** 141  
-**Passing:** 112  
-**Failing:** 29  
+**Date:** 2026-04-26
 **Test Framework:** Bun Test
+**Test Files:** 39
+**Total Tests:** 1124
+**Passing:** 1124
+**Failing:** 0
+**Assertions:** 2142
 
-## Coverage Overview
+**Overall coverage:** 76.01% functions / 70.72% lines
 
-| Module                        | Function Coverage | Line Coverage | Status        |
-| ----------------------------- | ----------------- | ------------- | ------------- |
-| **ApiService.js**             | 88.89%            | 91.67%        | ✅ Excellent  |
-| **ApiPerformanceMonitor.js**  | 100%              | 100%          | ✅ Complete   |
-| **CacheService.js**           | 100%              | 88.94%        | ✅ Excellent  |
-| **Logger.js**                 | 100%              | 100%          | ✅ Complete   |
-| **StyleService.js**           | 100%              | 88.89%        | ✅ Excellent  |
-| **BaseFeature.js**            | 84.62%            | 82.14%        | ✅ Very Good  |
-| **DomService.js**             | 66.67%            | 74.51%        | ⚠️ Good       |
-| **JournalListSync.js**        | 22.73%            | 5.18%         | ❌ Needs Work |
-| **BannerService.js**          | 7.14%             | 5.92%         | ❌ Needs Work |
-| **MessageListenerService.js** | 33.33%            | 5.66%         | ❌ Needs Work |
-| **OutComes.js**               | 0%                | 1.22%         | ❌ No Tests   |
-| **JournalSyncBanner.js**      | 6.67%             | 2.78%         | ❌ Needs Work |
+## Coverage by Module
 
-**Overall Coverage:** 53.10% functions, 58.78% lines
+### Excellent (≥90% lines)
 
-## Test Files Created
+| Module | % Funcs | % Lines |
+| --- | ---: | ---: |
+| `services/StyleService.js` | 100.00 | 100.00 |
+| `services/Logger.js` | 100.00 | 97.37 |
+| `services/ApiService.js` | 89.74 | 98.99 |
+| `services/BannerService.js` | 93.33 | 92.69 |
+| `services/VersionCheckService.js` | 80.00 | 98.57 |
+| `core/BaseFeature.js` | 100.00 | 90.60 |
+| `lib/parseJsonResponse.js` | 100.00 | 100.00 |
+| `lib/schoolId.js` | 100.00 | 100.00 |
+| `lib/fetchTeacherJournals.js` | 100.00 | 97.14 |
+| `lib/finalGradeWarning.js` | 100.00 | 91.04 |
+| `features/journalList/KriitSyncNotifier.js` | 100.00 | 100.00 |
+| `features/journalList/OutComes.js` | 100.00 | 98.68 |
+| `features/header/TimetableDiscrepancyDetectionFeature.js` | 86.11 | 95.50 |
+| `features/header/HeaderSyncButtonFeature.js` | 87.50 | 91.61 |
+| `features/singleJournal/addFinalGrades/FinalGradeHighlighter.js` | 100.00 | 94.12 |
 
-### Service Tests (New)
+### Good (60–89% lines)
 
-1. ✅ **CacheService.test.js** - Comprehensive tests for caching functionality
-   - Set/get operations
-   - Cache expiration
-   - Request deduplication
-   - Journal-specific cache clearing
-   - Statistics tracking
+| Module | % Funcs | % Lines |
+| --- | ---: | ---: |
+| `services/CacheService.js` | 88.71 | 88.75 |
+| `services/CryptoService.js` | 90.00 | 87.78 |
+| `services/DomService.js` | 83.33 | 83.33 |
+| `features/journalList/JournalSyncBanner.js` | 86.67 | 72.61 |
+| `features/singleJournal/highlightGradeCells/HighlightGradeCellsFeature.js` | 91.76 | 87.21 |
+| `features/singleJournal/highlightMissingGrades/HighlightMissingGradesFeature.js` | 88.57 | 85.03 |
+| `features/singleJournal/lastLessonNotification/LastLessonNotificationFeature.js` | 88.46 | 66.58 |
+| `lib/kriitSyncCheck.js` | 80.33 | 62.13 |
 
-2. ✅ **Logger.test.js** - Complete logger functionality tests
-   - All log levels (info, warning, error, debug, success)
-   - Debug mode toggling
-   - Message formatting with timestamps
-   - Source tracing
+### Needs work (<60% lines)
 
-3. ✅ **DomService.test.js** - DOM manipulation tests
-   - Element waiting/observing
-   - Element creation and insertion
-   - Style injection
-   - Attribute handling
+| Module | % Funcs | % Lines | Notes |
+| --- | ---: | ---: | --- |
+| `features/singleJournal/lessonDiscrepancies/DiscrepanciesTable.js` | 56.10 | 51.14 | Large UI component |
+| `features/journalList/finalGradeWarning/FinalGradeWarningFeature.js` | 62.50 | 43.95 | |
+| `features/journalList/JournalListSync.js` | 77.46 | 35.29 | 5000+ line module — algorithm-heavy |
+| `features/journalList/lessonCountWarning/LessonCountWarningFeature.js` | 53.33 | 29.66 | |
+| `features/singleJournal/highlightFinalGrades/HighlightFinalGradesFeature.js` | 78.26 | 29.71 | |
+| `features/journalList/TahvelNewAssignmentSync.js` | 42.11 | 15.01 | |
+| `features/singleJournal/lessonDiscrepancies/LessonDiscrepanciesFeature.js` | 21.24 | 9.93 | Large branching feature |
+| `services/SentryService.js` | 57.14 | 9.27 | Most paths run only on real errors |
+| `services/MessageListenerService.js` | 33.33 | 7.81 | Routing layer; mostly side effects |
+| `features/singleJournal/lessonDiscrepancies/IndependentWorkCapacityFeature.js` | 0.00 | 2.44 | No tests yet |
 
-4. ✅ **StyleService.test.js** - CSS injection tests
-   - CSS injection and removal
-   - Duplicate prevention
-   - Multiple style management
+## Test Layout
 
-5. ✅ **ApiPerformanceMonitor.test.js** - Performance monitoring tests
-   - Call recording
-   - Statistics calculation
-   - Export functionality
-   - Enable/disable toggling
-
-### Core Tests (New)
-
-6. ✅ **BaseFeature.test.js** - Feature lifecycle tests
-   - Activation/deactivation
-   - URL pattern matching
-   - Required element waiting
-   - API initialization
-
-### Existing Tests (Already Present)
-
-- ApiService.test.js (enhanced coverage)
-- JournalListSync.test.js
-- JournalListSync.algorithm.test.js
-- lessonDates.test.js
-- journalTheme.test.js
-- test-duplicate-student-cache-prevention.test.js
-- test-formatting.test.js
-
-## Key Achievements
-
-### ✅ Completed
-
-1. **Service Layer Coverage** - All core services now have comprehensive tests
-2. **Logger Module** - 100% coverage achieved
-3. **Cache Service** - 88.94% line coverage with thorough testing
-4. **API Performance Monitor** - 100% coverage
-5. **BaseFeature** - 82% line coverage for core functionality
-
-### Algorithm Modules (70% Requirement)
-
-- ❌ **JournalListSync.js**: 5.18% (CRITICAL - needs significant work)
-  - Large complex file with 5000+ lines
-  - Core algorithm module requiring ≥70% coverage
-  - Existing tests cover basic flows only
-
-## Failing Tests Analysis
-
-The 29 failing tests are primarily in:
-
-1. **BaseFeature tests** (6 failures)
-   - DOM-related test issues with happy-dom integration
-   - Timing-dependent observer tests
-   - API initialization async issues
-
-2. **StyleService tests** (5 failures)
-   - Document mock incompleteness
-   - getElementById implementation issues
-
-3. **DomService tests** (8 failures)
-   - Happy-dom integration challenges
-   - Event listener and observer functionality
-
-4. **CacheService tests** (6 failures)
-   - State management between tests
-   - Mock chrome API limitations
-
-5. **JournalListSync lesson dates tests** (4 failures)
-   - Initialization order issues
-   - Async dependency problems
-
-## Recommendations
-
-### Immediate Priority (Get CI Green ✅)
-
-1. Fix failing BaseFeature tests - mock improvements needed
-2. Fix CacheService test state isolation
-3. Resolve StyleService document mock issues
-4. Fix DomService happy-dom integration
-
-### High Priority (70% Coverage Goal)
-
-1. **JournalListSync.js** - Add comprehensive algorithm tests
-   - Need 70% minimum for algorithm modules
-   - Currently at 5.18% - requires significant test development
-   - Break down into testable units
-   - Add integration tests for main workflows
-
-2. **BannerService.js** - UI component tests
-3. **MessageListenerService.js** - Message handling tests
-
-### Medium Priority
-
-1. **JournalSyncBanner.js** - Banner feature tests
-2. **OutComes.js** - Outcomes feature tests
-3. Increase BaseFeature coverage to 90%+
-
-## Test Quality Metrics
-
-### Coverage by Category
-
-- **Services**: 88% average (Excellent)
-- **Core**: 82% (Very Good)
-- **Features**: 11% average (Needs Work)
-
-### Test Types
-
-- ✅ **Unit Tests**: 106 tests
-- ✅ **Integration Tests**: 6 tests
-- ❌ **Algorithm Tests**: Needs expansion for JournalListSync
-
-### Best Practices Followed
-
-- ✅ AAA pattern (Arrange, Act, Assert)
-- ✅ Descriptive test names
-- ✅ Isolated test cases
-- ✅ Mock external dependencies
-- ✅ Edge case coverage
-- ✅ Error path testing
-
-## Next Steps
-
-1. **Fix Failing Tests** (Priority 1)
-   - Improve DOM mocking strategy
-   - Better async test handling
-   - Isolate test state
-
-2. **JournalListSync Algorithm Coverage** (Priority 2)
-   - Target: 70% line coverage minimum
-   - Break into testable sub-algorithms
-   - Add workflow integration tests
-   - Test data transformation logic
-
-3. **Feature Tests** (Priority 3)
-   - Banner features
-   - Outcomes feature
-   - Other UI features
-
-4. **Documentation** (Ongoing)
-   - Document test patterns
-   - Add testing guide
-   - Improve test maintainability
+- `test/services/` — unit tests for shared singletons (ApiService, CacheService incl. crypto + tier + version-wipe variants, CryptoService, BannerService, Logger, DomService, StyleService, SentryService, VersionCheckService).
+- `test/core/` — `BaseFeature` lifecycle tests.
+- `test/lib/` — pure-helper tests (`fetchTeacherJournals`, `finalGradeWarning`, `kriitSyncCheck`, `schoolId`).
+- `test/features/header/` — header-bar feature tests.
+- `test/features/journalList/` — journal-list feature tests (sync algorithm, banner, notifier, outcomes, warnings).
+- `test/features/singleJournal/` — single-journal feature tests (discrepancies, final grades, highlights, last-lesson notification).
+- `test/mocks/` and `test/setup.js` — Chrome API mocks and JSDOM bootstrap.
 
 ## Commands
 
@@ -202,14 +81,11 @@ bun test
 # Run with coverage
 bun test --coverage
 
-# Run specific test file
+# Run a specific file
 bun test test/services/CacheService.test.js
 
 # Watch mode
 bun test --watch
 ```
 
----
-
-**Status**: 🟡 In Progress - CI partially passing, coverage improving  
-**Goal**: 🎯 70% algorithm module coverage, all tests passing
+To regenerate the numbers in this report, run `bun test --coverage` and replace the tables. The figures above are a snapshot — they will drift as code is added.

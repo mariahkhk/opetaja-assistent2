@@ -1,15 +1,19 @@
 # Single Journal Features
 
-This directory will contain features that enhance the single journal view in Tahvel.
+Features active on an individual journal edit page (`/journal/:id/edit`).
 
-## Current Features
+## Modules
 
-- **Missing Lessons**: Identify lessons that are in the timetable but missing from the journal
+- **`lessonDiscrepancies/`** — Compares the timetable against actual journal entries.
+  - `LessonDiscrepanciesFeature.js` orchestrates detection.
+  - `DiscrepanciesTable.js` renders the inline table and "add missing entry" actions.
+  - `IndependentWorkCapacityFeature.js` validates `auditoorne` vs. independent-work capacity types.
+- **`lastLessonNotification/LastLessonNotificationFeature.js`** — Strobing yellow banner showing the date of the final lesson so teachers don't forget independent-work entries. The colour ramps up as the date approaches.
+- **`highlightMissingGrades/HighlightMissingGradesFeature.js`** — Marks empty grade cells red once an independent-work due date has passed.
+- **`highlightGradeCells/HighlightGradeCellsFeature.js`** — Color-codes grade cells by result so teachers can scan a journal at a glance.
+- **`highlightFinalGrades/HighlightFinalGradesFeature.js`** — Highlights students who already qualify for a final grade.
+- **`addFinalGrades/`** — Final-grade workflow.
+  - `FinalGradeHighlighter.js` marks rows that need a final grade.
+  - `FinalGradesManagementFeature.js` provides the one-click "add final grades" UI.
 
-## Planned Features (TODO)
-
-- **Assignment Sync**: Sync assignments with external systems like Kriit
-- **Final Grading**: Automatically calculate and apply final grades
-- **Journal Enhancements**: Improve journal interface with better visualization
-
-These features are currently under development and will be implemented in future updates.
+See the top-level `README.md` for the full feature catalogue and project structure.

@@ -232,7 +232,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `journalId` | Journal identifier | `123` |
 | `schoolId` | School identifier | `9` |
 | `teacherId` | Teacher identifier | `456` |
-| `entryType` | Journal entry type | `SISSEKANNE_I` (independent work), `SISSEKANNE_P` (practical work), `SISSEKANNE_L` (lesson) |
+| `entryType` | Journal entry type | `SISSEKANNE_T` (lesson — auditoorne tund), `SISSEKANNE_I` (independent work), `SISSEKANNE_P` (practical work), `SISSEKANNE_L` (final grade — lõpptulemus) |
 | `comparisonDate` | Date for comparisons (YYYY-MM-DD) | `2024-11-07` |
 
 ### Service Access Patterns
@@ -523,9 +523,10 @@ describe('MyFeature', () => {
 
 | String | Meaning | Context |
 |--------|---------|---------|
-| `SISSEKANNE_I` | Independent work entry | Journal entry type |
-| `SISSEKANNE_P` | Practical work entry | Journal entry type |
-| `SISSEKANNE_L` | Lesson entry | Journal entry type |
+| `SISSEKANNE_T` | Lesson entry (auditoorne tund) — default classroom-contact type | Journal entry type |
+| `SISSEKANNE_I` | Independent work entry (iseseisev töö) | Journal entry type |
+| `SISSEKANNE_P` | Practical work entry (praktiline töö) | Journal entry type |
+| `SISSEKANNE_L` | Final-grade entry (lõpptulemus) | Journal entry type |
 | `✨` | Extension log prefix | Logger service |
 | `oa2-` | CSS class prefix | All injected elements |
 
