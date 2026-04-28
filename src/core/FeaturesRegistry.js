@@ -23,7 +23,7 @@ export async function loadFeatures() {
   const allAvailableFeatures = {
     header: [],
     journalList: [],
-    singleJournal: [] // TODO: Add features when implemented
+    singleJournal: []
   }
 
   // Only import and instantiate features that should be loaded
@@ -55,8 +55,6 @@ export async function loadFeatures() {
     } catch (error) {
       Logger.error('Error loading HeaderSyncButtonFeature:', error)
     }
-
-    // TODO: Import other Kriit-dependent features when implemented
   } else {
     Logger.debug('Skipping Kriit-dependent features because Kriit is disabled')
   }
