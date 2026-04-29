@@ -1,4 +1,5 @@
 import { describe, test, expect } from 'bun:test'
+import { extractOutcomeNumbersFromEntryName } from '../../../src/lib/extractOutcomeNumbersFromEntryName.js'
 
 describe('FinalGradesManagementFeature - Utility Methods', () => {
   describe('Grade schema mapping (#mapGradeToSchema logic)', () => {
@@ -142,9 +143,6 @@ describe('FinalGradesManagementFeature - Utility Methods', () => {
     test('should keep original in CALCULATED mode', () => {
       const results = [{ ovGrades: { 1: '4.5' } }, { ovGrades: { 1: 'A' } }]
 
-      const mode = 'CALCULATED'
-      // In CALCULATED mode, don't modify
-
       expect(results[0].ovGrades['1']).toBe('4.5')
       expect(results[1].ovGrades['1']).toBe('A')
     })
@@ -185,6 +183,18 @@ describe('FinalGradesManagementFeature - Utility Methods', () => {
       const ovEntries = entries.filter(e => e.nameEt?.toLowerCase().includes('õpiväljund'))
 
       expect(ovEntries.length).toBe(2)
+    })
+
+    test('should detect ÕV numbers only from a trailing parenthesized suffix', () => {
+      expect(extractOutcomeNumbersFromEntryName('Foo (ÕV2)')).toEqual(['2'])
+      expect(extractOutcomeNumbersFromEntryName('Bar (ÕV1, ÕV3)')).toEqual(['1', '3'])
+      expect(extractOutcomeNumbersFromEntryName('Baz (ÕV1, ÕV2, ÕV2)')).toEqual(['1', '2'])
+    })
+
+    test('should ignore plain ÕV mentions outside the trailing suffix', () => {
+      expect(extractOutcomeNumbersFromEntryName('ÕV2 töö')).toEqual([])
+      expect(extractOutcomeNumbersFromEntryName('Foo (ÕV2) lisa')).toEqual([])
+      expect(extractOutcomeNumbersFromEntryName('Foo (ÕV2, test)')).toEqual([])
     })
   })
 

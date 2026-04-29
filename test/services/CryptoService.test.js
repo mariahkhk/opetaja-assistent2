@@ -1,8 +1,10 @@
 import { describe, test, expect, beforeEach } from 'bun:test'
 import { cryptoService } from '../../src/services/CryptoService.js'
+import { restoreChromeMock } from '../setup.js'
 
 describe('CryptoService', () => {
   beforeEach(() => {
+    restoreChromeMock()
     cryptoService._reset()
   })
 

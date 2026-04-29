@@ -1,6 +1,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { domService } from '../../../services/DomService.js'
+import { extractOutcomeNumbersFromEntryName } from '../../../lib/extractOutcomeNumbersFromEntryName.js'
 import { injectFinalGradeCSS, markMismatch, clearMismatch } from './FinalGradeHighlighter.js'
 
 class FinalGradesByOvFeature extends BaseFeature {
@@ -810,7 +811,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     Logger.debug('✨ FinalGradesByOvFeature: DEBUG students structure:', students)
     const studentMap = {}
     const journalStudentIdToStudentId = {}
-    let hasOvSissekanneI = false
+    let hasOvTaggedEntries = false
     students.forEach(s => {
       Logger.debug('✨ FinalGradesByOvFeature: DEBUG processing student:', s)
       // Check if student data is nested under .student or directly on the object
@@ -834,42 +835,24 @@ class FinalGradesByOvFeature extends BaseFeature {
     // Map ÕV number using outcomeOrderNr+1 for SISSEKANNE_O (robust to all nameEt formats)
     // This ensures correct mapping regardless of how ÕV is tagged in nameEt
     const ovNumToOutcomeId = {} // Map ÕV number (as string) to curriculumModuleOutcomes from SISSEKANNE_O
-    // Track how many SISSEKANNE_I assignment entries reference each ÕV — used to count expected assignments
+    // Track how many tagged grade entries reference each ÕV — used to count expected assignments
     const ovExpectedAssignmentCount = {}
     entries.forEach(entry => {
+      const ovNums = extractOutcomeNumbersFromEntryName(entry.nameEt)
+      const hasGradeData = !!(entry.journalStudentResults || entry.journalEntryStudents)
+
       if (entry.entryType === 'SISSEKANNE_O' && typeof entry.outcomeOrderNr === 'number') {
         const ovNum = String(entry.outcomeOrderNr + 1)
         if (entry.curriculumModuleOutcomes) {
           ovNumToOutcomeId[ovNum] = entry.curriculumModuleOutcomes
         }
       }
-      // Support ÕVn in nameEt for SISSEKANNE_I, including patterns like (ÕV1) or (ÕV1, ÕV2)
-      if (entry.entryType === 'SISSEKANNE_I' && entry.nameEt) {
-        // Extract all ÕV numbers referenced in this SISSEKANNE_I name and count each unique ÕV once per entry
-        const foundNums = new Set()
-        // Find all occurrences like (ÕV1, ÕV2) and extract numbers
-        const parenOvMatches = entry.nameEt.match(/\(\s*ÕV(\d+)(?:,\s*ÕV(\d+))*\s*\)/gi)
-        if (parenOvMatches) {
-          parenOvMatches.forEach(m => {
-            [...m.matchAll(/ÕV(\d+)/gi)].forEach(x => {
-              if (x && x[1]) foundNums.add(x[1])
-            })
-          })
-        }
-        // Also support plain ÕVn mentions elsewhere in the nameEt
-        const plainMatches = entry.nameEt.match(/ÕV(\d+)/gi)
-        if (plainMatches) {
-          plainMatches.forEach(m => {
-            const n = (m.match(/\d+/) || [])[0]
-            if (n) foundNums.add(n)
-          })
-        }
-        if (foundNums.size > 0) {
-          hasOvSissekanneI = true
-          foundNums.forEach(n => {
-            ovExpectedAssignmentCount[String(n)] = (ovExpectedAssignmentCount[String(n)] || 0) + 1
-          })
-        }
+
+      if (ovNums.length > 0 && hasGradeData) {
+        hasOvTaggedEntries = true
+        ovNums.forEach(ovNum => {
+          ovExpectedAssignmentCount[ovNum] = (ovExpectedAssignmentCount[ovNum] || 0) + 1
+        })
       }
     })
     Logger.debug('✨ FinalGradesByOvFeature: ovNumToOutcomeId mapping for this journal', ovNumToOutcomeId)
@@ -920,95 +903,55 @@ class FinalGradesByOvFeature extends BaseFeature {
           })
         }
       }
-      // SISSEKANNE_H: always count toward final grade
-      else if (entry.entryType === 'SISSEKANNE_H' && (entry.journalStudentResults || entry.journalEntryStudents)) {
-        if (entry.journalStudentResults) {
-          Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
-            if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
-            if (Array.isArray(results)) {
-              results.forEach(r => {
-                if (r.grade && r.grade.code) gradesByStudent[journalStudentId].push(r.grade.code.replace('KUTSEHINDAMINE_', ''))
-              })
-            } else {
-              Logger.debug('✨ FinalGradesByOvFeature: SISSEKANNE_H results is not array', { journalStudentId, results })
-            }
-          })
-        } else if (Array.isArray(entry.journalEntryStudents)) {
-          entry.journalEntryStudents.forEach(js => {
-            if (js.grade && js.grade.code && js.journalStudent != null) {
-              const journalStudentId = String(js.journalStudent)
-              if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
-              gradesByStudent[journalStudentId].push(js.grade.code.replace('KUTSEHINDAMINE_', ''))
-            }
-          })
-        }
-      }
-      // SISSEKANNE_I: check for ÕVn in nameEt, including patterns like (ÕV1), (ÕV1, ÕV2)
-      else if (entry.entryType === 'SISSEKANNE_I' && (entry.journalStudentResults || entry.journalEntryStudents)) {
-        // Try to extract all ÕV numbers from nameEt
-        let ovNums = []
-        // Find all ÕV numbers in parentheses, e.g. (ÕV1), (ÕV2), (ÕV1, ÕV2)
-        const parenOvMatches = entry.nameEt && entry.nameEt.match(/\(\s*ÕV(\d+)(?:,\s*ÕV(\d+))*\s*\)/gi)
-        if (parenOvMatches) {
-          hasOvSissekanneI = true
-          parenOvMatches.forEach(m => {
-            const nums = [...m.matchAll(/ÕV(\d+)/gi)].map(x => x[1])
-            ovNums.push(...nums)
-          })
-        }
-        // Also support plain ÕVn in nameEt
-        const ovMatch = entry.nameEt && entry.nameEt.match(/ÕV(\d+)/i)
-        if (ovMatch && ovMatch[1]) {
-          hasOvSissekanneI = true
-          ovNums.push(ovMatch[1])
-        }
-        // Remove duplicates
-        ovNums = [...new Set(ovNums)]
+      else {
+        const ovNums = extractOutcomeNumbersFromEntryName(entry.nameEt)
+        const shouldCollectGrades = entry.entryType === 'SISSEKANNE_H' || entry.entryType === 'SISSEKANNE_I' || ovNums.length > 0
 
-        // Helper to collect a single student grade into gradesByStudent and outcomeGradesByStudent
-        const collectSissekanneIGrade = (journalStudentId, grade) => {
+        if (!shouldCollectGrades || !(entry.journalStudentResults || entry.journalEntryStudents)) continue
+
+        const collectEntryGrade = (journalStudentId, grade) => {
           if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
           gradesByStudent[journalStudentId].push(grade)
+
           if (ovNums.length > 0) {
             ovNums.forEach(ovNum => {
               if (!outcomeGradesByStudent[journalStudentId]) outcomeGradesByStudent[journalStudentId] = {}
               if (!outcomeGradesByStudent[journalStudentId][ovNum]) outcomeGradesByStudent[journalStudentId][ovNum] = []
               outcomeGradesByStudent[journalStudentId][ovNum].push(grade)
-              if (Logger.isDebugMode()) Logger.debug('FinalGradesByOvFeature: Mapped SISSEKANNE_I grade to ÕV column', {
-                journalStudentId,
-                grade,
-                ovNum,
-                entryName: entry.nameEt
-              })
             })
-          } else {
-            if (Logger.isDebugMode()) Logger.debug('FinalGradesByOvFeature: SISSEKANNE_I grade not mapped to ÕV column', {
+          }
+
+          if (Logger.isDebugMode()) {
+            Logger.debug('FinalGradesByOvFeature: Mapped entry grade to ÕV columns', {
               journalStudentId,
               grade,
-              entryName: entry.nameEt
+              ovNums,
+              entryName: entry.nameEt,
+              entryType: entry.entryType
             })
           }
         }
 
-        // Extract from journalStudentResults (map format)
         if (entry.journalStudentResults) {
           Object.entries(entry.journalStudentResults).forEach(([journalStudentId, results]) => {
+            if (!gradesByStudent[journalStudentId]) gradesByStudent[journalStudentId] = []
             if (Array.isArray(results)) {
               results.forEach(r => {
-                if (r.grade && r.grade.code) {
-                  collectSissekanneIGrade(journalStudentId, r.grade.code.replace('KUTSEHINDAMINE_', ''))
-                }
+                if (r.grade && r.grade.code) collectEntryGrade(journalStudentId, r.grade.code.replace('KUTSEHINDAMINE_', ''))
               })
             } else {
-              Logger.debug('✨ FinalGradesByOvFeature: SISSEKANNE_I results is not array', { journalStudentId, results })
+              Logger.debug('✨ FinalGradesByOvFeature: Entry results is not array', {
+                journalStudentId,
+                results,
+                entryType: entry.entryType,
+                entryName: entry.nameEt
+              })
             }
           })
-        }
-        // Fallback: extract from journalEntryStudents (array format)
-        else if (Array.isArray(entry.journalEntryStudents)) {
+        } else if (Array.isArray(entry.journalEntryStudents)) {
           entry.journalEntryStudents.forEach(js => {
-            if (js.grade && js.grade.code && js.journalStudent) {
-              collectSissekanneIGrade(String(js.journalStudent), js.grade.code.replace('KUTSEHINDAMINE_', ''))
+            if (js.grade && js.grade.code && js.journalStudent != null) {
+              collectEntryGrade(String(js.journalStudent), js.grade.code.replace('KUTSEHINDAMINE_', ''))
             }
           })
         }
@@ -1125,7 +1068,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       })
     })
     Logger.debug('✨ FinalGradesByOvFeature: SUMMARY', summary)
-    return { output, allOvNums, ovNumToOutcomeId, journalStudentIdToStudentId, hasOvSissekanneI }
+    return { output, allOvNums, ovNumToOutcomeId, journalStudentIdToStudentId, hasOvTaggedEntries }
   }
 
   // Apply grading-mode rules to a previously calculated `results` object in-place.
@@ -1253,7 +1196,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     Logger.debug('✨ FinalGradesByOvFeature: #showResults called', { results, button, opts })
     // Only perform sync logic, do not render a table
     // eslint-disable-next-line no-unused-vars
-    const { allOvNums, ovNumToOutcomeId, hasOvSissekanneI, output } = results
+    const { allOvNums, ovNumToOutcomeId, hasOvTaggedEntries, output } = results
     // Build a map of (studentId|ovNum) => existing grade object for updating
     const existingGradesMap = {}
     if (this._lastEntries) {
@@ -1364,13 +1307,13 @@ class FinalGradesByOvFeature extends BaseFeature {
         return true
       }
     })
-    // If ÕV columns exist but there are no SISSEKANNE_I with ÕV, show message
+    // If ÕV columns exist but there are no tagged entries, show message
     let container = document.getElementById('oa-final-grades-results')
     if (!container) {
       container = domService.createAndInsertElement('div', { id: 'oa-final-grades-results' }, '', button, 'afterend')
     }
-    if (allOvNums.length > 0 && !hasOvSissekanneI) {
-      container.innerHTML = '<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Ühtegi õpiväljundit pole märgitud iseseisvatesse töödesse!</div>'
+    if (allOvNums.length > 0 && !hasOvTaggedEntries) {
+      container.innerHTML = '<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Ühtegi õpiväljundit pole märgitud sissekannete nimetustesse!</div>'
       return
     }
     // If ÕV columns exist, automatically sync grades silently (no status message unless error)
@@ -1719,15 +1662,6 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             if (!row && needleIdcode) {
               row = rows.find(r => (r.textContent || '').includes(needleIdcode)) || null
-            }
-            // Fallback: index-based mapping if table order appears to match
-            if (!row) {
-              try {
-                const idx = output.indexOf(student)
-                if (rows && rows[idx]) row = rows[idx]
-              } catch (e) {
-                row = null
-              }
             }
             if (!row) continue
             const isAP = rowHasAcademicLeave(row)
@@ -2153,7 +2087,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         if (r && r.journalStudentId != null) resultMap[String(r.journalStudentId).trim()] = r
       })
 
-      rows.forEach((row, rowIdx) => {
+      rows.forEach(row => {
         try {
           if (rowHasAcademicLeave(row)) return
           const cells = Array.from(row.children).filter(n => n.nodeType === 1)
@@ -2179,7 +2113,6 @@ class FinalGradesByOvFeature extends BaseFeature {
               }) || null
           }
 
-          if (!student) student = results.output[rowIdx] || null
           if (!student || student.finalGrade === null) return
 
           finalGradeCols.forEach(colIdx => {
