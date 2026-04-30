@@ -129,4 +129,16 @@ describe('DiscrepanciesTable - Lisa koik (Add all) button', () => {
     expect(table.lastMissingEntries.length).toBe(2)
     expect(table.lastMissingEntries[0].type).toBe('missingJournalEntry')
   })
+
+  test('button data-* attributes serialize array values as JSON', () => {
+    const rooms = [{ id: 1, nameEt: 'Room A' }, { id: 2, nameEt: 'Room B' }]
+    const entry = makeMissingEntry('2025-09-02', 7, 2)
+    entry.rooms = rooms
+
+    const container = renderTable([entry])
+    const lisaButton = container.querySelector('button[data-handler="addMissing"]')
+
+    expect(lisaButton).not.toBeNull()
+    expect(JSON.parse(lisaButton.dataset.rooms)).toEqual(rooms)
+  })
 })

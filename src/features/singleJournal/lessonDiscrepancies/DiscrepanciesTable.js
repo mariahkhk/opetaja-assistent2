@@ -864,7 +864,10 @@ export class DiscrepanciesTable {
    */
   #createButton(id, text, colorKey, data = {}, tooltip = '') {
     const dataAttributes = Object.entries(data)
-      .map(([key, value]) => `data-${key.toLowerCase()}="${String(value).replace(/"/g, '&quot;')}"`)
+      .map(([key, value]) => {
+        const serialized = value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value)
+        return `data-${key.toLowerCase()}="${serialized.replace(/"/g, '&quot;')}"`
+      })
       .join(' ')
     const idAttribute = id ? `id="${id}"` : ''
     const titleAttribute = tooltip ? `title="${tooltip}"` : ''
