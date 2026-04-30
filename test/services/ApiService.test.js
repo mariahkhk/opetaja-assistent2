@@ -172,6 +172,55 @@ describe('ApiService', () => {
       expect(result1).toEqual(result2)
     })
 
+    test('should not double-consume body when deduping in-flight GET requests', async () => {
+      let textCalls = 0
+      global.fetch = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        text: async () => {
+          textCalls++
+          if (textCalls > 1) throw new TypeError("Failed to execute 'text' on 'Response': body stream already read")
+          return JSON.stringify({ id: 1 })
+        }
+      }))
+
+      const [r1, r2] = await Promise.all([
+        apiService.get('/users', {}, { cache: false }),
+        apiService.get('/users', {}, { cache: false })
+      ])
+
+      expect(textCalls).toBe(1)
+      expect(r1).toEqual(r2)
+      expect(r1).toEqual({ id: 1 })
+      expect(r2).toEqual({ id: 1 })
+    })
+
+    test('should propagate the same API error to both joiners on non-OK responses', async () => {
+      let textCalls = 0
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => {
+          textCalls++
+          if (textCalls > 1) throw new TypeError("Failed to execute 'text' on 'Response': body stream already read")
+          return ''
+        }
+      }))
+
+      const results = await Promise.allSettled([
+        apiService.get('/users', {}, { cache: false }),
+        apiService.get('/users', {}, { cache: false })
+      ])
+
+      expect(textCalls).toBe(1)
+      expect(results[0].status).toBe('rejected')
+      expect(results[1].status).toBe('rejected')
+      expect(results[0].reason).toMatchObject({ status: 500 })
+      expect(results[1].reason).toMatchObject({ status: 500 })
+    })
+
     test('should not deduplicate different GET requests', async () => {
       const promise1 = apiService.get('/users', {}, { cache: false })
       const promise2 = apiService.get('/posts', {}, { cache: false })

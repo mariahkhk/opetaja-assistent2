@@ -476,6 +476,9 @@ class ApiService {
 
       // For GET requests, try to dedupe identical in-flight requests so multiple
       // callers don't trigger duplicate network traffic. We key by method+url.
+      // The shared promise resolves to a body-cached object (not the raw
+      // Response): a Response body stream can only be consumed once, so two
+      // callers awaiting the same Response would race on .text().
       let response
       if (method === 'GET') {
         const reqKey = `${method}_${urlString}`
@@ -483,14 +486,14 @@ class ApiService {
           if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Joining pending request: ${reqKey}`)
           response = await ApiService.pendingRequests[reqKey]
         } else {
-          // Create a fetch promise and store it
           const fetchPromise = (async() => {
-            try {
-              const r = await ApiService._throttledFetch(urlString, requestOptions)
-              if (!r.ok) throw r
-              return r
-            } catch (err) {
-              throw err
+            const r = await ApiService._throttledFetch(urlString, requestOptions)
+            const bodyText = await r.text()
+            return {
+              ok: r.ok,
+              status: r.status,
+              statusText: r.statusText,
+              text: () => Promise.resolve(bodyText)
             }
           })()
           ApiService.pendingRequests[reqKey] = fetchPromise
