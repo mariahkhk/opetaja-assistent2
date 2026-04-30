@@ -1,5 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test'
 import { restoreChromeMock } from '../../setup.js'
+import LessonDiscrepanciesFeature from '../../../src/features/singleJournal/lessonDiscrepancies/LessonDiscrepanciesFeature.js'
+import Logger from '../../../src/services/Logger.js'
 
 describe('LessonDiscrepanciesFeature - Utility Methods', () => {
   beforeEach(() => {
@@ -393,6 +395,53 @@ describe('LessonDiscrepanciesFeature - Utility Methods', () => {
         expect(defaultInfo.targetIndex).toBe(0)
         expect(defaultInfo.exactMatches).toEqual([])
       }
+    })
+  })
+
+  describe('getCapacityTypeProblems empty-entries guard (real class)', () => {
+    // Regression: Sentry TypeError "Cannot read properties of undefined (reading 'filter')"
+    // hit getCapacityTypeProblems when #performDetailedCapacityValidation's early-return path
+    // yielded undefined. The fix returns []. The try/catch in getCapacityTypeProblems would
+    // mask a regression by returning [] from its catch block, so we also assert that
+    // Logger.error was NOT called — that distinguishes the fixed path from the crash path.
+    let originalLoggerError
+    let loggerErrorCalls
+
+    beforeEach(() => {
+      // Outer beforeEach replaces global.chrome with a minimal mock missing
+      // chrome.storage. Restore the full mock from setup.js so BaseFeature's
+      // constructor (which reads chrome.storage.local) doesn't throw.
+      restoreChromeMock()
+      originalLoggerError = Logger.error
+      loggerErrorCalls = []
+      Logger.error = (...args) => { loggerErrorCalls.push(args) }
+    })
+
+    afterEach(() => {
+      Logger.error = originalLoggerError
+    })
+
+    test('returns [] without logging an error when entries is empty', async () => {
+      const feature = new LessonDiscrepanciesFeature()
+      const journalData = { entries: [], info: { lessonHours: { capacityHours: [] } } }
+
+      const result = await feature.getCapacityTypeProblems(journalData)
+
+      expect(result).toEqual([])
+      expect(loggerErrorCalls).toEqual([])
+    })
+
+    test('returns [] without logging an error when entries contain only non-target types', async () => {
+      const feature = new LessonDiscrepanciesFeature()
+      const journalData = {
+        entries: [{ entryType: 'SISSEKANNE_L', id: 1 }],
+        info: { lessonHours: { capacityHours: [] } }
+      }
+
+      const result = await feature.getCapacityTypeProblems(journalData)
+
+      expect(result).toEqual([])
+      expect(loggerErrorCalls).toEqual([])
     })
   })
 

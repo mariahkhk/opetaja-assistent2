@@ -205,7 +205,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       this.#lastJournalData = journalData
 
       const discrepancies = await this.#findLessonDiscrepancies(journalData, timetableData)
-      const capacityProblems = await this.#getCapacityTypeProblems(journalData)
+      const capacityProblems = await this.getCapacityTypeProblems(journalData)
 
       // Verify we're still on the correct page before inserting the table
       if (!this.isActive || !this.shouldActivate(window.location.href)) {
@@ -2244,7 +2244,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       const { journalData } = await this.#fetchJournalAndTimetableData(this.#currentJournalId, true)
 
       // Re-run unified validation
-      const _capacityProblems = await this.#getCapacityTypeProblems(journalData)
+      const _capacityProblems = await this.getCapacityTypeProblems(journalData)
 
       // Instead of only updating capacity problems (which hides timetable discrepancies),
       // perform a full table refresh so both timetable discrepancies and capacity problems
@@ -2271,7 +2271,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     this.#saveMonitoringSetup = false
   }
 
-  async #getCapacityTypeProblems(journalData) {
+  async getCapacityTypeProblems(journalData) {
     try {
       // First check if there's a discrepancy between planned and used hours for "MAHT_a"
       const capacityHours = journalData.info?.lessonHours?.capacityHours || []
@@ -2311,7 +2311,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     // Verify string comparison logic
 
     if (targetEntries.length === 0) {
-      return
+      return []
     }
 
     // Fetch detailed data for each target entry
