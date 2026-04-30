@@ -57,7 +57,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     maxWidth: '100%'
   }
 
-  #mapGradeToSchema(grade) {
+  mapGradeToSchema(grade) {
     let code = null,
       nameEt = '',
       nameEn = '',
@@ -99,7 +99,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     this._oaSyncRunning = true
     let allSuccess = true
     try {
-      const journalId = this.#extractJournalId()
+      const journalId = this.extractJournalId()
       const estDate = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Tallinn' })
       const gradeDate = estDate + 'T00:00:00.000Z'
       for (const ovNum of results.allOvNums) {
@@ -165,7 +165,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               return null
             }
             const lookupKey = `${studentId}|${ovNum}`
-            const mapped = this.#mapGradeToSchema(grade)
+            const mapped = this.mapGradeToSchema(grade)
             if (!mapped) return null
             const existing = freshGradesMap[lookupKey]
             // If an existing grade is present and it matches the mapped grade, skip to avoid a no-op update
@@ -314,7 +314,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           btn.style.background = '#ff9800'
           try {
             Logger.debug('✨ FinalGradesByOvFeature: Button click handler start (direct)')
-            const journalId = this.#extractJournalId()
+            const journalId = this.extractJournalId()
             Logger.debug('[DEBUG] Direct click: journalId:', journalId)
             if (!journalId) {
               Logger.error('[DEBUG] Direct click: No journalId found!')
@@ -599,7 +599,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         btn.style.background = '#ff9800'
         try {
           Logger.debug('✨ FinalGradesByOvFeature: Button click handler start (delegated)')
-          const journalId = this.#extractJournalId()
+          const journalId = this.extractJournalId()
           Logger.debug('[DEBUG] Delegated click: journalId:', journalId)
           if (!journalId) {
             Logger.error('[DEBUG] Delegated click: No journalId found!')
@@ -709,7 +709,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 }
                 lastSnapshot = snapshot
                 Logger.debug('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating grade diffs')
-                const journalId = this.#extractJournalId()
+                const journalId = this.extractJournalId()
                 if (!journalId) return
                 let newEntries, newStudents
                 if (this._lastJournalId && this._lastJournalId === journalId && this._lastEntries && this._lastStudents) {
@@ -802,7 +802,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     }
   }
 
-  #extractJournalId() {
+  extractJournalId() {
     const match = window.location.href.match(/\/journal\/(\d+)/)
     return match ? match[1] : null
   }
@@ -884,7 +884,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
         // If studentOutcomeResults is missing, fetch detailed outcome data
         if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
-          const journalId = this.#extractJournalId()
+          const journalId = this.extractJournalId()
           studentOutcomeResults = await this.#fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, students, {
             output: 'studentOutcomeResults'
           })
@@ -1076,7 +1076,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   // - 'mitte' (Mitteeristav hindamine): numeric 3-5 -> A, 2 (and 1) -> MA; final = A if all OV grades are A and none ungraded, otherwise MA
   // - 'eristav' (Eristav hindamine): A -> 5, MA or ungraded -> 2, final = rounded average of all grades
   // Assumptions: grade '1' is treated as worst-case and maps to MA under 'mitte'; unknown tokens treated as ungraded or MA when sensible.
-  #applyGradingModeToResults(results, mode) {
+  applyGradingModeToResults(results, mode) {
     try {
       if (!results || !Array.isArray(results.output)) return
       const out = results.output
@@ -1207,7 +1207,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           if (ovNum) {
             const studentOutcomeResults = entry.studentOutcomeResults
             if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
-              const journalId = this.#extractJournalId()
+              const journalId = this.extractJournalId()
               const map = await this.#fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, [], { output: 'existingGradesMap', ovNum })
               Object.assign(existingGradesMap, map)
             } else if (studentOutcomeResults) {
@@ -1234,7 +1234,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         let journalAssessment = this._journalAssessment || ''
         if (!journalAssessment) {
           try {
-            const journalId = this.#extractJournalId()
+            const journalId = this.extractJournalId()
             if (journalId) {
               const j = await this.api.tahvel.get(`/journals/${journalId}`)
               if (j && j.assessment) journalAssessment = String(j.assessment || '')
@@ -1282,7 +1282,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           modeToApply = shouldUseMitte ? 'mitte' : hasNumeric ? 'eristav' : ''
         }
       }
-      if (modeToApply) this.#applyGradingModeToResults(results, modeToApply)
+      if (modeToApply) this.applyGradingModeToResults(results, modeToApply)
     } catch (e) {
       Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode before computing diffs', e)
     }
@@ -1327,7 +1327,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         let journalAssessment = this._journalAssessment || ''
         if (!journalAssessment) {
           try {
-            const journalId = this.#extractJournalId()
+            const journalId = this.extractJournalId()
             if (journalId) {
               const j = await this.api.tahvel.get(`/journals/${journalId}`)
               if (j && j.assessment) journalAssessment = String(j.assessment || '')
@@ -1421,7 +1421,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             try {
               const selected = sel.value
-              this.#applyGradingModeToResults(results, selected)
+              this.applyGradingModeToResults(results, selected)
               // Re-run showResults to update highlights/UI without auto-sync
               setTimeout(() => {
                 try {
@@ -1487,7 +1487,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             // Apply initial grading mode to computed results
             try {
               const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
-              if (initialMode) this.#applyGradingModeToResults(results, initialMode)
+              if (initialMode) this.applyGradingModeToResults(results, initialMode)
             } catch (e) {
               Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode', e)
             }
@@ -1539,7 +1539,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 // Apply initial grading mode mapping if user hasn't changed selection
                 try {
                   const toApply = existingSelect.value || defaultMode
-                  if (toApply) this.#applyGradingModeToResults(results, toApply)
+                  if (toApply) this.applyGradingModeToResults(results, toApply)
                 } catch (e) {
                   Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode for existing select', e)
                 }
@@ -2243,7 +2243,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         // Determine default mode similar to #showResults logic
         if (!journalAssessment) {
           try {
-            const journalId = this.#extractJournalId()
+            const journalId = this.extractJournalId()
             if (journalId) {
               const j = await this.api.tahvel.get(`/journals/${journalId}`)
               if (j && j.assessment) journalAssessment = String(j.assessment || '')
@@ -2295,7 +2295,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         // Apply initial grading mode to results so subsequent logic uses mapped finalGrade
         try {
           const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
-          if (initialMode) this.#applyGradingModeToResults(results, initialMode)
+          if (initialMode) this.applyGradingModeToResults(results, initialMode)
         } catch (e) {
           Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode for L flow', e)
         }
@@ -2310,7 +2310,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             try {
               const selected = sel.value
-              this.#applyGradingModeToResults(results, selected)
+              this.applyGradingModeToResults(results, selected)
               // Re-run L show results in non-auto mode to refresh UI/highlights only
               try {
                 await this.showLGradeResults(results, button, lastEntries, { autoSync: false })
@@ -2330,7 +2330,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     }
 
     try {
-      const journalId = this.#extractJournalId()
+      const journalId = this.extractJournalId()
       // Find the SISSEKANNE_L entry
       const lEntry = (lastEntries || []).find(e => e.entryType === 'SISSEKANNE_L')
       if (!lEntry) {
@@ -2661,7 +2661,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
       // Set current value if one exists in the cell
       const currentText = (cell.innerText || cell.textContent || '').trim()
-      const currentGrade = this.#extractGradeFromText(currentText)
+      const currentGrade = this.extractGradeFromText(currentText)
       if (currentGrade && grades.some(g => g.value === currentGrade)) {
         select.value = currentGrade
       }
@@ -2756,7 +2756,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   // Extract grade value from text content
-  #extractGradeFromText(text) {
+  extractGradeFromText(text) {
     if (!text) return ''
     const cleaned = text.trim().toUpperCase()
     if (['1', '2', '3', '4', '5'].includes(cleaned)) return cleaned
@@ -2832,7 +2832,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             lastSnapshot = snapshot
             Logger.debug('✨ FinalGradesByOvFeature: Detected meaningful DOM change — re-evaluating L diffs')
-            const journalId = this.#extractJournalId()
+            const journalId = this.extractJournalId()
             if (!journalId) return
             const [newEntries, newStudents] = await Promise.all([
               this.api.tahvel.get(`/journals/${journalId}/journalEntriesByDate`, { allStudents: true }, { cache: false }),

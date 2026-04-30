@@ -9,7 +9,7 @@ import { ApiService } from '../services/ApiService.js'
 /**
  * Get the current Tahvel base URL based on the current domain
  */
-function getTahvelBaseUrl() {
+export function getTahvelBaseUrl() {
   const hostname = window.location.hostname
   if (hostname.includes('test.tahvel.eenet.ee')) {
     return 'https://test.tahvel.eenet.ee/hois_back'

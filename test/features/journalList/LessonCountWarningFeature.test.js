@@ -1,4 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
+import { JSDOM } from 'jsdom'
 import LessonCountWarningFeature from '../../../src/features/journalList/lessonCountWarning/LessonCountWarningFeature.js'
 import { cacheService } from '../../../src/services/CacheService.js'
 import Logger from '../../../src/services/Logger.js'
@@ -452,55 +453,75 @@ describe('LessonCountWarningFeature', () => {
   })
 
   describe('addWarningIndicator', () => {
-    test('should calculate correct tooltip for extra lessons (plural)', () => {
-      const domCount = 13
-      const timetableCount = 10
-      const difference = domCount - timetableCount
-      expect(difference).toBe(3)
-      expect(`Päevikus on ${difference} liigset tundi`).toBe('Päevikus on 3 liigset tundi')
+    let dom
+    let originalDocument
+
+    beforeEach(() => {
+      dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+      originalDocument = global.document
+      global.document = dom.window.document
     })
 
-    test('should calculate correct tooltip for one extra lesson (singular)', () => {
-      const domCount = 11
-      const timetableCount = 10
-      const difference = domCount - timetableCount
-      expect(difference).toBe(1)
-      expect(`Päevikus on ${difference} liigne tund`).toBe('Päevikus on 1 liigne tund')
+    afterEach(() => {
+      global.document = originalDocument
     })
 
-    test('should calculate correct tooltip for missing lessons (plural)', () => {
-      const domCount = 8
-      const timetableCount = 10
-      const absDifference = Math.abs(domCount - timetableCount)
-      expect(absDifference).toBe(2)
-      expect(`Päevikus puudub ${absDifference} tundi`).toBe('Päevikus puudub 2 tundi')
+    function makeLinkInDOM() {
+      const cell = global.document.createElement('td')
+      const link = global.document.createElement('a')
+      link.href = '#/journal/123'
+      link.textContent = 'Test Journal'
+      cell.appendChild(link)
+      global.document.body.appendChild(cell)
+      return link
+    }
+
+    test('sets plural Estonian tooltip for multiple extra lessons', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 13, timetableCount: 10 })
+      const indicator = global.document.querySelector('.oa-warning-indicator')
+      expect(indicator).not.toBeNull()
+      expect(indicator.title).toBe('Päevikus on 3 liigset tundi')
+      expect(indicator.textContent).toBe('📅')
     })
 
-    test('should calculate correct tooltip for one missing lesson (singular)', () => {
-      const domCount = 9
-      const timetableCount = 10
-      const absDifference = Math.abs(domCount - timetableCount)
-      expect(absDifference).toBe(1)
-      expect(`Päevikus puudub ${absDifference} tund`).toBe('Päevikus puudub 1 tund')
+    test('sets singular Estonian tooltip for one extra lesson', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 11, timetableCount: 10 })
+      const indicator = global.document.querySelector('.oa-warning-indicator')
+      expect(indicator.title).toBe('Päevikus on 1 liigne tund')
     })
 
-    test('should not add duplicate indicators', () => {
-      const mockLinkElement = {
-        parentElement: {
-          querySelector: mock(() => ({ className: 'oa-warning-indicator' }))
-        }
-      }
+    test('sets plural Estonian tooltip for multiple missing lessons', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 8, timetableCount: 10 })
+      const indicator = global.document.querySelector('.oa-warning-indicator')
+      expect(indicator.title).toBe('Päevikus puudub 2 tundi')
+    })
 
-      const discrepancy = {
-        journalId: 123,
-        domCount: 12,
-        timetableCount: 10
-      }
+    test('sets singular Estonian tooltip for one missing lesson', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 9, timetableCount: 10 })
+      const indicator = global.document.querySelector('.oa-warning-indicator')
+      expect(indicator.title).toBe('Päevikus puudub 1 tund')
+    })
 
-      feature.addWarningIndicator(mockLinkElement, discrepancy)
+    test('wraps the link in a span with the indicator appended', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 11, timetableCount: 10 })
+      const wrapper = link.parentElement
+      expect(wrapper.tagName).toBe('SPAN')
+      expect(wrapper.children.length).toBe(2)
+      expect(wrapper.children[0]).toBe(link)
+      expect(wrapper.children[1].classList.contains('oa-warning-indicator')).toBe(true)
+    })
 
-      // Should return early without calling insertBefore
-      expect(mockLinkElement.parentElement.querySelector).toHaveBeenCalledWith('.oa-warning-indicator')
+    test('does not add a duplicate indicator when one already exists', () => {
+      const link = makeLinkInDOM()
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 12, timetableCount: 10 })
+      feature.addWarningIndicator(link, { journalId: 123, domCount: 12, timetableCount: 10 })
+      const indicators = global.document.querySelectorAll('.oa-warning-indicator')
+      expect(indicators.length).toBe(1)
     })
   })
 

@@ -41,7 +41,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   #tableObserver = null
   #dialogObserver = null
   #isRefreshing = false
-  #lastJournalData = null
+  lastJournalData = null
   #originalFetch = null
   #problematicEntriesCache = null
   #dialogCloseObserver = null
@@ -61,10 +61,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     // Initialize the table class
     this.table = new DiscrepanciesTable({
       api: this.api,
-      formatDate: this.#formatDisplayDate,
-      extractJournalId: () => this.#extractJournalId(),
+      formatDate: this.formatDisplayDate,
+      extractJournalId: () => this.extractJournalId(),
       calculateDuplicateIndex: discrepancy => this.#calculateDuplicateIndex(discrepancy),
-      findDuplicateMatches: (entryId, date) => this.#findDuplicateMatches(entryId, date),
+      findDuplicateMatches: (entryId, date) => this.findDuplicateMatches(entryId, date),
       addDiscrepancyButtonListeners: () => this.#addDiscrepancyButtonListeners(),
       shouldContinue: () => this.isActive && this.shouldActivate(window.location.href)
     })
@@ -99,7 +99,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
   #delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-  #formatDate = date => {
+  formatDate = date => {
     try {
       // Handle null, undefined, or empty values
       if (!date) {
@@ -111,7 +111,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #formatDisplayDate = date => {
+  formatDisplayDate = date => {
     // Handle null, undefined, or empty values
     if (!date) {
       return 'Invalid Date'
@@ -151,13 +151,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0' && rect.width > 0 && rect.height > 0
   }
 
-  #extractJournalId = () => {
+  extractJournalId = () => {
     const match = window.location.href.match(/\/journal\/(\d+)/) || window.location.href.match(/journalId[=:](\d+)/i)
     return match ? parseInt(match[1], 10) : null
   }
 
   async #clearStaleCache() {
-    const journalId = this.#extractJournalId()
+    const journalId = this.extractJournalId()
     if (journalId) {
       await cacheService.clearJournalCache(journalId)
     }
@@ -195,14 +195,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
     this.#lastRefreshTs = now
     try {
-      const journalId = this.#extractJournalId()
+      const journalId = this.extractJournalId()
       if (!journalId) {
         this.#refreshInProgress = false
         return
       }
 
       const { journalData, timetableData } = await this.#fetchJournalAndTimetableData(journalId, forceRefresh)
-      this.#lastJournalData = journalData
+      this.lastJournalData = journalData
 
       const discrepancies = await this.#findLessonDiscrepancies(journalData, timetableData)
       const capacityProblems = await this.getCapacityTypeProblems(journalData)
@@ -265,7 +265,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #getCurrentStudyYearDates() {
+  getCurrentStudyYearDates() {
     const now = new Date()
     const studyYear = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()
     return {
@@ -284,7 +284,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     try {
       const teacherId = info.journalTeachers?.[0]?.id
       if (!teacherId || !schoolId) return []
-      const { from: defaultFrom, thru: defaultThru } = this.#getCurrentStudyYearDates()
+      const { from: defaultFrom, thru: defaultThru } = this.getCurrentStudyYearDates()
       const from = info.studyYearStartDate ?? defaultFrom
       const thru = info.studyYearEndDate ?? defaultThru
       const endpoint = `/timetableevents/timetableByTeacher/${schoolId}?from=${from}&lang=ET&teachers=${teacherId}&thru=${thru}`
@@ -305,7 +305,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #fetchLessonTimes(schoolId) {
+  async fetchLessonTimes(schoolId) {
     if (!schoolId) return []
     try {
       return await new Promise((resolve, reject) => {
@@ -327,8 +327,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #calculateLessonNumber(timeStart, schoolId) {
-    const times = await this.#fetchLessonTimes(schoolId)
+  async calculateLessonNumber(timeStart, schoolId) {
+    const times = await this.fetchLessonTimes(schoolId)
     if (!timeStart || !times.length) return 1
 
     const exactMatch = times.find(lesson => lesson.timeStart === timeStart)
@@ -347,13 +347,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }).number
   }
 
-  #aggregateJournalEntries(entries) {
+  aggregateJournalEntries(entries) {
     return entries.reduce((aggregated, entry) => {
       if (!LessonDiscrepanciesFeature.JOURNAL_ENTRY_CONTACT_TYPES.includes(entry.entryType)) {
         return aggregated
       }
 
-      const date = this.#formatDate(entry.entryDate)
+      const date = this.formatDate(entry.entryDate)
       aggregated[date] ??= {
         count: 0,
         start: Infinity,
@@ -368,16 +368,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }, {})
   }
 
-  async #aggregateTimetableEvents(events, schoolId) {
+  async aggregateTimetableEvents(events, schoolId) {
     const stats = {}
     for (const event of events) {
-      const date = this.#formatDate(event.date)
+      const date = this.formatDate(event.date)
       stats[date] ??= {
         count: 0,
         start: Infinity
       }
 
-      const lessonNumber = await this.#calculateLessonNumber(event.timeStart, schoolId)
+      const lessonNumber = await this.calculateLessonNumber(event.timeStart, schoolId)
       const validLessonNumber = Number(lessonNumber)
       stats[date].count++
       stats[date].start = Math.min(stats[date].start, validLessonNumber)
@@ -387,8 +387,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
   async #findLessonDiscrepancies(journal, timetable) {
     const schoolId = journal.schoolId
-    const journalStats = this.#aggregateJournalEntries(journal.entries)
-    const timetableStats = await this.#aggregateTimetableEvents(timetable, schoolId)
+    const journalStats = this.aggregateJournalEntries(journal.entries)
+    const timetableStats = await this.aggregateTimetableEvents(timetable, schoolId)
 
     const allDates = [...new Set([...Object.keys(journalStats), ...Object.keys(timetableStats)])]
 
@@ -425,7 +425,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       const { date, journal: journalData, timetable: timetableData } = difference
       const { count: journalCount, start: journalStart, entries } = journalData
       const { count: timetableCount, start: timetableStart } = timetableData
-      const timetableEntries = timetable.filter(event => this.#formatDate(event.date) === date)
+      const timetableEntries = timetable.filter(event => this.formatDate(event.date) === date)
 
       if (!journalCount && timetableCount) {
         await this.#createMissingLessonDiscrepancies(
@@ -482,7 +482,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         timeEnd: entry.timeEnd,
         name: entry.nameEt || journal.info.nameEt,
         rooms: entry.rooms ?? [],
-        lessonNumber: await this.#calculateLessonNumber(entry.timeStart, schoolId),
+        lessonNumber: await this.calculateLessonNumber(entry.timeStart, schoolId),
         type: 'missingJournalEntry'
       }))
     )
@@ -538,13 +538,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   #calculateDuplicateIndex(discrepancy) {
     // Use the same logic as #findJournalEntryElement to ensure consistency
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] calculateDuplicateIndex called with:`, discrepancy)
-    const duplicateInfo = this.#findDuplicateMatches(discrepancy.entryId, discrepancy.date)
+    const duplicateInfo = this.findDuplicateMatches(discrepancy.entryId, discrepancy.date)
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] calculateDuplicateIndex result: targetIndex=${duplicateInfo.targetIndex}`)
     return duplicateInfo.targetIndex
   }
 
-  #findDuplicateMatches(entryId, date) {
-    if (!this.#lastJournalData?.entries) {
+  findDuplicateMatches(entryId, date) {
+    if (!this.lastJournalData?.entries) {
       Logger.warning(`No journal data available for findDuplicateMatches`)
       return {
         exactMatches: [],
@@ -552,7 +552,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
     }
 
-    const targetEntry = this.#lastJournalData.entries.find(entry => entry.id == entryId)
+    const targetEntry = this.lastJournalData.entries.find(entry => entry.id == entryId)
     if (!targetEntry) {
       Logger.warning(`Target entry ${entryId} not found in journal data`)
       return {
@@ -567,7 +567,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       dateSearchCriteria = '-'
       if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Searching for null date entries (showing as "-")`)
     } else {
-      dateSearchCriteria = this.#formatDisplayDate(date).slice(0, 5)
+      dateSearchCriteria = this.formatDisplayDate(date).slice(0, 5)
       if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Searching for date prefix: ${dateSearchCriteria}`)
     }
 
@@ -635,7 +635,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Find all duplicate entries in API data, sorted by ID (for consistent ordering)
     // Handle null dates specially since they need to match by null status, not formatted value
-    const duplicateEntries = this.#lastJournalData.entries.filter(entry => {
+    const duplicateEntries = this.lastJournalData.entries.filter(entry => {
       // For null dates, both entries must have null/undefined entryDate
       const targetDateIsNull = !targetEntry.entryDate
       const entryDateIsNull = !entry.entryDate
@@ -647,10 +647,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Both entries have null dates - match: ${entry.id}`)
       } else if (!targetDateIsNull && !entryDateIsNull) {
         // Both have dates - compare formatted dates
-        dateMatches = this.#formatDate(entry.entryDate) === this.#formatDate(targetEntry.entryDate)
+        dateMatches = this.formatDate(entry.entryDate) === this.formatDate(targetEntry.entryDate)
         if (Logger.isDebugMode())
           Logger.debug(
-            `[${this.name}] Comparing formatted dates: ${this.#formatDate(entry.entryDate)} === ${this.#formatDate(targetEntry.entryDate)} = ${dateMatches}`
+            `[${this.name}] Comparing formatted dates: ${this.formatDate(entry.entryDate)} === ${this.formatDate(targetEntry.entryDate)} = ${dateMatches}`
           )
       } else {
         // One is null, one isn't - no match
@@ -947,7 +947,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       fixCapacity: () => {
         if (Logger.isDebugMode()) {
           Logger.debug(`[${this.name}] Calling handleFixCapacity with:`, { date: data.date, entryId: data.entryId })
-          Logger.debug(`[${this.name}] Date formatting test - input: ${data.date}, output: ${this.#formatDisplayDate(data.date)}`)
+          Logger.debug(`[${this.name}] Date formatting test - input: ${data.date}, output: ${this.formatDisplayDate(data.date)}`)
         }
         return this.#handleFixCapacity(data.date, data.entryId, data)
       },
@@ -1042,7 +1042,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
       }
 
-      const journalId = this.#currentJournalId || this.#extractJournalId()
+      const journalId = this.#currentJournalId || this.extractJournalId()
       if (journalId) {
         try {
           await cacheService.clearJournalCache(journalId)
@@ -1089,18 +1089,18 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   // helpers (#findAndClickAddButton and #fillAddForm).
   // Immediately create a missing journal entry (no confirmation UI).
   async #createMissingEntryDirect({ date, start, count, timetableData = {}, skipReload = false } = {}) {
-    const journalId = this.#currentJournalId || this.#extractJournalId()
+    const journalId = this.#currentJournalId || this.extractJournalId()
     if (!journalId) throw new Error('Journal ID puudub')
 
     const effectiveStart = timetableData.timetablestart ?? timetableData.timetableStart ?? start ?? 1
     const effectiveCount = timetableData.timetablecount ?? timetableData.timetableCount ?? count ?? 1
-    const teacherId = this.#lastJournalData?.info?.journalTeachers?.[0]?.id
+    const teacherId = this.lastJournalData?.info?.journalTeachers?.[0]?.id
 
     const payload = {
       startLessonNr: Number(effectiveStart),
       lessons: Number(effectiveCount),
       entryType: LessonDiscrepanciesFeature.JOURNAL_ENTRY_DEFAULT_TYPE,
-      nameEt: timetableData.name || this.#lastJournalData?.info?.nameEt || 'Tund',
+      nameEt: timetableData.name || this.lastJournalData?.info?.nameEt || 'Tund',
       studyPeriodEvent: null,
       journalOmoduleTheme: null,
       entryDate: new Date(date).toISOString(),
@@ -1221,7 +1221,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       // Preferred flow: perform a server-side fetch -> modify -> PUT to update the entry
-      const journalId = this.#currentJournalId || this.#extractJournalId()
+      const journalId = this.#currentJournalId || this.extractJournalId()
       if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
         try {
           const detailUrl = `/journals/${journalId}/journalEntry/${actualEntryId}`
@@ -1252,7 +1252,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           if (data.name) putPayload.nameEt = data.name
 
           // Normalize teacher ids: use current first teacher or the journal's first teacher
-          const teacherIdFromJournal = this.#lastJournalData?.info?.journalTeachers?.[0]?.id
+          const teacherIdFromJournal = this.lastJournalData?.info?.journalTeachers?.[0]?.id
           if (!Array.isArray(putPayload.journalEntryTeachers) || putPayload.journalEntryTeachers.length === 0) {
             putPayload.journalEntryTeachers = teacherIdFromJournal ? [Number(teacherIdFromJournal)] : []
           } else {
@@ -1351,7 +1351,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   async #fillAddForm(date, start, count, timetableData) {
-    const formattedDate = this.#formatDisplayDate(date)
+    const formattedDate = this.formatDisplayDate(date)
     const effectiveStart = timetableData.timetablestart || timetableData.timetableStart || start
     const effectiveCount = timetableData.timetablecount || timetableData.timetableCount || count
 
@@ -1625,7 +1625,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       if (annotatedRow) return annotatedRow
     }
 
-    const { exactMatches, targetIndex } = this.#findDuplicateMatches(entryId, date)
+    const { exactMatches, targetIndex } = this.findDuplicateMatches(entryId, date)
 
     Logger.debug(
       `[${this.name}] findJournalEntryElement: entryId=${entryId}, date=${date}, exactMatches.length=${exactMatches.length}, targetIndex=${targetIndex}`
@@ -1637,15 +1637,15 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       // For null dates, we need to find all independent work entries with "-" date
       // and use the position-based matching from the journal data
-      if (date === 'NO_DATE' && this.#lastJournalData?.entries) {
-        const targetEntry = this.#lastJournalData.entries.find(entry => entry.id == entryId)
+      if (date === 'NO_DATE' && this.lastJournalData?.entries) {
+        const targetEntry = this.lastJournalData.entries.find(entry => entry.id == entryId)
         if (!targetEntry) {
           Logger.error(`[${this.name}] Target entry ${entryId} not found in journal data for fallback`)
           return null
         }
 
         // Find all null date entries of the same type in the journal data
-        const nullDateEntries = this.#lastJournalData.entries
+        const nullDateEntries = this.lastJournalData.entries
           .filter(entry => !entry.entryDate && entry.entryType === targetEntry.entryType)
           .sort((a, b) => a.id - b.id)
 
@@ -1721,7 +1721,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       if (date === 'NO_DATE') {
         dateSearchCriteria = '-'
       } else {
-        dateSearchCriteria = this.#formatDisplayDate(date).slice(0, 5)
+        dateSearchCriteria = this.formatDisplayDate(date).slice(0, 5)
       }
 
       const allRows = document.querySelectorAll(
@@ -1767,9 +1767,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    */
   #findEntryInNewTahvel(entryId) {
     const headers = document.querySelectorAll('th.header-cell')
-    if (headers.length === 0 || !this.#lastJournalData?.entries) return null
+    if (headers.length === 0 || !this.lastJournalData?.entries) return null
 
-    const entries = this.#lastJournalData.entries
+    const entries = this.lastJournalData.entries
 
     if (headers.length !== entries.length) {
       Logger.warning(`[${this.name}] New Tahvel: header/entry count mismatch (${headers.length} headers, ${entries.length} entries) - skipping positional match`)
@@ -2940,7 +2940,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         stringLength: typeof date === 'string' ? date.length : 'N/A'
       })
 
-      const formattedDate = this.#formatDisplayDate(date)
+      const formattedDate = this.formatDisplayDate(date)
       Logger.debug(`[${this.name}] Date formatting result:`, {
         input: date,
         output: formattedDate,
@@ -2951,10 +2951,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       Logger.debug(`[${this.name}] handleFixCapacity called with entryId=${entryId}, data.entryid=${data.entryid}, actualEntryId=${actualEntryId}`)
 
       // Try to refresh journal data if it's missing
-      if (!this.#lastJournalData && this.#currentJournalId) {
+      if (!this.lastJournalData && this.#currentJournalId) {
         try {
           const { journalData } = await this.#fetchJournalAndTimetableData(this.#currentJournalId, true)
-          this.#lastJournalData = journalData
+          this.lastJournalData = journalData
         } catch (refreshError) {
           Logger.error(`[${this.name}] Failed to refresh journal data:`, refreshError)
         }
@@ -2962,7 +2962,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       // Attempt server-side capacity fix first: fetch detailed entry and PUT modified payload
       try {
-        const journalId = this.#currentJournalId || this.#extractJournalId()
+        const journalId = this.#currentJournalId || this.extractJournalId()
         if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
           const detailUrl = `/journals/${journalId}/journalEntry/${actualEntryId}`
           // Fetch fresh detailed entry (no cache)
@@ -2984,8 +2984,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 safeCopy.journalEntryTeachers = [String(sel.id)]
                 // Preserve teacherSelection but ensure id is string
                 safeCopy.teacherSelection = detailedEntry.teacherSelection.map(t => ({ ...t, id: String(t.id) }))
-              } else if (this.#lastJournalData?.info?.journalTeachers && this.#lastJournalData.info.journalTeachers.length > 0) {
-                const fallback = this.#lastJournalData.info.journalTeachers[0]
+              } else if (this.lastJournalData?.info?.journalTeachers && this.lastJournalData.info.journalTeachers.length > 0) {
+                const fallback = this.lastJournalData.info.journalTeachers[0]
                 safeCopy.journalEntryTeachers = [String(fallback.id)]
                 safeCopy.teacherSelection = [{ id: String(fallback.id), displayName: fallback.displayName || fallback.name || '' }]
               } else {
@@ -3019,7 +3019,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 }
                 try {
                   const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
-                  this.#lastJournalData = journalData
+                  this.lastJournalData = journalData
                 } catch (e) {
                   Logger.debug(`[${this.name}] refresh after focused PUT failed:`, e)
                 }
@@ -3069,8 +3069,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
               if (!Array.isArray(safeCopy.journalEntryTeachers) || safeCopy.journalEntryTeachers.length === 0) {
                 if (Array.isArray(detailedEntry.teacherSelection) && detailedEntry.teacherSelection.length > 0) {
                   safeCopy.journalEntryTeachers = [String(detailedEntry.teacherSelection[0].id)]
-                } else if (this.#lastJournalData?.info?.journalTeachers && this.#lastJournalData.info.journalTeachers.length > 0) {
-                  safeCopy.journalEntryTeachers = [String(this.#lastJournalData.info.journalTeachers[0].id)]
+                } else if (this.lastJournalData?.info?.journalTeachers && this.lastJournalData.info.journalTeachers.length > 0) {
+                  safeCopy.journalEntryTeachers = [String(this.lastJournalData.info.journalTeachers[0].id)]
                 } else {
                   safeCopy.journalEntryTeachers = []
                 }
@@ -3094,7 +3094,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 }
                 try {
                   const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
-                  this.#lastJournalData = journalData
+                  this.lastJournalData = journalData
                 } catch (e) {
                   Logger.debug(`[${this.name}] refresh after focused PUT failed:`, e)
                 }
@@ -3175,7 +3175,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 // Re-fetch journal data to reflect changes
                 try {
                   const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
-                  this.#lastJournalData = journalData
+                  this.lastJournalData = journalData
                 } catch (reErr) {
                   Logger.debug(`[${this.name}] failed to refresh journal data after PUT:`, reErr)
                 }
@@ -3222,11 +3222,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           actualEntryId,
           date,
           duplicateIndex,
-          formattedDate: this.#formatDisplayDate(date),
-          datePrefix: this.#formatDisplayDate(date).slice(0, 5),
-          hasJournalData: !!this.#lastJournalData,
-          entriesInCache: this.#lastJournalData?.entries?.length || 0,
-          targetEntryExists: !!(this.#lastJournalData?.entries ?? []).find(entry => entry.id == actualEntryId),
+          formattedDate: this.formatDisplayDate(date),
+          datePrefix: this.formatDisplayDate(date).slice(0, 5),
+          hasJournalData: !!this.lastJournalData,
+          entriesInCache: this.lastJournalData?.entries?.length || 0,
+          targetEntryExists: !!(this.lastJournalData?.entries ?? []).find(entry => entry.id == actualEntryId),
           rowsFound: document.querySelectorAll('tr[ng-click*="editJournalEntry"]').length,
           clickableRowsFound: document.querySelectorAll('tr[ng-click*="editJournalEntry"], tr[onclick*="editJournalEntry"]').length,
           allTableRows: document.querySelectorAll('tr').length
@@ -3262,8 +3262,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       // Fallback to journal data if not found in problematic entries cache
-      if (!entryData && this.#lastJournalData?.entries) {
-        entryData = this.#lastJournalData.entries.find(e => e.id == entryId)
+      if (!entryData && this.lastJournalData?.entries) {
+        entryData = this.lastJournalData.entries.find(e => e.id == entryId)
         if (entryData) {
           // Note: validationResult will be null in this case
         }
@@ -3310,7 +3310,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // Special handling for teacher validation issues: try server-side assignment BEFORE opening the dialog
       if (validationResult?.errorType === 'no_teacher_selected') {
         try {
-          const journalId = this.#currentJournalId || this.#extractJournalId()
+          const journalId = this.#currentJournalId || this.extractJournalId()
           if (journalId && entryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
             const detailUrl = `/journals/${journalId}/journalEntry/${entryId}`
             const detailedEntry = await this.api.tahvel.get(detailUrl, { allStudents: true }, { cache: false, cacheExpiration: 0 })
@@ -3322,7 +3322,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 teacherId = detailedEntry.teacherSelection[0].id
               }
               if (!teacherId) {
-                teacherId = this.#lastJournalData?.info?.journalTeachers?.[0]?.id
+                teacherId = this.lastJournalData?.info?.journalTeachers?.[0]?.id
               }
 
               if (teacherId) {
@@ -3331,8 +3331,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 let teacherObj = null
                 if (Array.isArray(detailedEntry.teacherSelection) && detailedEntry.teacherSelection.length > 0) {
                   teacherObj = detailedEntry.teacherSelection.find(t => Number(t.id) === Number(teacherId)) || detailedEntry.teacherSelection[0]
-                } else if (this.#lastJournalData?.info?.journalTeachers) {
-                  teacherObj = this.#lastJournalData.info.journalTeachers.find(t => Number(t.id) === Number(teacherId)) || null
+                } else if (this.lastJournalData?.info?.journalTeachers) {
+                  teacherObj = this.lastJournalData.info.journalTeachers.find(t => Number(t.id) === Number(teacherId)) || null
                 }
 
                 // Server expects teacher ids as strings in some cases; use string form to match example payload
@@ -3354,7 +3354,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                   safeCopy.teacherSelection = safeCopy.teacherSelection.map(t => ({ ...t, id: String(t.id) }))
                 } else {
                   // No teacher metadata available - set minimal teacherSelection using journal info if present
-                  const fallbackTeacher = this.#lastJournalData?.info?.journalTeachers?.find(t => Number(t.id) === Number(teacherId))
+                  const fallbackTeacher = this.lastJournalData?.info?.journalTeachers?.find(t => Number(t.id) === Number(teacherId))
                   if (fallbackTeacher) {
                     safeCopy.teacherSelection = [
                       { id: String(fallbackTeacher.id), displayName: fallbackTeacher.displayName || fallbackTeacher.name || '' }
@@ -3386,7 +3386,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                   }
                   try {
                     const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
-                    this.#lastJournalData = journalData
+                    this.lastJournalData = journalData
                   } catch (e) {
                     Logger.debug(`[${this.name}] refresh after teacher PUT failed:`, e)
                   }

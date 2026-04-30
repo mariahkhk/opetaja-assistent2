@@ -131,7 +131,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       let hasAnyDiscrepancy = false
 
       for (const journal of journals) {
-        const hasDiscrepancy = await this.#checkJournalDiscrepancy(journal)
+        const hasDiscrepancy = await this.checkJournalDiscrepancy(journal)
         if (hasDiscrepancy) {
           hasAnyDiscrepancy = true
           break // Found at least one discrepancy, no need to check more
@@ -183,12 +183,11 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
 
   /**
    * Check if a single journal has timetable discrepancies
-   * @private
    */
-  async #checkJournalDiscrepancy(journal) {
+  async checkJournalDiscrepancy(journal) {
     try {
       // Get actual lesson count from journal (MAHT_a only)
-      const actualLessonCount = this.#getLessonCountFromJournal(journal)
+      const actualLessonCount = this.getLessonCountFromJournal(journal)
       if (actualLessonCount === null) {
         return false
       }
@@ -207,7 +206,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       const timetableLessons = await this.#getTimetableLessons(journal.id, teacherIds)
 
       // Count past lessons
-      const pastTimetableLessons = this.#countPastLessons(timetableLessons)
+      const pastTimetableLessons = this.countPastLessons(timetableLessons)
 
       // Flag discrepancy when journal and timetable lesson counts don't match
       return pastTimetableLessons !== actualLessonCount
@@ -221,9 +220,8 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
 
   /**
    * Get contact lesson count from journal object (MAHT_a + MAHT_p + MAHT_e)
-   * @private
    */
-  #getLessonCountFromJournal(journal) {
+  getLessonCountFromJournal(journal) {
     if (!journal || !journal.lessonHours || !journal.lessonHours.capacityHours) {
       return null
     }
@@ -249,7 +247,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
       }
 
       // Get current study year date range
-      const { from, thru } = this.#getCurrentStudyYearRange()
+      const { from, thru } = this.getCurrentStudyYearRange()
 
       // Build teacher IDs parameter
       const teacherIdsParam = teacherIds.join(',')
@@ -278,9 +276,8 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
 
   /**
    * Get current study year date range
-   * @private
    */
-  #getCurrentStudyYearRange() {
+  getCurrentStudyYearRange() {
     const now = new Date()
     const currentYear = now.getFullYear()
     const studyYear = now.getMonth() < 8 ? currentYear - 1 : currentYear
@@ -293,9 +290,8 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
 
   /**
    * Count past lessons from timetable events
-   * @private
    */
-  #countPastLessons(timetableEvents) {
+  countPastLessons(timetableEvents) {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 

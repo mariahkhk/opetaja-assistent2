@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, mock } from 'bun:test'
-import { BaseFeature, api } from '../../src/core/BaseFeature.js'
+import { BaseFeature, api, getTahvelBaseUrl } from '../../src/core/BaseFeature.js'
+import Logger from '../../src/services/Logger.js'
 import { JSDOM } from 'jsdom'
 
 describe('BaseFeature', () => {
@@ -225,25 +226,21 @@ describe('BaseFeature', () => {
     })
   })
 
-  describe('onRequiredElementsNotFound', () => {
-    test('should be called on timeout', async () => {
-      // Set up real jsdom for MutationObserver
-      const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
-      global.document = dom.window.document
-      global.MutationObserver = dom.window.MutationObserver
+  describe('onRequiredElementsNotFound (default implementation)', () => {
+    test('logs a warning with the feature name and error message, does not throw', () => {
+      const feature = new BaseFeature('test', '/test')
+      const originalWarning = Logger.warning
+      const calls = []
+      Logger.warning = (...args) => calls.push(args)
 
-      const feature = new BaseFeature('test', '/test', '.never-exists')
-      const onNotFoundMock = mock(() => {})
-      feature.onRequiredElementsNotFound = onNotFoundMock
-
-      feature.activate()
-
-      // Manually trigger the not found callback to test it
-      if (feature.onRequiredElementsNotFound) {
-        feature.onRequiredElementsNotFound(new Error('Timeout'))
+      try {
+        expect(() => feature.onRequiredElementsNotFound(new Error('Timeout boom'))).not.toThrow()
+        expect(calls.length).toBe(1)
+        expect(calls[0][0]).toContain('test')
+        expect(calls[0][0]).toContain('Timeout boom')
+      } finally {
+        Logger.warning = originalWarning
       }
-
-      expect(onNotFoundMock).toHaveBeenCalled()
     })
   })
 
@@ -279,23 +276,53 @@ describe('BaseFeature', () => {
   })
 
   describe('getTahvelBaseUrl', () => {
-    test('should return production URL for tahvel.edu.ee', () => {
-      // The api object is created at module load, so it uses the initial window.location
-      // We test this by checking the initial value
-      expect(api.tahvel.baseUrl).toContain('tahvel')
-      expect(api.tahvel.baseUrl).toContain('/hois_back')
+    test('returns production URL for tahvel.edu.ee hostname', () => {
+      const originalWindow = global.window
+      global.window = { location: { hostname: 'tahvel.edu.ee' } }
+      try {
+        expect(getTahvelBaseUrl()).toBe('https://tahvel.edu.ee/hois_back')
+      } finally {
+        global.window = originalWindow
+      }
     })
 
-    test('should handle different Tahvel environments', () => {
-      // Test that URL follows expected pattern
-      expect(api.tahvel.baseUrl).toMatch(/https?:\/\/.*tahvel.*\/hois_back/)
+    test('returns test URL for test.tahvel.eenet.ee hostname', () => {
+      const originalWindow = global.window
+      global.window = { location: { hostname: 'test.tahvel.eenet.ee' } }
+      try {
+        expect(getTahvelBaseUrl()).toBe('https://test.tahvel.eenet.ee/hois_back')
+      } finally {
+        global.window = originalWindow
+      }
+    })
+
+    test('falls back to production URL for unknown hostnames', () => {
+      const originalWindow = global.window
+      global.window = { location: { hostname: 'localhost' } }
+      try {
+        expect(getTahvelBaseUrl()).toBe('https://tahvel.edu.ee/hois_back')
+      } finally {
+        global.window = originalWindow
+      }
     })
   })
 
   describe('removeFinalGradeBanner', () => {
-    test('should be a no-op by default', () => {
+    test('default implementation returns undefined (no-op) and does not throw', () => {
       const feature = new BaseFeature('test', '/test')
-      expect(() => feature.removeFinalGradeBanner()).not.toThrow()
+      expect(feature.removeFinalGradeBanner()).toBeUndefined()
+    })
+
+    test('subclasses can override with banner-removal logic', () => {
+      class FeatureWithBanner extends BaseFeature {
+        removeFinalGradeBanner() {
+          this.bannerRemoved = true
+          return 'removed'
+        }
+      }
+      const feature = new FeatureWithBanner('test', '/test')
+      expect(feature.removeFinalGradeBanner()).toBe('removed')
+      expect(feature.bannerRemoved).toBe(true)
     })
   })
 })

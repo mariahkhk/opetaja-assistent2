@@ -401,4 +401,230 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
       expect(feature.currentSchoolId).toBeNull()
     })
   })
+
+  describe('getLessonCountFromJournal', () => {
+    it('sums MAHT_a + MAHT_p + MAHT_e contact hours', () => {
+      const journal = {
+        lessonHours: {
+          totalUsedHours: 100,
+          capacityHours: [
+            { capacity: 'MAHT_a', usedHours: 7 },
+            { capacity: 'MAHT_p', usedHours: 3 },
+            { capacity: 'MAHT_e', usedHours: 2 },
+            { capacity: 'MAHT_i', usedHours: 50 }
+          ]
+        }
+      }
+      expect(feature.getLessonCountFromJournal(journal)).toBe(12)
+    })
+
+    it('returns sum of contact hours even when only one type present', () => {
+      const journal = {
+        lessonHours: {
+          capacityHours: [{ capacity: 'MAHT_a', usedHours: 9 }]
+        }
+      }
+      expect(feature.getLessonCountFromJournal(journal)).toBe(9)
+    })
+
+    it('falls back to totalUsedHours when no contact-type capacity hours exist', () => {
+      const journal = {
+        lessonHours: {
+          totalUsedHours: 30,
+          capacityHours: [{ capacity: 'MAHT_i', usedHours: 30 }]
+        }
+      }
+      expect(feature.getLessonCountFromJournal(journal)).toBe(30)
+    })
+
+    it('returns 0 when totalUsedHours is missing and no contact hours', () => {
+      const journal = {
+        lessonHours: { capacityHours: [{ capacity: 'MAHT_i', usedHours: 5 }] }
+      }
+      expect(feature.getLessonCountFromJournal(journal)).toBe(0)
+    })
+
+    it('returns null when journal missing or lessonHours missing', () => {
+      expect(feature.getLessonCountFromJournal(null)).toBeNull()
+      expect(feature.getLessonCountFromJournal({})).toBeNull()
+      expect(feature.getLessonCountFromJournal({ lessonHours: {} })).toBeNull()
+    })
+
+    it('handles missing usedHours by treating it as 0', () => {
+      const journal = {
+        lessonHours: {
+          capacityHours: [
+            { capacity: 'MAHT_a' },
+            { capacity: 'MAHT_a', usedHours: 4 }
+          ]
+        }
+      }
+      expect(feature.getLessonCountFromJournal(journal)).toBe(4)
+    })
+  })
+
+  describe('getCurrentStudyYearRange', () => {
+    it('returns Sept-1 to Aug-31 ISO string range spanning study year', () => {
+      const { from, thru } = feature.getCurrentStudyYearRange()
+      const fromDate = new Date(from)
+      const thruDate = new Date(thru)
+      expect(fromDate.getUTCMonth()).toBe(8)
+      expect(fromDate.getUTCDate()).toBe(1)
+      expect(thruDate.getUTCMonth()).toBe(7)
+      expect(thruDate.getUTCDate()).toBe(31)
+      expect(thruDate.getUTCFullYear() - fromDate.getUTCFullYear()).toBe(1)
+    })
+  })
+
+  describe('countPastLessons', () => {
+    const FIXED_NOW = new Date('2024-11-20T12:00:00Z').getTime()
+    let RealDate
+    beforeEach(() => {
+      RealDate = global.Date
+      global.Date = class extends RealDate {
+        constructor(...args) {
+          if (args.length === 0) super(FIXED_NOW)
+          else super(...args)
+        }
+        static now() { return FIXED_NOW }
+      }
+    })
+    afterEach(() => { global.Date = RealDate })
+
+    it('counts only events with date strictly before today', () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const lastWeek = new Date()
+      lastWeek.setDate(lastWeek.getDate() - 7)
+
+      const events = [
+        { date: yesterday.toISOString() },
+        { date: tomorrow.toISOString() },
+        { date: lastWeek.toISOString() },
+        { date: new Date().toISOString() }
+      ]
+      expect(feature.countPastLessons(events)).toBe(2)
+    })
+
+    it('returns 0 when all events are in the future', () => {
+      const future = new Date()
+      future.setDate(future.getDate() + 5)
+      expect(feature.countPastLessons([{ date: future.toISOString() }])).toBe(0)
+    })
+
+    it('returns 0 for empty array', () => {
+      expect(feature.countPastLessons([])).toBe(0)
+    })
+
+    it('skips events without date field', () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const events = [
+        {},
+        { date: null },
+        { date: yesterday.toISOString() }
+      ]
+      expect(feature.countPastLessons(events)).toBe(1)
+    })
+  })
+
+  describe('checkJournalDiscrepancy', () => {
+    beforeEach(() => {
+      feature.currentSchoolId = 9
+      feature.currentTeacherId = 123
+    })
+
+    it('returns true when timetable past-lesson count differs from journal contact hours', async () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const lastWeek = new Date()
+      lastWeek.setDate(lastWeek.getDate() - 7)
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint.startsWith('/timetableevents/timetableByTeacher/')) {
+          return {
+            timetableEvents: [
+              { journalId: 101, date: yesterday.toISOString() },
+              { journalId: 101, date: lastWeek.toISOString() },
+              { journalId: 999, date: lastWeek.toISOString() }
+            ]
+          }
+        }
+        return {}
+      })
+
+      const journal = {
+        id: 101,
+        lessonHours: { capacityHours: [{ capacity: 'MAHT_a', usedHours: 5 }] },
+        journalTeachers: [{ id: 123 }]
+      }
+      expect(await feature.checkJournalDiscrepancy(journal)).toBe(true)
+    })
+
+    it('returns false when timetable past-lesson count matches journal contact hours', async () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const lastWeek = new Date()
+      lastWeek.setDate(lastWeek.getDate() - 7)
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint.startsWith('/timetableevents/timetableByTeacher/')) {
+          return {
+            timetableEvents: [
+              { journalId: 101, date: yesterday.toISOString() },
+              { journalId: 101, date: lastWeek.toISOString() }
+            ]
+          }
+        }
+        return {}
+      })
+
+      const journal = {
+        id: 101,
+        lessonHours: { capacityHours: [{ capacity: 'MAHT_a', usedHours: 2 }] },
+        journalTeachers: [{ id: 123 }]
+      }
+      expect(await feature.checkJournalDiscrepancy(journal)).toBe(false)
+    })
+
+    it('returns false when journal has no lesson count metadata', async () => {
+      const journal = { id: 101, journalTeachers: [{ id: 123 }] }
+      expect(await feature.checkJournalDiscrepancy(journal)).toBe(false)
+    })
+
+    it('returns false when journal has no teachers and no fallback teacher id', async () => {
+      feature.currentTeacherId = null
+      const journal = {
+        id: 101,
+        lessonHours: { capacityHours: [{ capacity: 'MAHT_a', usedHours: 1 }] },
+        journalTeachers: []
+      }
+      expect(await feature.checkJournalDiscrepancy(journal)).toBe(false)
+    })
+
+    it('falls back to currentTeacherId when journal has no teachers', async () => {
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint.startsWith('/timetableevents/timetableByTeacher/')) {
+          return { timetableEvents: [{ journalId: 101, date: yesterday.toISOString() }] }
+        }
+        return {}
+      })
+
+      const journal = {
+        id: 101,
+        lessonHours: { capacityHours: [{ capacity: 'MAHT_a', usedHours: 1 }] },
+        journalTeachers: []
+      }
+      expect(await feature.checkJournalDiscrepancy(journal)).toBe(false)
+      const timetableCall = feature.api.tahvel.get.mock.calls.find(c =>
+        c[0].startsWith('/timetableevents/timetableByTeacher/')
+      )
+      expect(timetableCall[0]).toContain('teachers=123')
+    })
+  })
 })

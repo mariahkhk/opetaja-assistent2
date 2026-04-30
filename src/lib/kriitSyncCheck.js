@@ -810,7 +810,7 @@ async function getLessonFromPlan(api, journalId, teacherId, { position }) {
  * @param {Object} teacher - { id, nameEt, fullname }
  * @returns {Promise<Object>} { personalCode, name, id }
  */
-async function getTeacherPersonalCodeCached(api, teacher) {
+export async function getTeacherPersonalCodeCached(api, teacher) {
   const teacherId = teacher.id
   const teacherName = teacher.nameEt || teacher.fullname || ''
 

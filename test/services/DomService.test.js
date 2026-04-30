@@ -18,30 +18,27 @@ describe('DomService', () => {
 
   describe('waitForElement', () => {
     test('should resolve immediately if element exists', async () => {
-      const mockElement = { id: 'test-element' }
-      global.document.querySelector = mock(() => mockElement)
+      const div = document.createElement('div')
+      div.id = 'test-element'
+      document.body.appendChild(div)
 
       const element = await domService.waitForElement('#test-element')
-      expect(element).toBe(mockElement)
+      expect(element).toBe(div)
+      expect(element.id).toBe('test-element')
     })
 
     test('should wait for element to appear', async () => {
-      let callCount = 0
-      global.document.querySelector = mock(() => {
-        callCount++
-        if (callCount > 2) {
-          return { id: 'delayed-element' }
-        }
-        return null
-      })
+      setTimeout(() => {
+        const div = document.createElement('div')
+        div.id = 'delayed-element'
+        document.body.appendChild(div)
+      }, 100)
 
       const element = await domService.waitForElement('#delayed-element', 1000, 50)
       expect(element.id).toBe('delayed-element')
     })
 
-    test('should reject on timeout', async () => {
-      global.document.querySelector = mock(() => null)
-
+    test('should reject on timeout when element never appears', async () => {
       try {
         await domService.waitForElement('#non-existent', 100, 20)
         expect(true).toBe(false)
@@ -53,15 +50,35 @@ describe('DomService', () => {
 
   describe('observeForElements', () => {
     test('should find elements immediately if they exist', () => {
-      const mockElements = [{ className: 'immediate-element' }]
-      global.document.querySelectorAll = mock(() => mockElements)
+      const a = document.createElement('div')
+      a.className = 'immediate-element'
+      const b = document.createElement('div')
+      b.className = 'immediate-element'
+      document.body.appendChild(a)
+      document.body.appendChild(b)
 
       const callback = mock(() => {})
-      const observer = domService.observeForElements('.immediate-element', callback)
+      domService.observeForElements('.immediate-element', callback)
 
       expect(callback).toHaveBeenCalledTimes(1)
-      expect(callback.mock.calls[0][0]).toEqual(mockElements)
+      const found = callback.mock.calls[0][0]
+      expect(Array.from(found)).toEqual([a, b])
       expect(callback.mock.calls[0][1]).toBe('.immediate-element')
+    })
+
+    test('should fire callback when matching elements appear later via mutation', async () => {
+      const callback = mock(() => {})
+      domService.observeForElements('.late-element', callback)
+
+      const div = document.createElement('div')
+      div.className = 'late-element'
+      document.body.appendChild(div)
+
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      expect(callback).toHaveBeenCalled()
+      const lastCall = callback.mock.calls[callback.mock.calls.length - 1]
+      expect(Array.from(lastCall[0])).toEqual([div])
     })
   })
 

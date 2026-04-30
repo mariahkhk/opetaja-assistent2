@@ -7,6 +7,7 @@ import {
   createStudentMap,
   extractAssignmentsFromEntries,
   getAssignmentNameFromEntry,
+  getTeacherPersonalCodeCached,
   clearKriitSyncCaches,
   buildDiffSummary
 } from '../../src/lib/kriitSyncCheck.js'
@@ -539,6 +540,111 @@ describe('kriitSyncCheck', () => {
         hasDifferences: false,
         hasNewAssignments: false
       })
+    })
+  })
+
+  describe('getTeacherPersonalCodeCached — concurrent dedupe', () => {
+    function makeTeacherSearchApi() {
+      const calls = { count: 0 }
+      const api = {
+        tahvel: {
+          baseUrl: 'https://tahvel.edu.ee/hois_back',
+          get: mock(async (endpoint) => {
+            calls.count++
+            await new Promise(resolve => setTimeout(resolve, 20))
+            const match = endpoint.match(/name=([^&]+)/)
+            const name = match ? decodeURIComponent(match[1]) : ''
+            return {
+              content: [{ id: 100, name, idcode: '38001010001' }]
+            }
+          })
+        }
+      }
+      return { api, calls }
+    }
+
+    it('deduplicates concurrent requests for the same teacher into a single API call', async () => {
+      const { api, calls } = makeTeacherSearchApi()
+      const teacher = { id: 100, nameEt: 'Mari Mets' }
+
+      const [a, b, c] = await Promise.all([
+        getTeacherPersonalCodeCached(api, teacher),
+        getTeacherPersonalCodeCached(api, teacher),
+        getTeacherPersonalCodeCached(api, teacher)
+      ])
+
+      expect(calls.count).toBe(1)
+      expect(a.personalCode).toBe('38001010001')
+      expect(b.personalCode).toBe('38001010001')
+      expect(c.personalCode).toBe('38001010001')
+    })
+
+    it('caches the result so subsequent serial calls do not hit the API again', async () => {
+      const { api, calls } = makeTeacherSearchApi()
+      const teacher = { id: 200, nameEt: 'Jaan Kuusk' }
+
+      await getTeacherPersonalCodeCached(api, teacher)
+      await getTeacherPersonalCodeCached(api, teacher)
+      await getTeacherPersonalCodeCached(api, teacher)
+
+      expect(calls.count).toBe(1)
+    })
+
+    it('makes separate API calls for distinct teacher ids', async () => {
+      const { api, calls } = makeTeacherSearchApi()
+      await Promise.all([
+        getTeacherPersonalCodeCached(api, { id: 1, nameEt: 'A A' }),
+        getTeacherPersonalCodeCached(api, { id: 2, nameEt: 'B B' }),
+        getTeacherPersonalCodeCached(api, { id: 3, nameEt: 'C C' })
+      ])
+      expect(calls.count).toBe(3)
+    })
+
+    it('returns fallback data when teacher is not found in search results', async () => {
+      const api = {
+        tahvel: {
+          baseUrl: 'https://tahvel.edu.ee/hois_back',
+          get: mock(async () => ({ content: [] }))
+        }
+      }
+      const result = await getTeacherPersonalCodeCached(api, { id: 999, nameEt: 'Ghost Teacher' })
+      expect(result.personalCode).toBe('')
+      expect(result.name).toBe('Ghost Teacher')
+      expect(result.id).toBe(999)
+    })
+
+    it('returns empty data when teacher has no id or name', async () => {
+      const api = { tahvel: { get: mock(async () => ({ content: [] })) } }
+      const result = await getTeacherPersonalCodeCached(api, { id: null, nameEt: '' })
+      expect(result.personalCode).toBe('')
+      expect(api.tahvel.get).not.toHaveBeenCalled()
+    })
+
+    it('returns error fallback when API throws', async () => {
+      const api = {
+        tahvel: {
+          baseUrl: 'https://tahvel.edu.ee/hois_back',
+          get: mock(async () => { throw new Error('Network down') })
+        }
+      }
+      const result = await getTeacherPersonalCodeCached(api, { id: 50, nameEt: 'Network Fail' })
+      expect(result.personalCode).toBe('')
+      expect(result.id).toBe(50)
+      expect(result.name).toBe('Network Fail')
+    })
+
+    it('clearKriitSyncCaches forces re-fetch on next call', async () => {
+      const { api, calls } = makeTeacherSearchApi()
+      const teacher = { id: 300, nameEt: 'Reset Test' }
+
+      await getTeacherPersonalCodeCached(api, teacher)
+      expect(calls.count).toBe(1)
+
+      clearKriitSyncCaches()
+      await cacheService.clearCache()
+
+      await getTeacherPersonalCodeCached(api, teacher)
+      expect(calls.count).toBe(2)
     })
   })
 })

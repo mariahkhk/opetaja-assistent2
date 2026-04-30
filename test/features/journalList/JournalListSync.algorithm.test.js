@@ -2060,14 +2060,6 @@ describe('JournalListSync - Algorithm Tests', () => {
     })
   })
 
-  describe('removeSyncBanner', () => {
-    test('should call banner service remove', () => {
-      journalListSync.removeSyncBanner()
-
-      expect(true).toBe(true)
-    })
-  })
-
   describe('onDeactivate', () => {
     test('should call resetJournalLinks and clean up', () => {
       journalListSync.resetJournalLinks = mock(() => {})
@@ -2075,6 +2067,50 @@ describe('JournalListSync - Algorithm Tests', () => {
       journalListSync.onDeactivate()
 
       expect(journalListSync.resetJournalLinks).toHaveBeenCalled()
+    })
+  })
+
+  describe('banner DOM lifecycle', () => {
+    beforeEach(() => {
+      const container = document.createElement('div')
+      container.className = 'tahvel-form-buttons'
+      document.body.appendChild(container)
+      window.location.hash = '#/journals'
+    })
+
+    test('showMissingApiKeyBanner injects an element into the banner insertion wrapper', () => {
+      journalListSync.showMissingApiKeyBanner()
+      const insertionWrapper = document.querySelector('.ta-sync-banner-insertion')
+      expect(insertionWrapper).not.toBeNull()
+      expect(insertionWrapper.children.length).toBeGreaterThan(0)
+    })
+
+    test('showAllInSyncBanner injects an element into the banner insertion wrapper', () => {
+      journalListSync.showAllInSyncBanner()
+      const insertionWrapper = document.querySelector('.ta-sync-banner-insertion')
+      expect(insertionWrapper).not.toBeNull()
+      expect(insertionWrapper.children.length).toBeGreaterThan(0)
+    })
+
+    test('removeSyncBanner removes a previously shown banner from the DOM', () => {
+      journalListSync.showMissingApiKeyBanner()
+      const insertionWrapper = document.querySelector('.ta-sync-banner-insertion')
+      const childrenBefore = insertionWrapper.children.length
+      expect(childrenBefore).toBeGreaterThan(0)
+
+      journalListSync.removeSyncBanner()
+      expect(insertionWrapper.children.length).toBe(childrenBefore - 1)
+    })
+
+    test('removeSyncBanner is a safe no-op when no banner is currently shown', () => {
+      expect(() => journalListSync.removeSyncBanner()).not.toThrow()
+    })
+
+    test('subsequent show calls replace the previous banner instead of stacking', () => {
+      journalListSync.showMissingApiKeyBanner()
+      journalListSync.showAllInSyncBanner()
+      const insertionWrapper = document.querySelector('.ta-sync-banner-insertion')
+      expect(insertionWrapper.children.length).toBe(1)
     })
   })
 
@@ -2124,24 +2160,6 @@ describe('JournalListSync - Algorithm Tests', () => {
       journalListSync.showErrorBanner()
 
       expect(journalListSync.error).toBe('Test error')
-    })
-  })
-
-  describe('showMissingApiKeyBanner', () => {
-    test('should call journalSyncBannerService', () => {
-      journalListSync.resetKriitApiToken = mock(() => {})
-
-      journalListSync.showMissingApiKeyBanner()
-
-      expect(true).toBe(true)
-    })
-  })
-
-  describe('showAllInSyncBanner', () => {
-    test('should call journalSyncBannerService', () => {
-      journalListSync.showAllInSyncBanner()
-
-      expect(true).toBe(true)
     })
   })
 
@@ -2203,9 +2221,175 @@ describe('JournalListSync - Algorithm Tests', () => {
     })
   })
 
+  describe('getFirstLessonFromPlan', () => {
+    test('returns the first non-null MAHT_a week-beginning date for the journal', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({
+            journals: [{ id: 100, hours: { MAHT_a: [null, null, 2, 4, null] } }],
+            weekNrs: [1, 2, 3, 4, 5],
+            studyPeriods: [
+              {
+                nameEt: 'Sügissemester',
+                weekNrs: [1, 2, 3, 4, 5],
+                weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
+              }
+            ]
+          }))
+        }
+      }
+      expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBe('2024-09-16')
+    })
+
+    test('returns null when journal not in plan', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({ journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] }))
+        }
+      }
+      expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
+    })
+
+    test('returns null when journal has no MAHT_a hours', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({ journals: [{ id: 100, hours: {} }], weekNrs: [], studyPeriods: [] }))
+        }
+      }
+      expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
+    })
+
+    test('returns null when all MAHT_a hours are null', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({
+            journals: [{ id: 100, hours: { MAHT_a: [null, null, null] } }],
+            weekNrs: [1, 2, 3],
+            studyPeriods: []
+          }))
+        }
+      }
+      expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
+    })
+
+    test('returns null on API error', async () => {
+      journalListSync.api = {
+        tahvel: { get: mock(async () => { throw new Error('Network down') }) }
+      }
+      expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
+    })
+  })
+
+  describe('getLastLessonFromPlan', () => {
+    test('returns the last non-null MAHT_a week-beginning date for the journal', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({
+            journals: [{ id: 100, hours: { MAHT_a: [2, 4, null, 4, null] } }],
+            weekNrs: [1, 2, 3, 4, 5],
+            studyPeriods: [
+              {
+                nameEt: 'Sügissemester',
+                weekNrs: [1, 2, 3, 4, 5],
+                weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
+              }
+            ]
+          }))
+        }
+      }
+      expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBe('2024-09-23')
+    })
+
+    test('returns null when journal not in plan', async () => {
+      journalListSync.api = {
+        tahvel: {
+          get: mock(async () => ({ journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] }))
+        }
+      }
+      expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBeNull()
+    })
+
+    test('returns null when planData is missing journals or studyPeriods', async () => {
+      journalListSync.api = {
+        tahvel: { get: mock(async () => ({})) }
+      }
+      expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBeNull()
+    })
+
+    test('returns null on API error', async () => {
+      journalListSync.api = {
+        tahvel: { get: mock(async () => { throw new Error('502') }) }
+      }
+      expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBeNull()
+    })
+  })
+
+  describe('setupStudyYearMonitoring', () => {
+    test('captures initial study year and skips listener setup when submit button is missing', () => {
+      journalListSync.getSelectedStudyYear = mock(() => '2024/2025')
+      journalListSync.lastStudyYear = null
+      journalListSync.setupStudyYearMonitoring()
+      expect(journalListSync.lastStudyYear).toBe('2024/2025')
+    })
+
+    test('attaches click listener to submit button which triggers fetchJournalData on table update', async () => {
+      const submit = document.createElement('button')
+      submit.setAttribute('type', 'submit')
+      document.body.appendChild(submit)
+
+      journalListSync.getSelectedStudyYear = mock(() => '2024/2025')
+      const fetchJournalData = mock(async () => {})
+      journalListSync.fetchJournalData = fetchJournalData
+      journalListSync.waitForTableUpdate = mock(() => Promise.resolve())
+
+      journalListSync.setupStudyYearMonitoring()
+      submit.click()
+
+      await Promise.resolve()
+      await Promise.resolve()
+
+      expect(fetchJournalData).toHaveBeenCalled()
+    })
+  })
+
   describe('fetchJournalsFromApi', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.fetchJournalsFromApi).toBe('function')
+    test('paginates through journals endpoint and aggregates content into a single array', async () => {
+      const calls = []
+      journalListSync.getSelectedStudyYear = mock(() => null)
+      journalListSync.api = {
+        tahvel: {
+          baseUrl: 'https://tahvel.edu.ee/hois_back',
+          get: mock(async (endpoint, params) => {
+            calls.push(params.page)
+            if (params.page === 0) return { content: [{ id: 1 }, { id: 2 }], totalPages: 2 }
+            if (params.page === 1) return { content: [{ id: 3 }], totalPages: 2 }
+            return { content: [], totalPages: 2 }
+          })
+        }
+      }
+
+      const result = await journalListSync.fetchJournalsFromApi()
+
+      expect(calls).toEqual([0, 1])
+      expect(result.length).toBe(3)
+      expect(result.map(j => j.id)).toEqual([1, 2, 3])
+    })
+
+    test('uses /journals endpoint when baseUrl already contains /hois_back', async () => {
+      journalListSync.getSelectedStudyYear = mock(() => null)
+      let endpointUsed = null
+      journalListSync.api = {
+        tahvel: {
+          baseUrl: 'https://tahvel.edu.ee/hois_back',
+          get: mock(async (endpoint) => {
+            endpointUsed = endpoint
+            return { content: [], totalPages: 0 }
+          })
+        }
+      }
+
+      await journalListSync.fetchJournalsFromApi()
+      expect(endpointUsed).toBe('/journals')
     })
   })
 
@@ -2217,18 +2401,6 @@ describe('JournalListSync - Algorithm Tests', () => {
       journalListSync.onRequiredElementsFound(elements, 'test-selector')
 
       expect(journalListSync.journalLinks).toEqual(elements)
-    })
-  })
-
-  describe('getFirstLessonFromPlan', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.getFirstLessonFromPlan).toBe('function')
-    })
-  })
-
-  describe('getLastLessonFromPlan', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.getLastLessonFromPlan).toBe('function')
     })
   })
 
@@ -2254,102 +2426,11 @@ describe('JournalListSync - Algorithm Tests', () => {
     })
   })
 
-  describe('setupStudyYearMonitoring', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.setupStudyYearMonitoring).toBe('function')
-    })
-  })
-
   describe('waitForTableUpdate', () => {
     test('should return a promise', () => {
       const result = journalListSync.waitForTableUpdate()
 
       expect(result).toBeInstanceOf(Promise)
-    })
-  })
-
-  describe('proceedWithKriitApiCall', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.proceedWithKriitApiCall).toBe('function')
-    })
-  })
-
-  describe('fetchJournalData', () => {
-    test('should be an async function', () => {
-      expect(typeof journalListSync.fetchJournalData).toBe('function')
-    })
-  })
-
-  describe('collectJournalData', () => {
-    test('should be an async function', () => {
-      expect(typeof journalListSync.collectJournalData).toBe('function')
-    })
-  })
-
-  describe('Theme Caching', () => {
-    test('should cache themes with TWO_WEEKS expiration', async () => {
-      // Mock the cache service
-      const mockCacheService = {
-        getOrFetch: mock(async (cacheKey, fetchFn, expiration) => {
-          expect(cacheKey).toMatch(/^theme_\d+_\d+$/)
-          expect(expiration).toBe(14 * 24 * 60 * 60 * 1000) // TWO_WEEKS
-          return await fetchFn()
-        }),
-        EXPIRATION: {
-          TWO_WEEKS: 14 * 24 * 60 * 60 * 1000
-        }
-      }
-
-      // Verify cache key format and expiration
-      const journalId = 123
-      const themeId = 456
-      const expectedCacheKey = `theme_${journalId}_${themeId}`
-      const themeContent = '<html>theme content</html>'
-
-      await mockCacheService.getOrFetch(expectedCacheKey, async () => themeContent, mockCacheService.EXPIRATION.TWO_WEEKS)
-
-      expect(mockCacheService.getOrFetch).toHaveBeenCalledTimes(1)
-    })
-
-    test('should use correct cache key format for themes', () => {
-      const journalId = 789
-      const themeId = 101
-      const expectedCacheKey = `theme_${journalId}_${themeId}`
-
-      // Verify cache key format
-      expect(expectedCacheKey).toBe('theme_789_101')
-    })
-
-    test('should cache themes to prevent redundant API calls', async () => {
-      let fetchCount = 0
-      const mockCacheService = {
-        getOrFetch: mock(async (cacheKey, fetchFn, expiration) => {
-          // First call fetches, subsequent calls return cached data
-          if (fetchCount === 0) {
-            fetchCount++
-            return await fetchFn()
-          }
-          // Simulate cache hit - don't call fetchFn
-          return '<html>cached theme</html>'
-        }),
-        EXPIRATION: {
-          TWO_WEEKS: 14 * 24 * 60 * 60 * 1000
-        }
-      }
-
-      // First call - should fetch
-      await mockCacheService.getOrFetch('theme_1_2', async () => '<html>theme</html>', mockCacheService.EXPIRATION.TWO_WEEKS)
-
-      // Second call - should use cache
-      await mockCacheService.getOrFetch('theme_1_2', async () => '<html>theme</html>', mockCacheService.EXPIRATION.TWO_WEEKS)
-
-      expect(mockCacheService.getOrFetch).toHaveBeenCalledTimes(2)
-      expect(fetchCount).toBe(1) // Only fetched once
-    })
-
-    test('TWO_WEEKS constant should equal 14 days in milliseconds', () => {
-      const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
-      expect(TWO_WEEKS_MS).toBe(1209600000) // 14 days in ms
     })
   })
 
@@ -2440,10 +2521,6 @@ describe('JournalListSync - Algorithm Tests', () => {
   })
 
   describe('syncWithKriit', () => {
-    test('should be an async function', () => {
-      expect(typeof journalListSync.syncWithKriit).toBe('function')
-    })
-
     test('should surface entry-type sync failures without resubmitting unchanged students', async () => {
       const tahvelError = new Error('API Error: 412 (journal.messages.changeIsNotAllowedStudentIsNotStudying)')
       tahvelError.status = 412
@@ -2580,18 +2657,6 @@ describe('JournalListSync - Algorithm Tests', () => {
     })
   })
 
-  describe('syncGradeToTahvel', () => {
-    test('should be an async function', () => {
-      expect(typeof journalListSync.syncGradeToTahvel).toBe('function')
-    })
-  })
-
-  describe('setupStudyYearMonitoring - DOM tests', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.setupStudyYearMonitoring).toBe('function')
-    })
-  })
-
   describe('onRequiredElementsFound - DOM integration', () => {
     test('should extract journal links from DOM', () => {
       const dom = new JSDOM(`
@@ -2607,41 +2672,6 @@ describe('JournalListSync - Algorithm Tests', () => {
       const links = dom.window.document.querySelectorAll('a[href*="journal"]')
       expect(links.length).toBe(2)
       expect(links[0].getAttribute('href')).toContain('123')
-    })
-  })
-
-  describe('removeSyncBanner - DOM manipulation', () => {
-    test('should remove sync banner from DOM', () => {
-      journalListSync.removeSyncBanner()
-      expect(typeof journalListSync.removeSyncBanner).toBe('function')
-    })
-  })
-
-  describe('showMissingApiKeyBanner - DOM rendering', () => {
-    test('should show missing API key banner', () => {
-      const dom = new JSDOM(`
-        <!DOCTYPE html>
-        <html>
-          <body>
-            <div id="main-content">
-              <div class="layout-padding">
-                <div></div>
-              </div>
-            </div>
-          </body>
-        </html>
-      `)
-
-      global.document = dom.window.document
-      journalListSync.showMissingApiKeyBanner()
-
-      expect(typeof journalListSync.showMissingApiKeyBanner).toBe('function')
-    })
-  })
-
-  describe('fetchJournalsFromApi', () => {
-    test('should be an async function', () => {
-      expect(typeof journalListSync.fetchJournalsFromApi).toBe('function')
     })
   })
 
@@ -2684,10 +2714,6 @@ describe('JournalListSync - Algorithm Tests', () => {
   })
 
   describe('extractDueDateDifferences', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.extractDueDateDifferences).toBe('function')
-    })
-
     test('should return empty array when differences is null', () => {
       journalListSync.differences = null
       const result = journalListSync.extractDueDateDifferences()
@@ -2719,33 +2745,9 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(result[0].assignmentName).toBe('Homework')
     })
 
-    test('should skip when dates match', () => {
-      const subjects = [
-        {
-          journalId: 123,
-          assignments: [
-            {
-              id: 1,
-              name: 'Test',
-              kriitDueDate: '2024-01-15',
-              tahvelDueDate: '2024-01-15'
-            }
-          ]
-        }
-      ]
-
-      const differences = []
-      journalListSync.extractDueDateDifferences(subjects, differences)
-
-      expect(differences.length).toBe(0)
-    })
   })
 
   describe('extractAssignmentHoursDifferences', () => {
-    test('should be a function', () => {
-      expect(typeof journalListSync.extractAssignmentHoursDifferences).toBe('function')
-    })
-
     test('should return empty array when differences is null', () => {
       journalListSync.differences = null
       const result = journalListSync.extractAssignmentHoursDifferences()
@@ -2789,192 +2791,6 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(result[0].assignmentName).toBe('Lab Work')
     })
 
-    test('should skip when hours match', () => {
-      const subjects = [
-        {
-          journalId: 123,
-          assignments: [
-            {
-              id: 1,
-              name: 'Test',
-              kriitHours: 2,
-              tahvelHours: 2
-            }
-          ]
-        }
-      ]
-
-      const differences = []
-      journalListSync.extractAssignmentHoursDifferences(subjects, differences)
-
-      expect(differences.length).toBe(0)
-    })
-
-    test('should handle null hours', () => {
-      const subjects = [
-        {
-          journalId: 123,
-          assignments: [
-            {
-              id: 1,
-              name: 'Test',
-              kriitHours: null,
-              tahvelHours: 2
-            }
-          ]
-        }
-      ]
-
-      const differences = []
-      journalListSync.extractAssignmentHoursDifferences(subjects, differences)
-
-      expect(differences.length).toBe(0)
-    })
-  })
-
-  describe('Student Name Resolution', () => {
-    test('should resolve student names in PUT request payload', async () => {
-      const mockInstance = {
-        getJournalStudents: mock(async journalId => {
-          return [
-            {
-              id: 4620683,
-              studentId: 178481,
-              fullname: 'Test Student',
-              studentGroup: 'TAK24'
-            }
-          ]
-        }),
-        getStudentDetails: mock(async studentId => {
-          return {
-            id: 178481,
-            person: {
-              idcode: '50001012345',
-              fullname: 'Test Student'
-            },
-            status: 'OPPURSTAATUS_O'
-          }
-        })
-      }
-
-      const studentsToUpdate = [
-        {
-          journalStudent: 4620683,
-          grade: { code: 'KUTSEHINDAMINE_A' }
-        }
-      ]
-
-      const studentsWithNames = await Promise.all(
-        studentsToUpdate.map(async student => {
-          let studentName = 'Unknown'
-          let studentPersonalCode = 'Unknown'
-
-          if (student.journalStudent) {
-            const journalStudents = await mockInstance.getJournalStudents(348986)
-            const journalStudent = journalStudents?.find(js => js.id === student.journalStudent)
-
-            if (journalStudent && journalStudent.studentId) {
-              const studentDetails = await mockInstance.getStudentDetails(journalStudent.studentId)
-
-              if (studentDetails && studentDetails.person) {
-                studentName = studentDetails.person.fullname
-                studentPersonalCode = studentDetails.person.idcode
-              }
-            }
-          }
-
-          return {
-            ...student,
-            studentName: studentName,
-            studentPersonalCode: studentPersonalCode
-          }
-        })
-      )
-
-      expect(studentsWithNames).toHaveLength(1)
-      expect(studentsWithNames[0].studentName).toBe('Test Student')
-      expect(studentsWithNames[0].studentPersonalCode).toBe('50001012345')
-      expect(studentsWithNames[0].studentName).not.toBe('Unknown')
-      expect(studentsWithNames[0].studentPersonalCode).not.toBe('Unknown')
-    })
-  })
-
-  describe('Inactive Student Handling', () => {
-    test('should sync grades for inactive students', () => {
-      // Inactive students should now be synced just like active students
-      // Only deleted students (OPPURSTAATUS_K) are skipped
-      const inactiveStudent = {
-        personalCode: '39001011234',
-        name: 'Inactive Student',
-        isActive: false,
-        isDeleted: false,
-        isGraduated: false
-      }
-
-      const activeStudent = {
-        personalCode: '50001010001',
-        name: 'Active Student',
-        isActive: true,
-        isDeleted: false,
-        isGraduated: false
-      }
-
-      const deletedStudent = {
-        personalCode: '50001010003',
-        name: 'Deleted Student',
-        isActive: false,
-        isDeleted: true,
-        isGraduated: false
-      }
-
-      const graduatedStudent = {
-        personalCode: '50001010004',
-        name: 'Graduated Student',
-        isActive: false,
-        isDeleted: false,
-        isGraduated: true
-      }
-
-      // Inactive students should be processed (not skipped)
-      expect(inactiveStudent.isActive).toBe(false)
-      expect(inactiveStudent.isDeleted).toBe(false)
-      expect(inactiveStudent.isGraduated).toBe(false)
-
-      // Active students should be processed
-      expect(activeStudent.isActive).toBe(true)
-      expect(activeStudent.isDeleted).toBe(false)
-      expect(activeStudent.isGraduated).toBe(false)
-
-      // Deleted students should be skipped
-      expect(deletedStudent.isDeleted).toBe(true)
-
-      // Graduated students should be processed (not skipped)
-      expect(graduatedStudent.isActive).toBe(false)
-      expect(graduatedStudent.isDeleted).toBe(false)
-      expect(graduatedStudent.isGraduated).toBe(true)
-    })
-
-    test('should process inactive students in sync operation', () => {
-      // Test that inactive students are included in sync, not filtered out
-      const results = [
-        { studentIsActive: true, studentIsDeleted: false, studentIsGraduated: false, grade: '5' },
-        { studentIsActive: false, studentIsDeleted: false, studentIsGraduated: false, grade: '4' }, // Inactive student
-        { studentIsActive: false, studentIsDeleted: true, studentIsGraduated: false, grade: '3' }, // Deleted student
-        { studentIsActive: false, studentIsDeleted: false, studentIsGraduated: true, grade: 'A' } // Graduated student
-      ]
-
-      // Filter out only deleted students, keep inactive and graduated students
-      const shouldSync = results.filter(r => !r.studentIsDeleted)
-
-      expect(shouldSync).toHaveLength(3) // Active + Inactive + Graduated (not deleted)
-      expect(shouldSync[0].studentIsActive).toBe(true)
-      expect(shouldSync[1].studentIsActive).toBe(false)
-      expect(shouldSync[1].studentIsDeleted).toBe(false)
-      expect(shouldSync[1].studentIsGraduated).toBe(false)
-      expect(shouldSync[2].studentIsActive).toBe(false)
-      expect(shouldSync[2].studentIsDeleted).toBe(false)
-      expect(shouldSync[2].studentIsGraduated).toBe(true)
-    })
   })
 
   describe('SISSEKANNE_P Integration Tests', () => {
@@ -3411,43 +3227,5 @@ describe('JournalListSync - Algorithm Tests', () => {
       expect(result[0].Tahvel).toBe(null)
     })
 
-    test('should handle journalEntryCapacityTypes correctly for different entry types', () => {
-      // Test that capacity types are set correctly based on entry type
-      // SISSEKANNE_I should have ['MAHT_i']
-      // SISSEKANNE_H should have ['MAHT_h']
-      // SISSEKANNE_P should have ['MAHT_p']
-
-      const testCases = [
-        {
-          entryType: 'SISSEKANNE_I',
-          expectedCapacityTypes: ['MAHT_i'],
-          description: 'Independent work'
-        },
-        {
-          entryType: 'SISSEKANNE_H',
-          expectedCapacityTypes: ['MAHT_h'],
-          description: 'Graded work'
-        },
-        {
-          entryType: 'SISSEKANNE_P',
-          expectedCapacityTypes: ['MAHT_p'],
-          description: 'Practical work'
-        }
-      ]
-
-      testCases.forEach(testCase => {
-        // Simulate the logic that would be applied when syncing to Tahvel
-        let capacityTypes
-        if (testCase.entryType === 'SISSEKANNE_I') {
-          capacityTypes = ['MAHT_i']
-        } else if (testCase.entryType === 'SISSEKANNE_H') {
-          capacityTypes = ['MAHT_h']
-        } else if (testCase.entryType === 'SISSEKANNE_P') {
-          capacityTypes = ['MAHT_p']
-        }
-
-        expect(capacityTypes).toEqual(testCase.expectedCapacityTypes)
-      })
-    })
   })
 })

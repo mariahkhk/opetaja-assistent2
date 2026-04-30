@@ -58,7 +58,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     super.onDeactivate()
   }
   async #showLastLessonNotification() {
-    const journalId = this.#extractJournalId()
+    const journalId = this.extractJournalId()
     if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] journalId:', journalId)
     if (!journalId) {
       if (Logger.isDebugMode()) Logger.debug('[LastLessonNotificationFeature] No journalId found, exiting')
@@ -151,7 +151,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
       if (futureIndependents.length > 0) {
         independentWorkMessages = futureIndependents.map(({ deadline }) => {
           const diffDays = Math.round((deadline - lastLesson) / (1000 * 60 * 60 * 24))
-          const deadlineStr = this.#formatDisplayDate(deadline)
+          const deadlineStr = this.formatDisplayDate(deadline)
           return `${deadlineStr} iseseiseva töö tähtaeg on ${diffDays} päeva hiljem kui viimane tund`
         })
       }
@@ -219,8 +219,8 @@ export default class LastLessonNotificationFeature extends BaseFeature {
         isPast = true
       }
     }
-    const comparisonDateStr = this.#formatDisplayDate(this.comparisonDate)
-    const todayStr = this.#formatDisplayDate(new Date())
+    const comparisonDateStr = this.formatDisplayDate(this.comparisonDate)
+    const todayStr = this.formatDisplayDate(new Date())
     const showComparisonDate = comparisonDateStr !== todayStr
     let bannerMessage
     if (date === 'not found in timetable') {
@@ -228,7 +228,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     } else {
       const verb = allPast ? 'toimus' : 'toimub'
       const approxText = isApproximate ? 'umbes ' : ''
-      bannerMessage = `Viimane tund ${verb} ${approxText}${this.#formatDisplayDate(date)}${showComparisonDate ? ` (võrdlus kuupäevaga ${comparisonDateStr})` : ''}`
+      bannerMessage = `Viimane tund ${verb} ${approxText}${this.formatDisplayDate(date)}${showComparisonDate ? ` (võrdlus kuupäevaga ${comparisonDateStr})` : ''}`
     }
     let bgColor = '#fff3cd' // yellow default
     let borderColor = '#ffeaa7'
@@ -297,7 +297,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     document.getElementById('last-lesson-inline-notification')?.remove()
     document.getElementById('last-lesson-banner')?.remove()
   }
-  #formatDisplayDate(date) {
+  formatDisplayDate(date) {
     const d = new Date(date)
     const day = d.getDate().toString().padStart(2, '0')
     const month = (d.getMonth() + 1).toString().padStart(2, '0')
@@ -305,7 +305,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     return `${day}.${month}.${year}`
   }
 
-  #extractJournalId() {
+  extractJournalId() {
     const match = window.location.href.match(/\/journal\/(\d+)/)
     return match ? parseInt(match[1], 10) : null
   }
