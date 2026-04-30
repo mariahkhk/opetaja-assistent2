@@ -586,21 +586,34 @@ class ApiService {
         // numeric Tahvel IDs in the path, or response-body fragments echoed by
         // JSON.parse. Logger.error forwards to Sentry — redact when the URL
         // is a PII endpoint, but keep status code, sanitised path, and error
-        // class name: those are diagnostic and not PII.
+        // class name: those are diagnostic and not PII. For non-PII endpoints,
+        // include the original error message and full path so Sentry receives
+        // an actionable title instead of a bare "GET Error:".
         const piiEndpoint = ApiService._isPiiUrl(urlString)
-        let safeError = error
+        const status = getErrorStatus(error)
+        const errorType = error?.constructor?.name
+        let safeError
         if (piiEndpoint) {
           const safePath = urlString
             ? urlString.split('?')[0].split('#')[0]
                 .replace(/^https?:\/\/[^/]+/, '')
                 .replace(/\/(students|teachers|journals)\/\d+/g, '/$1/<id>')
             : ''
-          const status = getErrorStatus(error)
           const parts = [`[REDACTED-PII Error on ${method}${safePath ? ' ' + safePath : ''}]`]
           if (status) parts.push(`status=${status}`)
-          if (error?.constructor?.name) parts.push(`type=${error.constructor.name}`)
+          if (errorType) parts.push(`type=${errorType}`)
+          safeError = new Error(parts.join(' '))
+        } else {
+          const fullPath = urlString
+            ? urlString.split('?')[0].split('#')[0].replace(/^https?:\/\/[^/]+/, '')
+            : ''
+          const parts = [`${method}${fullPath ? ' ' + fullPath : ''}`]
+          if (status) parts.push(`status=${status}`)
+          if (errorType) parts.push(`type=${errorType}`)
+          if (error?.message) parts.push(`message=${error.message}`)
           safeError = new Error(parts.join(' '))
         }
+        if (error?.stack) safeError.stack = error.stack
         Logger.error(`[${this.name}] ${method} Error:`, safeError)
       }
       throw error

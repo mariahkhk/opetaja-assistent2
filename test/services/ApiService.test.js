@@ -735,6 +735,80 @@ describe('ApiService', () => {
       expect(thrown.message).toContain('Server problem')
       expect(thrown.message).not.toContain('[REDACTED-PII]')
     })
+
+    test('Sentry-bound safeError carries method/path/status/type for non-PII GET errors', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 503,
+        statusText: 'Service Unavailable',
+        text: async () => 'gateway down'
+      }))
+
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      try {
+        await expect(apiService.get('/journals/onlyMyJournals', {}, { cache: false })).rejects.toThrow()
+        expect(loggerError).toHaveBeenCalled()
+        const safeError = loggerError.mock.calls[0][1]
+        expect(safeError).toBeInstanceOf(Error)
+        expect(safeError.message).toContain('GET')
+        expect(safeError.message).toContain('/hois_back/journals/onlyMyJournals')
+        expect(safeError.message).toContain('status=503')
+        expect(safeError.message).toContain('type=Error')
+        expect(safeError.message).toContain('message=API Error: 503')
+        expect(safeError.message).not.toContain('[REDACTED-PII]')
+      } finally {
+        Logger.error = originalError
+      }
+    })
+
+    test('Sentry-bound safeError preserves original stack frame for non-PII errors', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      global.fetch = mock(async () => {
+        const err = new TypeError('Failed to fetch')
+        err.stack = 'TypeError: Failed to fetch\n    at fetch (mock:1:1)'
+        throw err
+      })
+
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      try {
+        await expect(apiService.get('/journals/onlyMyJournals', {}, { cache: false })).rejects.toThrow()
+        const safeError = loggerError.mock.calls[0][1]
+        expect(safeError.stack).toBe('TypeError: Failed to fetch\n    at fetch (mock:1:1)')
+        expect(safeError.message).toContain('type=TypeError')
+        expect(safeError.message).toContain('message=Failed to fetch')
+      } finally {
+        Logger.error = originalError
+      }
+    })
+
+    test('Sentry-bound safeError redacts PII endpoints with diagnostic metadata only', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => JSON.stringify({ _errors: [{ message: 'PersonD 30000000001 leak' }] })
+      }))
+
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      try {
+        await expect(apiService.post('/students/789', { x: 1 })).rejects.toThrow()
+        const safeError = loggerError.mock.calls.at(-1)[1]
+        expect(safeError.message).toContain('[REDACTED-PII Error on POST /hois_back/students/<id>]')
+        expect(safeError.message).toContain('status=500')
+        expect(safeError.message).not.toContain('30000000001')
+        expect(safeError.message).not.toContain('PersonD')
+      } finally {
+        Logger.error = originalError
+      }
+    })
   })
 
   describe('parseJsonResponse', () => {
