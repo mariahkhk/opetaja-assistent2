@@ -580,11 +580,24 @@ class ApiService {
       }
       if (!suppressedErrorStatuses.has(getErrorStatus(error))) {
         // parseJsonResponse and other thrown messages can carry the URL with
-        // numeric Tahvel IDs in the path. Logger.error forwards to Sentry —
-        // redact when the URL is a high-PII endpoint, mirroring the inner
-        // catch's safeErrorDetails treatment.
+        // numeric Tahvel IDs in the path, or response-body fragments echoed by
+        // JSON.parse. Logger.error forwards to Sentry — redact when the URL
+        // is a PII endpoint, but keep status code, sanitised path, and error
+        // class name: those are diagnostic and not PII.
         const piiEndpoint = ApiService._isPiiUrl(urlString)
-        const safeError = piiEndpoint ? new Error(`[REDACTED-PII Error on ${method}]`) : error
+        let safeError = error
+        if (piiEndpoint) {
+          const safePath = urlString
+            ? urlString.split('?')[0].split('#')[0]
+                .replace(/^https?:\/\/[^/]+/, '')
+                .replace(/\/(students|teachers|journals)\/\d+/g, '/$1/<id>')
+            : ''
+          const status = getErrorStatus(error)
+          const parts = [`[REDACTED-PII Error on ${method}${safePath ? ' ' + safePath : ''}]`]
+          if (status) parts.push(`status=${status}`)
+          if (error?.constructor?.name) parts.push(`type=${error.constructor.name}`)
+          safeError = new Error(parts.join(' '))
+        }
         Logger.error(`[${this.name}] ${method} Error:`, safeError)
       }
       throw error
