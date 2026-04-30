@@ -388,7 +388,7 @@ class DifferenceRenderer {
     if (rowIdentifier.studentPersonalCode) row.dataset.studentPersonalCode = rowIdentifier.studentPersonalCode
 
     // Add status indicator element (initially hidden)
-    const statusIndicator = domService.createAndInsertElement(
+    domService.createAndInsertElement(
       'span',
       {
         classList: ['sync-status-indicator'],

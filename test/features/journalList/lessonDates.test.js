@@ -5,6 +5,9 @@ function makeMockApi({ timetableEvents = [], planData = null } = {}) {
   return {
     tahvel: {
       get: async endpoint => {
+        if (endpoint.includes('autocomplete/studyYears')) {
+          return [{ id: 727, nameEt: '2025/2026' }]
+        }
         if (endpoint.includes('timetableByTeacher')) {
           return { timetableEvents }
         }

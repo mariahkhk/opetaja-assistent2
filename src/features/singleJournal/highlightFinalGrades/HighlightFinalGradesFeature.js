@@ -1,7 +1,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import { styleService } from '../../../services/StyleService.js'
 import Logger from '../../../services/Logger.js'
-import { getWarningLevel, getFinalLessonDate as getFinalLessonDateShared, getStudyYearRange } from '../../../lib/finalGradeWarning.js'
+import { getWarningLevel, getFinalLessonDate as getFinalLessonDateShared } from '../../../lib/finalGradeWarning.js'
 
 const FINAL_LESSON_LOOKUP_CACHE_TTL = 6e4
 

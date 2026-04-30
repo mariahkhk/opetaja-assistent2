@@ -1,11 +1,18 @@
-import { describe, test, expect, beforeEach, mock } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import LastLessonNotificationFeature from '../../../src/features/singleJournal/lastLessonNotification/LastLessonNotificationFeature.js'
 
 describe('LastLessonNotificationFeature', () => {
   let feature
+  let originalSetTimeout
 
   beforeEach(() => {
+    originalSetTimeout = global.setTimeout
+    global.setTimeout = fn => {
+      fn()
+      return 0
+    }
+
     global.console = {
       debug: () => {},
       log: () => {},
@@ -20,6 +27,7 @@ describe('LastLessonNotificationFeature', () => {
     global.document = {
       getElementById: () => null,
       querySelector: () => null,
+      querySelectorAll: () => [],
       createElement: () => ({
         id: '',
         textContent: '',
@@ -35,6 +43,10 @@ describe('LastLessonNotificationFeature', () => {
       }
     }
     feature = new LastLessonNotificationFeature()
+  })
+
+  afterEach(() => {
+    global.setTimeout = originalSetTimeout
   })
 
   describe('constructor', () => {
@@ -453,6 +465,49 @@ describe('LastLessonNotificationFeature', () => {
   })
 
   describe('activate with independent work and past timetable', () => {
+    test('should resolve lesson plan study year id from Tahvel API', async () => {
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div class="hois-collapse-header"><div class="flex-gt-md-50"><span>Math</span></div></div></body></html>')
+      global.document = dom.window.document
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' } }
+
+      let lessonPlanEndpoint = null
+      feature.api = {
+        tahvel: {
+          get: mock(async (url) => {
+            if (url.includes('/autocomplete/studyYears')) {
+              return [{ id: 727, nameEt: '2025/2026' }]
+            }
+            if (url.includes('journalEntriesByDate')) {
+              return [{ id: 1, entryDate: '2026-04-13', entryType: 'SISSEKANNE_T' }]
+            }
+            if (url.includes('timetableevents')) {
+              return { timetableEvents: [] }
+            }
+            if (url.includes('/lessonplans/byteacher/')) {
+              lessonPlanEndpoint = url
+              return {
+                journals: [{ id: 12345, hours: { MAHT_a: [1] } }],
+                weekNrs: [10],
+                studyPeriods: [{ nameEt: 'Spring', weekNrs: [10], weekBeginningDates: ['2026-04-13'] }]
+              }
+            }
+            if (url.includes('journals/12345')) {
+              return {
+                id: 12345,
+                school: { id: 9 },
+                journalTeachers: [{ id: 4303, nameEt: 'Current Teacher' }]
+              }
+            }
+            return {}
+          })
+        }
+      }
+
+      await feature.activate()
+
+      expect(lessonPlanEndpoint).toBe('/lessonplans/byteacher/4303/727')
+    })
+
     test('should handle independent work entries with null due dates', async () => {
       const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
       global.document = dom.window.document

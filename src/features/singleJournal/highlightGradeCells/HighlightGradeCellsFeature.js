@@ -409,9 +409,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
   _isAcademicLeaveRow(row, firstGradeColumnIndex = 0) {
     if (!row?.children) return false
     const studentCells = Array.from(row.children).slice(0, firstGradeColumnIndex)
-    return studentCells.some(cell => {
-      return Array.from(cell.querySelectorAll('i span, i')).some(element => this._normalizeGradeValue(element.textContent) === 'AP')
-    })
+    return studentCells.some(cell => Array.from(cell.querySelectorAll('i span, i')).some(element => this._normalizeGradeValue(element.textContent) === 'AP'))
   }
 
   _isAcademicLeaveEmptyCell(row, cellValue, columnIndex, firstGradeColumnIndex, academicLeaveRows = null) {
@@ -448,7 +446,11 @@ class HighlightGradeCellsFeature extends BaseFeature {
     const journalId = this._getJournalId()
     if (!journalId || !this.api?.tahvel) return Promise.resolve()
     if (this._commentJournalId === journalId && this._commentPromise) return this._commentPromise
-    if (this._commentJournalId === journalId && this._commentFailedAt && Date.now() - this._commentFailedAt < COMMENT_FAILURE_RETRY_DELAY) return Promise.resolve()
+    if (
+      this._commentJournalId === journalId &&
+      this._commentFailedAt &&
+      Date.now() - this._commentFailedAt < COMMENT_FAILURE_RETRY_DELAY
+    ) return Promise.resolve()
     if (this._commentJournalId === journalId && Date.now() - this._commentLoadedAt < 6e4) return Promise.resolve()
 
     if (this._commentJournalId !== journalId) {

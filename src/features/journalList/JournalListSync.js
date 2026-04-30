@@ -23,6 +23,7 @@ import { differenceRenderer, journalSyncBannerService } from './JournalSyncBanne
 import { sendOutcomeEntriesToKriit } from './OutComes.js'
 import { notifyKriitGradesSynced, buildGradesForNotification } from './KriitSyncNotifier.js'
 import { getSchoolId } from '../../lib/schoolId.js'
+import { resolveLessonPlanDate, resolveStudyYearIdFromText } from '../../lib/studyYear.js'
 
 class JournalListSyncFeature extends BaseFeature {
   /**
@@ -478,25 +479,10 @@ class JournalListSyncFeature extends BaseFeature {
     if (!yearText) return null
 
     try {
-      const base = this.api && this.api.tahvel && this.api.tahvel.baseUrl ? String(this.api.tahvel.baseUrl) : ''
-      let studyYearsEndpoint = '/hois_back/autocomplete/studyYears'
-      if (base.endsWith('/hois_back')) studyYearsEndpoint = '/autocomplete/studyYears'
-
-      const studyYearsResponse = await this.api.tahvel.get(
-        studyYearsEndpoint,
-        {},
-        {
-          cache: true,
-          cacheExpiration: 24 * 60 * 60 * 1000 // Cache for 24 hours
-        }
-      )
-
-      if (Array.isArray(studyYearsResponse)) {
-        const matchingYear = studyYearsResponse.find(sy => sy.nameEt === yearText)
-        if (matchingYear && matchingYear.id) {
-          Logger.debug(`Resolved study year "${yearText}" to ID: ${matchingYear.id}`)
-          return matchingYear.id
-        }
+      const yearId = await resolveStudyYearIdFromText(this.api, yearText)
+      if (yearId) {
+        Logger.debug(`Resolved study year "${yearText}" to ID: ${yearId}`)
+        return yearId
       }
     } catch (err) {
       Logger.warning('Failed to resolve study year ID from text:', err.message)
@@ -1469,7 +1455,16 @@ class JournalListSyncFeature extends BaseFeature {
         const assignmentHoursDiffs = this.extractAssignmentHoursDifferences()
         const entryTypeDiffs = this.extractEntryTypeDifferences()
         const newAssignments = (window.journalListSync && window.journalListSync.newAssignments) || {}
-        differenceRenderer.render(container, assignmentNameDiffs, gradeDiffs, dueDateDiffs, entryDateDiffs, assignmentHoursDiffs, entryTypeDiffs, newAssignments)
+        differenceRenderer.render(
+          container,
+          assignmentNameDiffs,
+          gradeDiffs,
+          dueDateDiffs,
+          entryDateDiffs,
+          assignmentHoursDiffs,
+          entryTypeDiffs,
+          newAssignments
+        )
       }
     )
   }
@@ -2148,64 +2143,7 @@ class JournalListSyncFeature extends BaseFeature {
    */
   async getFirstLessonFromPlan(journalId, teacherId) {
     try {
-      // Get study year ID
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const currentMonth = now.getMonth()
-
-      // Determine study year (starts in September)
-      const studyYearStart = currentMonth < 8 ? currentYear - 1 : currentYear
-
-      // Study year ID appears to be based on pattern from the data: 726 for 2025-26
-      // The pattern seems to be: year - 1299 (e.g., 2025 - 1299 = 726)
-      const studyYearId = studyYearStart - 1299
-
-      const endpoint = `/lessonplans/byteacher/${teacherId}/${studyYearId}`
-
-      const planData = await this.api.tahvel.get(
-        endpoint,
-        {},
-        {
-          cache: true,
-          cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
-        }
-      )
-
-      if (!planData?.journals || !planData?.studyPeriods) {
-        return null
-      }
-
-      // Find the journal in the plan
-      const journalPlan = planData.journals.find(j => j.id === journalId)
-      if (!journalPlan?.hours?.MAHT_a) {
-        return null
-      }
-
-      // Find the first week with MAHT_a hours (non-null value)
-      const mahtAWeeks = journalPlan.hours.MAHT_a
-      const firstWeekIndex = mahtAWeeks.findIndex(hours => hours !== null)
-
-      if (firstWeekIndex === -1) {
-        return null
-      }
-
-      // Get the week number for that index
-      const weekNr = planData.weekNrs[firstWeekIndex]
-
-      if (!weekNr) {
-        return null
-      }
-
-      // Find the study period that contains this week
-      for (const period of planData.studyPeriods) {
-        const weekPosition = period.weekNrs.indexOf(weekNr)
-        if (weekPosition !== -1 && period.weekBeginningDates?.[weekPosition]) {
-          // Return the Monday of that week
-          return period.weekBeginningDates[weekPosition]
-        }
-      }
-
-      return null
+      return await resolveLessonPlanDate(this.api, journalId, teacherId, 'first')
     } catch (error) {
       Logger.debug(`Could not get first lesson from plan for journal ${journalId}:`, error.message)
       return null
@@ -2220,84 +2158,7 @@ class JournalListSyncFeature extends BaseFeature {
    */
   async getLastLessonFromPlan(journalId, teacherId) {
     try {
-      // Get study year ID
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const currentMonth = now.getMonth()
-
-      // Determine study year (starts in September)
-      const studyYearStart = currentMonth < 8 ? currentYear - 1 : currentYear
-
-      // Study year ID appears to be based on pattern from the data: 726 for 2025-26
-      // The pattern seems to be: year - 1299 (e.g., 2025 - 1299 = 726)
-      const studyYearId = studyYearStart - 1299
-
-      const endpoint = `/lessonplans/byteacher/${teacherId}/${studyYearId}`
-
-      Logger.debug(`[getLastLessonFromPlan] Fetching lesson plan for journal ${journalId}, teacher ${teacherId}, studyYear ${studyYearId}`)
-
-      const planData = await this.api.tahvel.get(
-        endpoint,
-        {},
-        {
-          cache: true,
-          cacheExpiration: 24 * 60 * 60 * 1000 // 24 hours
-        }
-      )
-
-      if (!planData?.journals || !planData?.studyPeriods) {
-        Logger.debug(`[getLastLessonFromPlan] No plan data found for journal ${journalId}`)
-        return null
-      }
-
-      // Find the journal in the plan
-      const journalPlan = planData.journals.find(j => j.id === journalId)
-      if (!journalPlan?.hours?.MAHT_a) {
-        Logger.debug(`[getLastLessonFromPlan] No MAHT_a hours found for journal ${journalId}`)
-        return null
-      }
-
-      // Find the last week with MAHT_a hours (non-null value)
-      const mahtAWeeks = journalPlan.hours.MAHT_a
-      let lastWeekIndex = -1
-
-      for (let i = mahtAWeeks.length - 1; i >= 0; i--) {
-        if (mahtAWeeks[i] !== null) {
-          lastWeekIndex = i
-          break
-        }
-      }
-
-      if (lastWeekIndex === -1) {
-        Logger.debug(`[getLastLessonFromPlan] No non-null MAHT_a hours found for journal ${journalId}`)
-        return null
-      }
-
-      Logger.debug(`[getLastLessonFromPlan] Found last week index: ${lastWeekIndex}, hours: ${mahtAWeeks[lastWeekIndex]}`)
-
-      // Get the week number for that index
-      const weekNr = planData.weekNrs[lastWeekIndex]
-
-      if (!weekNr) {
-        Logger.debug(`[getLastLessonFromPlan] No week number found at index ${lastWeekIndex}`)
-        return null
-      }
-
-      Logger.debug(`[getLastLessonFromPlan] Week number: ${weekNr}`)
-
-      // Find the study period that contains this week
-      for (const period of planData.studyPeriods) {
-        const weekPosition = period.weekNrs.indexOf(weekNr)
-        if (weekPosition !== -1 && period.weekBeginningDates?.[weekPosition]) {
-          // Return the Monday of that week
-          const lastLessonDate = period.weekBeginningDates[weekPosition]
-          Logger.debug(`[getLastLessonFromPlan] Found last lesson date: ${lastLessonDate} in period ${period.nameEt}`)
-          return lastLessonDate
-        }
-      }
-
-      Logger.debug(`[getLastLessonFromPlan] Week ${weekNr} not found in any study period`)
-      return null
+      return await resolveLessonPlanDate(this.api, journalId, teacherId, 'last')
     } catch (error) {
       Logger.debug(`Could not get last lesson from plan for journal ${journalId}:`, error.message)
       return null
@@ -3398,9 +3259,7 @@ class JournalListSyncFeature extends BaseFeature {
   countSuccessfulSyncChanges(successfulSyncs, batches) {
     const successfulKeys = new Set(successfulSyncs.map(sync => `${sync.journalId}::${sync.assignmentId}`))
     const gradeCount = successfulSyncs.reduce((count, sync) => count + (sync.updated || 0), 0)
-    const assignmentLevelCount = batches.reduce((count, batch) => {
-      return successfulKeys.has(`${batch.journalId}::${batch.assignmentId}`) ? count + this.getAssignmentLevelBatchChanges(batch).length : count
-    }, 0)
+    const assignmentLevelCount = batches.reduce((count, batch) => successfulKeys.has(`${batch.journalId}::${batch.assignmentId}`) ? count + this.getAssignmentLevelBatchChanges(batch).length : count, 0)
 
     return gradeCount + assignmentLevelCount
   }
@@ -3433,7 +3292,7 @@ class JournalListSyncFeature extends BaseFeature {
    * @returns {string|null|undefined} Normalized due date
    */
   normalizeTahvelDueDate(dueDate) {
-    let due = dueDate
+    const due = dueDate
     if (typeof due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(due)) {
       return `${due}T23:59:59.000Z`
     }
@@ -4168,7 +4027,9 @@ class JournalListSyncFeature extends BaseFeature {
         const skippedUpdates = successfulSyncs.filter(s => s.skipped).length
 
         // Count specific types of changes from batches
-        const assignmentLevelCounts = new Map(this.getAssignmentLevelSyncFields().map(field => [field.statusType, { count: 0, label: field.successLabel }]))
+        const assignmentLevelCounts = new Map(
+          this.getAssignmentLevelSyncFields().map(field => [field.statusType, { count: 0, label: field.successLabel }])
+        )
         for (const batch of batches) {
           if (successfulSyncs.some(s => s.journalId === batch.journalId && s.assignmentId === batch.assignmentId)) {
             for (const { field } of this.getAssignmentLevelBatchChanges(batch)) {

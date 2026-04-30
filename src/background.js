@@ -76,7 +76,11 @@ async function broadcastCacheMaintenance() {
     // chrome.storage.session may be unavailable; fall through with last=0.
   }
   if (now - last < BROADCAST_MIN_INTERVAL_MS) return
-  try { await chrome.storage.session.set({ [BROADCAST_TS_KEY]: now }) } catch {}
+  try {
+    await chrome.storage.session.set({ [BROADCAST_TS_KEY]: now })
+  } catch {
+    // Cache maintenance can still run even if throttling timestamp persistence fails.
+  }
   try {
     const tabs = await chrome.tabs.query({
       url: ['*://tahvel.edu.ee/*', '*://test.tahvel.eenet.ee/*']
@@ -117,7 +121,7 @@ function isTahvelTabUrl(url) {
   return url.includes('tahvel.edu.ee') || url.includes('test.tahvel.eenet.ee')
 }
 
-chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+chrome.tabs.onActivated.addListener(async({ tabId }) => {
   try {
     const tab = await chrome.tabs.get(tabId)
     if (isTahvelTabUrl(tab?.url)) broadcastCacheMaintenance()

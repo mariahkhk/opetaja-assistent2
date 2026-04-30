@@ -2,6 +2,7 @@ import Logger from '../services/Logger.js'
 import { cacheService } from '../services/CacheService.js'
 import { fetchTeacherJournals } from './fetchTeacherJournals.js'
 import { getSchoolId } from './schoolId.js'
+import { resolveLessonPlanDate } from './studyYear.js'
 
 // Cache expiration constants
 const ONE_HOUR_MS = 60 * 60 * 1000
@@ -755,47 +756,7 @@ async function getLessonDates(api, journalId, journalInfo) {
  */
 async function getLessonFromPlan(api, journalId, teacherId, { position }) {
   try {
-    const now = new Date()
-    const studyYearStart = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()
-    const studyYearId = studyYearStart - 1299
-
-    const planData = await api.tahvel.get(
-      `/lessonplans/byteacher/${teacherId}/${studyYearId}`,
-      {},
-      { cache: true, cacheExpiration: ONE_DAY_MS }
-    )
-
-    if (!planData?.journals || !planData?.studyPeriods) return null
-
-    const journalPlan = planData.journals.find(j => j.id === journalId)
-    if (!journalPlan?.hours?.MAHT_a) return null
-
-    const mahtAWeeks = journalPlan.hours.MAHT_a
-
-    let weekIndex
-    if (position === 'first') {
-      weekIndex = mahtAWeeks.findIndex(hours => hours !== null)
-    } else {
-      weekIndex = -1
-      for (let i = mahtAWeeks.length - 1; i >= 0; i--) {
-        if (mahtAWeeks[i] !== null) {
-          weekIndex = i
-          break
-        }
-      }
-    }
-    if (weekIndex === -1) return null
-
-    const weekNr = planData.weekNrs[weekIndex]
-    if (!weekNr) return null
-
-    for (const period of planData.studyPeriods) {
-      const weekPosition = period.weekNrs.indexOf(weekNr)
-      if (weekPosition !== -1 && period.weekBeginningDates?.[weekPosition]) {
-        return period.weekBeginningDates[weekPosition]
-      }
-    }
-    return null
+    return await resolveLessonPlanDate(api, journalId, teacherId, position)
   } catch (error) {
     Logger.debug(`[kriitSyncCheck] Failed to get ${position} lesson from plan for journal ${journalId}:`, error.message)
     return null

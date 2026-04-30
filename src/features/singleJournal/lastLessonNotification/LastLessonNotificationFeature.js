@@ -5,6 +5,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { getSchoolId } from '../../../lib/schoolId.js'
+import { resolveLessonPlanDate } from '../../../lib/studyYear.js'
 
 function getApiErrorStatus(error) {
   return error?.status || Number(error?.message?.match(/API Error:\s*(\d+)/)?.[1])
@@ -381,77 +382,7 @@ export default class LastLessonNotificationFeature extends BaseFeature {
    */
   async #getLastLessonFromPlan(journalId, teacherId) {
     try {
-      // Get study year ID
-      const now = new Date()
-      const currentYear = now.getFullYear()
-      const currentMonth = now.getMonth()
-
-      // Determine study year (starts in September)
-      const studyYearStart = currentMonth < 8 ? currentYear - 1 : currentYear
-
-      // Study year ID appears to be based on pattern from the data: 726 for 2025-26
-      // The pattern seems to be: year - 1299 (e.g., 2025 - 1299 = 726)
-      const studyYearId = studyYearStart - 1299
-
-      const endpoint = `/lessonplans/byteacher/${teacherId}/${studyYearId}`
-
-      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Fetching lesson plan for journal ${journalId}, teacher ${teacherId}, studyYear ${studyYearId}`)
-
-      const planData = await this.api.tahvel.get(endpoint, {}, { cache: true, cacheExpiration: 864e5 })
-
-      if (!planData?.journals || !planData?.studyPeriods) {
-        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No plan data found for journal ${journalId}`)
-        return null
-      }
-
-      // Find the journal in the plan
-      const journalPlan = planData.journals.find(j => j.id === journalId)
-      if (!journalPlan?.hours?.MAHT_a) {
-        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No MAHT_a hours found for journal ${journalId}`)
-        return null
-      }
-
-      // Find the last week with MAHT_a hours (non-null value)
-      const mahtAWeeks = journalPlan.hours.MAHT_a
-      let lastWeekIndex = -1
-
-      for (let i = mahtAWeeks.length - 1; i >= 0; i--) {
-        if (mahtAWeeks[i] !== null) {
-          lastWeekIndex = i
-          break
-        }
-      }
-
-      if (lastWeekIndex === -1) {
-        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No non-null MAHT_a hours found for journal ${journalId}`)
-        return null
-      }
-
-      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Found last week index: ${lastWeekIndex}, hours: ${mahtAWeeks[lastWeekIndex]}`)
-
-      // Get the week number for that index
-      const weekNr = planData.weekNrs[lastWeekIndex]
-
-      if (!weekNr) {
-        if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] No week number found at index ${lastWeekIndex}`)
-        return null
-      }
-
-      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Week number: ${weekNr}`)
-
-      // Find the study period that contains this week
-      for (const period of planData.studyPeriods) {
-        const weekPosition = period.weekNrs.indexOf(weekNr)
-        if (weekPosition !== -1 && period.weekBeginningDates?.[weekPosition]) {
-          // Return the Monday of that week
-          const lastLessonDate = period.weekBeginningDates[weekPosition]
-          if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Found last lesson date: ${lastLessonDate} in period ${period.nameEt}`)
-          return lastLessonDate
-        }
-      }
-
-      if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Week ${weekNr} not found in any study period`)
-      return null
+      return await resolveLessonPlanDate(this.api, journalId, teacherId, 'last')
     } catch (error) {
       if (Logger.isDebugMode()) Logger.debug(`[LastLessonNotificationFeature] Could not get last lesson from plan for journal ${journalId}:`, error.message)
       return null

@@ -2225,17 +2225,20 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns the first non-null MAHT_a week-beginning date for the journal', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({
-            journals: [{ id: 100, hours: { MAHT_a: [null, null, 2, 4, null] } }],
-            weekNrs: [1, 2, 3, 4, 5],
-            studyPeriods: [
-              {
-                nameEt: 'Sügissemester',
-                weekNrs: [1, 2, 3, 4, 5],
-                weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
-              }
-            ]
-          }))
+          get: mock(async (url) => {
+            if (url.includes('autocomplete/studyYears')) return [{ id: 727, nameEt: '2025/2026' }]
+            return {
+              journals: [{ id: 100, hours: { MAHT_a: [null, null, 2, 4, null] } }],
+              weekNrs: [1, 2, 3, 4, 5],
+              studyPeriods: [
+                {
+                  nameEt: 'Sügissemester',
+                  weekNrs: [1, 2, 3, 4, 5],
+                  weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
+                }
+              ]
+            }
+          })
         }
       }
       expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBe('2024-09-16')
@@ -2244,7 +2247,9 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns null when journal not in plan', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({ journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] }))
+          get: mock(async (url) => url.includes('autocomplete/studyYears')
+            ? [{ id: 727, nameEt: '2025/2026' }]
+            : { journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] })
         }
       }
       expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
@@ -2253,7 +2258,9 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns null when journal has no MAHT_a hours', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({ journals: [{ id: 100, hours: {} }], weekNrs: [], studyPeriods: [] }))
+          get: mock(async (url) => url.includes('autocomplete/studyYears')
+            ? [{ id: 727, nameEt: '2025/2026' }]
+            : { journals: [{ id: 100, hours: {} }], weekNrs: [], studyPeriods: [] })
         }
       }
       expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
@@ -2262,11 +2269,14 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns null when all MAHT_a hours are null', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({
-            journals: [{ id: 100, hours: { MAHT_a: [null, null, null] } }],
-            weekNrs: [1, 2, 3],
-            studyPeriods: []
-          }))
+          get: mock(async (url) => {
+            if (url.includes('autocomplete/studyYears')) return [{ id: 727, nameEt: '2025/2026' }]
+            return {
+              journals: [{ id: 100, hours: { MAHT_a: [null, null, null] } }],
+              weekNrs: [1, 2, 3],
+              studyPeriods: []
+            }
+          })
         }
       }
       expect(await journalListSync.getFirstLessonFromPlan(100, 7)).toBeNull()
@@ -2284,17 +2294,20 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns the last non-null MAHT_a week-beginning date for the journal', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({
-            journals: [{ id: 100, hours: { MAHT_a: [2, 4, null, 4, null] } }],
-            weekNrs: [1, 2, 3, 4, 5],
-            studyPeriods: [
-              {
-                nameEt: 'Sügissemester',
-                weekNrs: [1, 2, 3, 4, 5],
-                weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
-              }
-            ]
-          }))
+          get: mock(async (url) => {
+            if (url.includes('autocomplete/studyYears')) return [{ id: 727, nameEt: '2025/2026' }]
+            return {
+              journals: [{ id: 100, hours: { MAHT_a: [2, 4, null, 4, null] } }],
+              weekNrs: [1, 2, 3, 4, 5],
+              studyPeriods: [
+                {
+                  nameEt: 'Sügissemester',
+                  weekNrs: [1, 2, 3, 4, 5],
+                  weekBeginningDates: ['2024-09-02', '2024-09-09', '2024-09-16', '2024-09-23', '2024-09-30']
+                }
+              ]
+            }
+          })
         }
       }
       expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBe('2024-09-23')
@@ -2303,7 +2316,9 @@ describe('JournalListSync - Algorithm Tests', () => {
     test('returns null when journal not in plan', async () => {
       journalListSync.api = {
         tahvel: {
-          get: mock(async () => ({ journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] }))
+          get: mock(async (url) => url.includes('autocomplete/studyYears')
+            ? [{ id: 727, nameEt: '2025/2026' }]
+            : { journals: [{ id: 999 }], weekNrs: [], studyPeriods: [] })
         }
       }
       expect(await journalListSync.getLastLessonFromPlan(100, 7)).toBeNull()
