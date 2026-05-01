@@ -66,6 +66,23 @@ describe('HighlightGradeCellsFeature', () => {
     expect(css).toContain('td.oa2-grade-cell-positive tahvel-tooltip')
   })
 
+  test('suppresses native title while showing custom grade tooltip', () => {
+    const cell = document.createElement('td')
+    cell.className = 'oa2-grade-cell-positive'
+    cell.title = 'Praegune hinne erineb arvutatud hindest\nPraegune: A\nArvutatud: MA'
+    document.body.appendChild(cell)
+
+    feature._showTooltip(cell.title, { clientX: 0, clientY: 0 }, cell)
+
+    expect(cell.hasAttribute('title')).toBe(false)
+    expect(cell.dataset.oa2SuppressedTitle).toContain('Praegune hinne erineb')
+
+    feature._hideTooltip()
+
+    expect(cell.title).toContain('Praegune hinne erineb')
+    expect(cell.dataset.oa2SuppressedTitle).toBeUndefined()
+  })
+
   test('highlights full grade cells in columns that contain grades', () => {
     document.body.innerHTML = `
       <div id="studentTable">

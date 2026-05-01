@@ -3,6 +3,7 @@
 
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
+import { getNativeJournalHeaderCells } from '../../../lib/journalTableHeaders.js'
 
 class HighlightMissingGradesFeature extends BaseFeature {
   constructor() {
@@ -232,7 +233,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
       cell.classList.remove('highlight-missing-grade')
       cell.title = ''
     })
-    const headerCells = Array.from(table.querySelectorAll('thead th'))
+    const headerCells = getNativeJournalHeaderCells(table)
     Logger.debug('[HighlightMissingGradesFeature] run(): headerCells count', headerCells.length)
     const nowDate = new Date()
 

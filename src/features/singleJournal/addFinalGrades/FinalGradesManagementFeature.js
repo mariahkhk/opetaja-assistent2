@@ -2,6 +2,7 @@ import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { domService } from '../../../services/DomService.js'
 import { extractOutcomeNumbersFromEntryName } from '../../../lib/extractOutcomeNumbersFromEntryName.js'
+import { getNativeJournalHeaderRows } from '../../../lib/journalTableHeaders.js'
 import { injectFinalGradeCSS, markMismatch, clearMismatch } from './FinalGradeHighlighter.js'
 
 class FinalGradesByOvFeature extends BaseFeature {
@@ -2914,7 +2915,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   // Find column indices for final grade and ÕV columns in the journal table
   // Copied from HighlightFinalGradesFeature to avoid dependency
   findColumnIndices(table, outcomeEntryNames = []) {
-    const headerRows = Array.from(table.querySelectorAll('thead tr'))
+    const headerRows = getNativeJournalHeaderRows(table)
     const finalGradeCols = []
     const ovCols = []
     const debugHeaders = []

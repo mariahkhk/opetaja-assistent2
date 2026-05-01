@@ -1,6 +1,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { styleService } from '../../../services/StyleService.js'
+import { getNativeJournalHeaderCells } from '../../../lib/journalTableHeaders.js'
 
 const POSITIVE_GRADES = new Set(['A', '3', '4', '5'])
 const NEGATIVE_GRADES = new Set(['MA', '1', '2', 'X'])
@@ -22,6 +23,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
     this._mouseOutListener = null
     this._tooltip = null
     this._tooltipSourceCell = null
+    this._suppressedTitleCell = null
     this._pendingTooltipCell = null
     this._isActive = false
     this._commentJournalId = null
@@ -370,14 +372,18 @@ class HighlightGradeCellsFeature extends BaseFeature {
 
   _isJournalTable(table) {
     if (!table) return false
-    const headers = Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent || '').trim().toLowerCase())
+    const headers = this._getNativeHeaderCells(table).map(th => (th.textContent || '').trim().toLowerCase())
     return headers.some(header => header.includes('õppija'))
   }
 
   _getFirstGradeColumnIndex(table) {
-    const headers = Array.from(table.querySelectorAll('thead th'))
+    const headers = this._getNativeHeaderCells(table)
     const studentHeaderIndex = headers.findIndex(th => (th.textContent || '').trim().toLowerCase().includes('õppija'))
     return studentHeaderIndex >= 0 ? studentHeaderIndex + 1 : 2
+  }
+
+  _getNativeHeaderCells(table) {
+    return getNativeJournalHeaderCells(table)
   }
 
   _getCellValue(cell) {
@@ -548,7 +554,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
     if (!this._journalEntries.length) return columnEntryIndexes
 
     const usedEntryIndexes = new Set()
-    const headers = Array.from(table.querySelectorAll('thead th'))
+    const headers = this._getNativeHeaderCells(table)
     headers.forEach((header, columnIndex) => {
       if (columnIndex < firstGradeColumnIndex) return
       const entryIndex = this._findEntryIndexForHeader(header, usedEntryIndexes)
@@ -655,6 +661,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
       this._mouseOutListener = null
     }
     this._pendingTooltipCell = null
+    this._restoreSuppressedTitle()
     this._hideTooltip()
   }
 
@@ -708,7 +715,28 @@ class HighlightGradeCellsFeature extends BaseFeature {
     this._tooltipSourceCell = sourceCell
     this._tooltip.textContent = text
     this._tooltip.hidden = false
+    this._suppressNativeTitle(sourceCell)
     this._positionTooltip(event)
+  }
+
+  _suppressNativeTitle(cell) {
+    if (this._suppressedTitleCell && this._suppressedTitleCell !== cell) this._restoreSuppressedTitle()
+    if (!cell?.hasAttribute?.('title')) return
+
+    cell.dataset.oa2SuppressedTitle = cell.getAttribute('title') || ''
+    cell.removeAttribute('title')
+    this._suppressedTitleCell = cell
+  }
+
+  _restoreSuppressedTitle() {
+    const cell = this._suppressedTitleCell
+    this._suppressedTitleCell = null
+    if (!cell?.isConnected || !Object.hasOwn(cell.dataset || {}, 'oa2SuppressedTitle')) return
+
+    const title = cell.dataset.oa2SuppressedTitle
+    if (title) cell.setAttribute('title', title)
+    else cell.removeAttribute('title')
+    delete cell.dataset.oa2SuppressedTitle
   }
 
   _positionTooltip(event) {
@@ -725,6 +753,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
   }
 
   _hideTooltip() {
+    this._restoreSuppressedTitle()
     if (this._tooltip) {
       this._tooltip.remove()
       this._tooltip = null

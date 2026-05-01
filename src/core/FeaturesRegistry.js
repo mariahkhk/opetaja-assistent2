@@ -129,6 +129,16 @@ export async function loadFeatures() {
     Logger.error('Error loading HighlightGradeCellsFeature:', error)
   }
 
+  // Load assignment title helper row feature (always enabled)
+  try {
+    const AssignmentTitleRowFeature = (await import('../features/singleJournal/assignmentTitleRow/AssignmentTitleRowFeature.js')).default
+    const assignmentTitleRowFeature = new AssignmentTitleRowFeature()
+    allAvailableFeatures.singleJournal.push(assignmentTitleRowFeature)
+    Logger.debug('Feature "AssignmentTitleRowFeature" created')
+  } catch (error) {
+    Logger.error('Error loading AssignmentTitleRowFeature:', error)
+  }
+
   // Load highlight final grades feature (always enabled)
   try {
     const HighlightFinalGradesFeature = (await import('../features/singleJournal/highlightFinalGrades/HighlightFinalGradesFeature.js')).default
