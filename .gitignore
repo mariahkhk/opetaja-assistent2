@@ -5,7 +5,7 @@ node_modules
 
 opetaja-assistent
 .vscode
-kriit
+/kriit
 src/features/journalList/output.txt
 
 # output
@@ -29,6 +29,14 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .env.test.local
 .env.production.local
 .env.local
+
+# Playwright
+test-results/
+playwright-report/
+.playwright/
+
+# Tahvel fixture capture (raw, contains real PII — never commit)
+tests/fixtures/tahvel-raw/
 
 # caches
 .eslintcache

@@ -1,0 +1,145 @@
+{
+  "id": 404498,
+  "studyYearId": 726,
+  "studyYear": "OPPEAASTA_2025_26",
+  "studyYearStartDate": "2025-07-28T00:00:00Z",
+  "studyYearEndDate": "2026-08-30T00:00:00Z",
+  "nameEt": "Andmebaasiserverite haldus",
+  "studentGroups": [
+    "IS24"
+  ],
+  "journalTeachers": [
+    {
+      "id": 2078,
+      "nameEt": "Anonüümne1",
+      "nameEn": "Anonüümne1",
+      "firstname": "Anonüümne2",
+      "lastname": "Anonüümne3",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne1",
+      "nameRu": "Anonüümne1"
+    },
+    {
+      "id": 22816,
+      "nameEt": "Anonüümne4",
+      "nameEn": "Anonüümne4",
+      "firstname": "Anonüümne5",
+      "lastname": "Anonüümne6",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne4",
+      "nameRu": "Anonüümne4"
+    }
+  ],
+  "curriculumModules": [
+    {
+      "id": 154501,
+      "nameEt": "Rakendusserverid - Põhiõpingud (IS24)",
+      "nameEn": "Rakendusserverid - Basic studies (IS24)",
+      "curriculumModuleId": 14977,
+      "credits": null,
+      "assessment": null,
+      "gradeCode": null,
+      "gradeDate": null,
+      "teachers": null,
+      "isAdditional": null,
+      "moduleCode": "KUTSEMOODUL_P",
+      "nameRu": "Rakendusserverid - Põhiõpingud (IS24)"
+    }
+  ],
+  "responsiblesForModules": [
+    "Anonüümne1"
+  ],
+  "curriculumVersions": [
+    {
+      "id": 8646,
+      "curriculumId": 838,
+      "nameEt": "IS24 IT-süsteemide nooremspetsialist",
+      "nameEn": "IS24 Junior IT systems specialist",
+      "modules": [
+        {
+          "id": 154501,
+          "nameEt": "Rakendusserverid - Põhiõpingud",
+          "nameEn": "Rakendusserverid - Basic studies",
+          "curriculumModuleId": 14977,
+          "credits": null,
+          "assessment": null,
+          "gradeCode": null,
+          "gradeDate": null,
+          "teachers": null,
+          "isAdditional": null,
+          "moduleCode": "KUTSEMOODUL_P",
+          "nameRu": "Rakendusserverid - Põhiõpingud"
+        }
+      ],
+      "themes": [
+        {
+          "id": 405522,
+          "nameEt": "Andmebaasiserverite haldus",
+          "nameEn": null,
+          "nameRu": "Andmebaasiserverite haldus"
+        }
+      ],
+      "fictive": null
+    }
+  ],
+  "lessonHours": {
+    "totalPlannedHours": 78,
+    "totalUsedHours": 30,
+    "capacityHours": [
+      {
+        "capacity": "MAHT_a",
+        "plannedHours": 8,
+        "usedHours": 20
+      },
+      {
+        "capacity": "MAHT_i",
+        "plannedHours": 24,
+        "usedHours": 5
+      },
+      {
+        "capacity": "MAHT_p",
+        "plannedHours": 46,
+        "usedHours": 0
+      }
+    ]
+  },
+  "status": "PAEVIK_STAATUS_T",
+  "endDate": null,
+  "hasJournalStudents": true,
+  "journalRooms": [],
+  "includesOutcomes": false,
+  "isIndividual": false,
+  "finalEntryAllowed": true,
+  "assessment": "KUTSEHINDAMISVIIS_E",
+  "isDistinctiveAssessment": true,
+  "moodleCourseId": null,
+  "isReviewOk": null,
+  "reviewDate": null,
+  "reviewInfo": null,
+  "isOther": false,
+  "isStudentGroupTeacherJournal": false,
+  "isBasic": false,
+  "isSecondary": false,
+  "isVocational": true,
+  "isIndividualTheme": false,
+  "isGradeForbidden": false,
+  "isVerbalForbidden": false,
+  "canBeConfirmed": false,
+  "canBeUnconfirmed": false,
+  "canEdit": true,
+  "canViewReview": true,
+  "canReview": false,
+  "canConnectStudyMaterials": true,
+  "journalThemes": [
+    {
+      "id": 678493,
+      "nameEt": "Andmebaasiserverite haldus - Rakendusserverid (IS24)",
+      "nameEn": "Andmebaasiserverite haldus - Rakendusserverid (IS24)",
+      "nameRu": "Andmebaasiserverite haldus - Rakendusserverid (IS24)"
+    }
+  ]
+}

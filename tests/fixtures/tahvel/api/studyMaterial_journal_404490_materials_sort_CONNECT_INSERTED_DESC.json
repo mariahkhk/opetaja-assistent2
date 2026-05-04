@@ -1,0 +1,64 @@
+[
+  {
+    "id": 226619,
+    "nameEt": "Töökava: Linuxi tööjaamade haldus",
+    "typeCode": "OPPEMATERJAL_L",
+    "teacher": {
+      "id": 1123,
+      "nameEt": "Anonüümne95",
+      "nameEn": "Anonüümne95",
+      "nameRu": "Anonüümne95"
+    },
+    "isPublic": false,
+    "isVisibleToStudents": true,
+    "isVisibleToTeachers": false,
+    "isVisibleToStudentGroups": false,
+    "url": "https://example.test/anon/1",
+    "oisFile": {
+      "id": null,
+      "fname": null,
+      "ftype": null
+    },
+    "journalCount": 1,
+    "connect": {
+      "version": 0,
+      "id": 254936,
+      "inserted": "2025-08-26T13:13:07.326Z",
+      "insertedBy": "[ANON-FREETEXT-8]",
+      "studentDescriptionEt": null
+    },
+    "canEdit": false,
+    "inserted": "2025-08-26T13:13:07.323Z"
+  },
+  {
+    "id": 226615,
+    "nameEt": "Moodle kursus \"Linuxi tööjaamade haldus (Anonüümne)\"",
+    "typeCode": "OPPEMATERJAL_L",
+    "teacher": {
+      "id": 1123,
+      "nameEt": "Anonüümne95",
+      "nameEn": "Anonüümne95",
+      "nameRu": "Anonüümne95"
+    },
+    "isPublic": false,
+    "isVisibleToStudents": true,
+    "isVisibleToTeachers": false,
+    "isVisibleToStudentGroups": false,
+    "url": "https://example.test/anon/2",
+    "oisFile": {
+      "id": null,
+      "fname": null,
+      "ftype": null
+    },
+    "journalCount": 1,
+    "connect": {
+      "version": 0,
+      "id": 254932,
+      "inserted": "2025-08-26T12:51:33.005Z",
+      "insertedBy": "[ANON-FREETEXT-8]",
+      "studentDescriptionEt": null
+    },
+    "canEdit": false,
+    "inserted": "2025-08-26T12:51:33.001Z"
+  }
+]

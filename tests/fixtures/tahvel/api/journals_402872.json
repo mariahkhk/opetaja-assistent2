@@ -1,0 +1,145 @@
+{
+  "id": 402872,
+  "studyYearId": 726,
+  "studyYear": "OPPEAASTA_2025_26",
+  "studyYearStartDate": "2025-07-28T00:00:00Z",
+  "studyYearEndDate": "2026-08-30T00:00:00Z",
+  "nameEt": "Taristuteenused",
+  "studentGroups": [
+    "IS25"
+  ],
+  "journalTeachers": [
+    {
+      "id": 1123,
+      "nameEt": "Anonüümne95",
+      "nameEn": "Anonüümne95",
+      "firstname": "Anonüümne96",
+      "lastname": "Anonüümne97",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne95",
+      "nameRu": "Anonüümne95"
+    },
+    {
+      "id": 22816,
+      "nameEt": "Anonüümne4",
+      "nameEn": "Anonüümne4",
+      "firstname": "Anonüümne5",
+      "lastname": "Anonüümne6",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne4",
+      "nameRu": "Anonüümne4"
+    }
+  ],
+  "curriculumModules": [
+    {
+      "id": 171439,
+      "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+      "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+      "curriculumModuleId": 65279,
+      "credits": null,
+      "assessment": null,
+      "gradeCode": null,
+      "gradeDate": null,
+      "teachers": null,
+      "isAdditional": null,
+      "moduleCode": "KUTSEMOODUL_P",
+      "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+    }
+  ],
+  "responsiblesForModules": [
+    "Anonüümne95"
+  ],
+  "curriculumVersions": [
+    {
+      "id": 9711,
+      "curriculumId": 3585,
+      "nameEt": "IS25 IT-süsteemide nooremspetsialist",
+      "nameEn": "IS25 Junior IT systems specialist",
+      "modules": [
+        {
+          "id": 171439,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies",
+          "curriculumModuleId": 65279,
+          "credits": null,
+          "assessment": null,
+          "gradeCode": null,
+          "gradeDate": null,
+          "teachers": null,
+          "isAdditional": null,
+          "moduleCode": "KUTSEMOODUL_P",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud"
+        }
+      ],
+      "themes": [
+        {
+          "id": 454221,
+          "nameEt": "Taristuteenused",
+          "nameEn": null,
+          "nameRu": "Taristuteenused"
+        }
+      ],
+      "fictive": null
+    }
+  ],
+  "lessonHours": {
+    "totalPlannedHours": 39,
+    "totalUsedHours": 0,
+    "capacityHours": [
+      {
+        "capacity": "MAHT_a",
+        "plannedHours": 8,
+        "usedHours": 0
+      },
+      {
+        "capacity": "MAHT_i",
+        "plannedHours": 12,
+        "usedHours": 0
+      },
+      {
+        "capacity": "MAHT_p",
+        "plannedHours": 19,
+        "usedHours": 0
+      }
+    ]
+  },
+  "status": "PAEVIK_STAATUS_T",
+  "endDate": null,
+  "hasJournalStudents": false,
+  "journalRooms": [],
+  "includesOutcomes": false,
+  "isIndividual": false,
+  "finalEntryAllowed": true,
+  "assessment": "KUTSEHINDAMISVIIS_M",
+  "isDistinctiveAssessment": false,
+  "moodleCourseId": null,
+  "isReviewOk": null,
+  "reviewDate": null,
+  "reviewInfo": null,
+  "isOther": false,
+  "isStudentGroupTeacherJournal": false,
+  "isBasic": false,
+  "isSecondary": false,
+  "isVocational": true,
+  "isIndividualTheme": false,
+  "isGradeForbidden": false,
+  "isVerbalForbidden": false,
+  "canBeConfirmed": false,
+  "canBeUnconfirmed": false,
+  "canEdit": true,
+  "canViewReview": true,
+  "canReview": false,
+  "canConnectStudyMaterials": true,
+  "journalThemes": [
+    {
+      "id": 675806,
+      "nameEt": "Taristuteenused - IT valdkonna alusteadmised (IS25)",
+      "nameEn": "Taristuteenused - IT valdkonna alusteadmised (IS25)",
+      "nameRu": "Taristuteenused - IT valdkonna alusteadmised (IS25)"
+    }
+  ]
+}

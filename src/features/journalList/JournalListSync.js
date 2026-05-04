@@ -33,7 +33,10 @@ class JournalListSyncFeature extends BaseFeature {
    * @param {Element} el - Element matched by selector
    * @returns {Object|null} { href, id } or null if not resolvable
    */
-  _resolveJournalFromElement(el) {
+  // Alias kept for legacy underscore-prefixed callers in test/main convention.
+  _resolveJournalFromElement(el) { return this.resolveJournalFromElement(el) }
+
+  resolveJournalFromElement(el) {
     if (!el) return null
     // If it's an anchor
     if (el.tagName && el.tagName.toLowerCase() === 'a') {
@@ -50,7 +53,7 @@ class JournalListSyncFeature extends BaseFeature {
     let parent = el
     while (parent && parent !== document.body) {
       if (parent.tagName && parent.tagName.toLowerCase() === 'a') {
-        return this._resolveJournalFromElement(parent)
+        return this.resolveJournalFromElement(parent)
       }
       parent = parent.parentNode
     }
@@ -85,7 +88,7 @@ class JournalListSyncFeature extends BaseFeature {
         const anchors = tr.querySelectorAll && tr.querySelectorAll('a')
         if (anchors && anchors.length > 0) {
           for (const a of anchors) {
-            const resolved = this._resolveJournalFromElement(a)
+            const resolved = this.resolveJournalFromElement(a)
             if (resolved && resolved.id) return resolved
           }
         }
@@ -100,7 +103,7 @@ class JournalListSyncFeature extends BaseFeature {
       if (parentEl && parentEl.querySelectorAll) {
         const anchors = parentEl.querySelectorAll('a')
         for (const a of anchors) {
-          const resolved = this._resolveJournalFromElement(a)
+          const resolved = this.resolveJournalFromElement(a)
           if (resolved && resolved.id) return resolved
         }
       }
@@ -803,7 +806,7 @@ class JournalListSyncFeature extends BaseFeature {
           // leave href empty – we'll fetch full journal info below
         } else {
           // Resolve href/id from anchor or a child element (e.g. span.linked-name)
-          resolved = this._resolveJournalFromElement(link)
+          resolved = this.resolveJournalFromElement(link)
           id = resolved && resolved.id ? resolved.id : null
           href = resolved && resolved.href ? resolved.href : link.getAttribute ? link.getAttribute('href') || link.getAttribute('ng-href') || '' : ''
           name = (link.textContent || link.innerText || '').trim()

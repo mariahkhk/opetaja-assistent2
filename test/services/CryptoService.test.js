@@ -59,4 +59,75 @@ describe('CryptoService', () => {
     expect(blob.ct).not.toContain('Õpilane')
     expect(blob.ct).not.toContain('Tõnisson')
   })
+
+  test('migrates legacy AES key from OA_cacheKey to OA_cryptoCacheKey', async () => {
+    cryptoService._reset()
+    const legacyKey = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt'])
+    const exported = await crypto.subtle.exportKey('raw', legacyKey)
+    const legacyB64 = btoa(String.fromCharCode(...new Uint8Array(exported)))
+
+    await new Promise(r => global.chrome.storage.local.set({ OA_cacheKey: legacyB64 }, r))
+
+    const blob = await cryptoService.encrypt('test')
+    expect(typeof blob.iv).toBe('string')
+
+    const stored = await new Promise(r => global.chrome.storage.local.get(['OA_cryptoCacheKey', 'OA_cacheKey'], r))
+    expect(stored.OA_cryptoCacheKey).toBeTruthy()
+    expect(stored.OA_cacheKey).toBeUndefined()
+  })
+
+  test('regenerates AES key when stored value is unusable', async () => {
+    cryptoService._reset()
+    await new Promise(r => global.chrome.storage.local.set({ OA_cryptoCacheKey: 'not-valid-base64-aes-key!@#' }, r))
+
+    const blob = await cryptoService.encrypt('payload')
+    const decrypted = await cryptoService.decrypt(blob)
+    expect(decrypted).toBe('payload')
+  })
+
+  test('hash() produces deterministic output for the same input', async () => {
+    cryptoService._reset()
+    const a = await cryptoService.hash('key-input')
+    const b = await cryptoService.hash('key-input')
+    expect(a).toBe(b)
+  })
+
+  test('hash() produces different output for different inputs', async () => {
+    cryptoService._reset()
+    const a = await cryptoService.hash('input-a')
+    const b = await cryptoService.hash('input-b')
+    expect(a).not.toBe(b)
+  })
+
+  test('migrates legacy HMAC salt from OA_cacheKeySalt to OA_cryptoCacheSalt', async () => {
+    cryptoService._reset()
+    const legacySaltBytes = crypto.getRandomValues(new Uint8Array(32))
+    const legacyB64 = btoa(String.fromCharCode(...legacySaltBytes))
+
+    await new Promise(r => global.chrome.storage.local.set({ OA_cacheKeySalt: legacyB64 }, r))
+
+    await cryptoService.hash('hello')
+    const stored = await new Promise(r => global.chrome.storage.local.get(['OA_cryptoCacheSalt', 'OA_cacheKeySalt'], r))
+    expect(stored.OA_cryptoCacheSalt).toBeTruthy()
+    expect(stored.OA_cacheKeySalt).toBeUndefined()
+  })
+
+  test('regenerates HMAC salt when stored value is unusable', async () => {
+    cryptoService._reset()
+    await new Promise(r => global.chrome.storage.local.set({ OA_cryptoCacheSalt: '!@#not-valid' }, r))
+
+    const result = await cryptoService.hash('input')
+    expect(typeof result).toBe('string')
+  })
+
+  test('rotate() generates fresh keys and clears existing', async () => {
+    cryptoService._reset()
+    await cryptoService.encrypt('seed')
+    const before = await new Promise(r => global.chrome.storage.local.get(['OA_cryptoCacheKey'], r))
+
+    await cryptoService.rotate()
+    const after = await new Promise(r => global.chrome.storage.local.get(['OA_cryptoCacheKey'], r))
+
+    expect(after.OA_cryptoCacheKey).not.toBe(before.OA_cryptoCacheKey)
+  })
 })

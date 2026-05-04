@@ -1,0 +1,37 @@
+{
+  "differences": [
+    {
+      "subjectExternalId": "404498",
+      "groupName": "IS25",
+      "assignments": [
+        {
+          "assignmentExternalId": "test_001",
+          "assignmentId": 42,
+          "assignmentName": "Test ülesanne",
+          "assignmentEntryDate": "2026-04-15",
+          "assignmentDueAt": "2026-04-22",
+          "assignmentHours": 2,
+          "assignmentEntryType": "SISSEKANNE_I",
+          "results": [
+            { "studentPersonalCode": "50001010001", "studentName": "Anonüümne1", "grade": "5" }
+          ]
+        }
+      ]
+    }
+  ],
+  "newAssignments": {
+    "404498": [
+      {
+        "assignmentExternalId": null,
+        "assignmentName": "Uus ülesanne Kriidist",
+        "assignmentEntryDate": "2026-04-20",
+        "assignmentDueAt": "2026-04-27",
+        "assignmentHours": 1,
+        "lessons": 1,
+        "assignmentEntryType": "SISSEKANNE_I",
+        "createdAssignmentId": 99,
+        "assignmentLink": "https://example.test/anon/kriit/99"
+      }
+    ]
+  }
+}

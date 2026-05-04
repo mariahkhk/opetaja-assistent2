@@ -1,0 +1,27 @@
+{
+  "differences": [
+    {
+      "subjectExternalId": "404498",
+      "groupName": "IS25",
+      "assignments": [
+        {
+          "assignmentExternalId": "test_assignment_001",
+          "assignmentId": 42,
+          "assignmentName": "Test ülesanne (anonüümne)",
+          "assignmentEntryDate": "2026-04-15",
+          "assignmentDueAt": "2026-04-22",
+          "assignmentHours": 2,
+          "assignmentEntryType": "SISSEKANNE_I",
+          "results": [
+            {
+              "studentPersonalCode": "50001010001",
+              "studentName": "Anonüümne1",
+              "grade": "5"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "newAssignments": {}
+}

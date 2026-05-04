@@ -1,0 +1,1023 @@
+<!DOCTYPE html><html lang="en-US" data-critters-container=""><head><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <meta charset="utf-8">
+  <title>Tahvel</title>
+  <base href="/">
+  <meta name="description" content="Tahvel teeb hariduse haldamise lihtsaks ja tõhusaks. Juurdepääs kursustele, hinnetele ja õppematerjalidele.">
+  <meta property="og:description" content="Tahvel teeb hariduse haldamise lihtsaks ja tõhusaks. Juurdepääs kursustele, hinnetele ja õppematerjalidele.">
+  <meta property="og:title" content="Tahvel">
+  <meta name="viewport" content="width=device-width">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="theme-color" content="#ffffff">
+
+  <!-- Matomo -->
+  
+  <!-- End Matomo Code -->
+
+  
+  
+
+  <!-- Google Tag Manager -->
+  
+  <!-- End Google Tag Manager -->
+
+  <!--script src="https://browser.plumbr.io/pa.js" crossorigin="anonymous"
+    data-plumbr='{"accountId":"PLUMBR_ACCOUNT_ID",
+                "appName":"PLUMBR_APP_NAME","serverUrl":"https://bdr.plumbr.io"}'>
+  </script-->
+
+  
+<noscript></noscript></head>
+
+<body layout="row" ng-controller="MainController" class="layout-row">
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WXPPK25" height="0" width="0"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->​
+
+  <div id="main-wrapper" tabindex="-1" ng-class="{'new-ui': newUI}">
+    <button id="skip-to-content-button" ng-click="focusMainContent()" aria-label="Liigu põhisisuni;">Liigu põhisisuni</button>
+
+    <dg-translate-wrapper [language]="lang" _nghost-ng-c4118697799="" ng-version="18.2.1"></dg-translate-wrapper>
+    <dg-modal-overlay _nghost-ng-c9640864="" class="ng-tns-c9640864-0" ng-version="18.2.1"><div _ngcontent-ng-c9640864="" class="modal-background ng-tns-c9640864-0" style="display:none"></div><div _ngcontent-ng-c9640864="" class="modal-overlay ng-tns-c9640864-0" style="display:none"><div _ngcontent-ng-c9640864="" class="modal-wrapper ng-tns-c9640864-0 ng-trigger ng-trigger-modalAppearAnimation"><div _ngcontent-ng-c9640864="" class="modal-window ng-tns-c9640864-0"><!----><div _ngcontent-ng-c9640864="" class="modal-header ng-tns-c9640864-0"><!----><!----><button _ngcontent-ng-c9640864="" class="ng-tns-c9640864-0" tabindex="-1"><svg-icon _ngcontent-ng-c9640864="" class="ng-tns-c9640864-0"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c9640864="" aria-label="undefined">
+<path d="M19 6.41L17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41Z" _ngcontent-ng-c9640864=""></path>
+</svg></svg-icon></button></div><!----><!----></div></div></div></dg-modal-overlay>
+    <dg-dialog-overlay _nghost-ng-c278285113="" class="ng-tns-c278285113-1" ng-version="18.2.1"><div _ngcontent-ng-c278285113="" class="dialog-overlay ng-tns-c278285113-1" style="display:none"><!----></div></dg-dialog-overlay>
+    <dg-float-root _nghost-ng-c2269178995="" class="ng-tns-c2269178995-2" ng-version="18.2.1"><!----></dg-float-root>
+    <div id="angular-dummy-root-wrapper"><dummy-root _nghost-ng-c2035249468="" ng-version="18.2.1"></dummy-root></div>
+
+    <!----><md-toolbar id="main-toolbar" ng-if="showNavigation" role="banner" ng-style="{'display' : oldUI ? null : 'none'}" class="_md _md-toolbar-transitions">
+
+      <div flex="" layout="row" layout-align="start center" class="layout-align-start-center layout-row flex">
+        <dg-navmenu-desktop-expand-button _nghost-ng-c363158615="" ng-version="18.2.1"><button _ngcontent-ng-c363158615=""><svg-icon _ngcontent-ng-c363158615=""><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c363158615="" aria-label="undefined">
+<path d="M3 18H21V16H3V18ZM3 13H21V11H3V13ZM3 6V8H21V6H3Z" _ngcontent-ng-c363158615=""></path>
+</svg></svg-icon></button></dg-navmenu-desktop-expand-button>
+        <div id="toolbar-logo">
+          <!----><div ng-if="!productionEnvironment" class="testing-environment-sign">TEST</div><!---->
+          <a ng-href="#/" href="#/">
+            <img ng-style="state.logo ? '' : {'max-width': '150px'}" ng-src="data:image/JPEG;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAACECAMAAADWQAKOAAAAaVBMVEX///8APGePqbwvYIMfVHnP2uKftsbv8/UCPmjB0Nrf5+yxw9FQeZdvkalghaAOR2+Ho7fb4+p3l64JQ2xAbY0bUXfq7/LI1d5/nbM2ZYdojKX3+foTS3KWr8Crv825ydUnWn5Xf5tHcpHu8qtOAAAPgklEQVR4nO2d57qqOhCGE7qIAoIVBPH+L/KkUFIhiFtd5+H7s3TRX5LJzKQIwKpVq1atWrVq1f9eoX3+9i38aaVHmG2+fRN/WIgfXAm+LhfzQwTrb9/IH5VbQqpg++1b+ZPq+a0EX9I5hoMC79u38+fE8fsWwbN3356+ceHl2vD8EMH7p2+hSKgNyf+iJ7rJoKQPEwxtdE3ngV5kkHz2ym9QreAHofXJWzg5MDiEqBzW9oev/AZtA+z95bv79uyG7rm+H56kNs0oCaFbLLuHfe9+FhEMUmZL4b7TLPpvPRsV4ne9uMI/UysPjAmGVwjjRc1OyhS74gj3w5YE1Y7obQ99wWfz33U2Kq/cpcoNYXI8GJ2heJAqvySASWA5FGELxv2XO21YFpyalUXO9nzT2ajqRP9CCs+oWNUQbk9XWNqDzMhj5WT/EkbDv1wIw+6zjYofgqh+xZw8W9YF4NZpUIaKn8WcnVWYy8c/DYr+eHkuTEybB2MADlwDVBocRrTpjmBqbQhhb1FK5A34EE4nOLxAbgajgp6NkYe/qxyl0JGPP4qG7R8JlZgoieHT6nRR36NKN+jgI3K2liKo3ZsvSnhMcphNlgRkyG2L1RHChrx9BOzQ/dOmZ1MUGsQvuLDHR4ifQbl/j27kdTEVw4GGdRgBwtUMVDAYDr/BR7c5p0VhsjVD/ByuYqJbaugntjy7mcY/w/y4BADyjD/HD9Wf/Hpj738HbbMD69a8+YwRPPfNP+a3y2FZTZ1G4rcfbAILEKR7O1I0dhI/5Bk7H+QnqdYYakkNvNIPqKHYU3t7LqFDPyGPEKG0pl8GKi48vwbCW/eZA6jWyRb4SS/k0ypis2iiyPr9UJk5JptzhZ49pg+M+R2AAUBc3bT8DAD+Hj/8CEbOFjJ9ffNw6ZpRu607lN80QNFcteA7TQLE/DgjUaEG6dtJIU/Z1EmKWM7h7hHA+Nm5nk2LYQrgOR7lNwkQ8+PcXe8H+IFTACctP2o6Aih46oPbifjtyIcJgIhfyfF7Qtqwd5oA+Jv8UIDBesY63fXldDBj4wAxP5YPbrh5p2ccoMQPtWbXNwfLLykxCUZyNoDjdBuagVGAbjnFbxygf32J32sRSjjnxaQG4Rd6NE09vzGh3RhAkR/iISWCxwBK/CwTfsVNu4ufbjb69vs2xzQYBCMJk3XhL9SHEWAUIOIXszGjit8YQLw/xy+BMJ+M/otIHRgV2z3tlIh1eal6jnHdwcfULrbGTvosvxGA6ZHndxLLE5EeoMTbkF+sLIDVYzoFYdvm7uVmMhhJdSlE/pG1ACV+YnugOhsjid8Fwuc0v5xx0pmL510KJxsJAe8zHPTpYOSia2fMAIbCQCgNPy1Aid+hzX+NCrdSitO5QzJs7Kl9MeYc02Qw4rSOnqSTCUAU/3P8pHxAv0ENsHiJH6buKK5x7PmNBxBzkmQeDEbPddYmDX0DgMb8NABxSeL47br84ZgwP8VrL+whCTve++BBc4L+RDCyU71KeuQ0QNwLyhrQ1NEOKlMClPhxDb9OJ8wPyu/pwmSxx88Szkl0TwQjRz7iYjQNUMyfjA0MVQHE/DhbZcaPFjSpXoVst/qk3UIqzQiOByO1vqdoEuAcfiqAUryyh8qmVboqllxvuO6giQAsguYEx4ORvd4/ngLoC/xEf5qXDFDi15jw63qd5CL2YAFyNfwkNbkt7JH75U6sD0aQl6Pt6JgAKMZf4/xkgCK/YhY/edeU4wcfTBXfS37VHc4gyAUjlgMfTKNScX423jhcSw+wOJTBVfD3zuV4jRAB0o4C/vt0F1jaO3qS5a54gDDvCSZyi93vbDIUfcOYOdpQDQ/esO29sFEPsIHCaeR8liQB4Iv8BkdPqjiWABA+aC1O0ZmlbFPd72VAkAlGigw2dQ4f3Sbkkg9eBN64yeGx36gDiCrLoX5wrtYkPwGgip/OG2B0HfBIkcZFBIgclWZ3I02OBHAz7FROZ7eGYpbiwojod1s4LztsN3Z+rBbgFgYF+s60gwbdtxxAkZcif6jUrBLISHLkZpVABpNPC1n/6E/23ZAS+DQvgUM7aNL9zQIU66spP5bgpA1kpd/ZaDoOE4zQ5rszXkKXyTwbGPSX3prE5gxAkZ8v+tNjpzFthTkta4W5YAQ9+9AKWzDj4k4rhkfjVnjgZ9R9ywBsBH6q/Kv+PIZ+ICs5GzDLD+SCkScbK13FwCliG3yTZAIg3bcPg9zQAHARv3YU92QkwkmGPScSAWwwwvVghlIq9QWApt2PPUCBny5/qJdRLMxJtnNzYmGsPhhhxyDw41GJ5gM07r7tAC7m1xEcz8awkvscw5n8hmBkz3pvD8kSzwZ4D+CV4Rdaia4npwXY8OZf5OcmicFjGeQDGZWygZmTDyTqg5GScRdcuWzPBSh0325xJdLkkylAgZ+YfyVmzMCh0WWkSwU/laMye9hmF4ycWSaHweUbTjwLoNB9e8pgedUBIABvgvsR8R4Gcm8fD6NhtdN9Ip1UnZuz+kSo2mDkwr63oxx8zgModj9WeAzwXpNNxwBFfiCNub1v8AoKxySmm+6Va/VQFTRv/rC5NhixGUAbxTucBVDqvm0BXpV3gADmsvtbcVHCDICgeE70CxPzZyntiW3id/GiwQjntwxDoAfNASh3n/kTVViV77uxt4SrsGM6Mn56ZELjqfMEs0YmdMqxz3xnIo+iVDzpDICq7kfSiGgKEAao6JxBLSfTSpJGJDCcKjQ+NmZkLtn+lWFzFp5EwuYOlJ0h5gB3yuY2vCeNBkCo6S9KM9YMIjcGETV9wA+MzuqFg5Ei41KpCltlDHCn7T7ji9SgUHdAJZRZnujvCAUj22HmDDuunJExQEc7pJC0rArTHWr7K29CRFmZ5KY/LxSM3JhCx8V0vWYA1Oef1AD0ww2kMisS/Z5qdGuH9s6R1xIzdSVSdj2/CNDfZ0E+7LtTBaqcKnRjw72IlVZnBT6uDZmx0FadAi/H0D+kPK6c6DWABemqiEPmezwKYAt5n8YTB6TH8Lpw5vhblEN7s+sbWxSGDqGbZlz5awARj3tdModOAbDhdXNjDDLyvvmme6vKFXxeDryDorcn58tlyN/n6jbxNYAWfGDDxdiECQAxKv4n1mEuRN9l2gp8Qk/4qHfKsS+6ceUvl8CkKjlkB+3AdawrvNZ7rhWTzCCyAt+cZUhFbaBqbJZuXPkSG8i1nCjWHwFAbSBXRiUzWEL7+2Zwcw0UqW+gH1f+citcBhk3GmUCwNaBsRBIimawNhkp8+91Ura22nHlC/xAVNw5s1oHYwAuUrQhmcHLqBWQ9IY1E5R6qvy9i5xKpVriSCdC9+tF0R3LbJTCNSmEy0dH2ouqrcWrdijlqSIO7bjyRZHIE2ZcdD8GQAEQm0GuWp/mmcHl68YoxQ0faqUfV74I4OkIH8XId1YqgNgMcv0XyCoYTJXstXzlIqUa+Vb148qXxcLiA48AUAIsHvDIVRfRKkxIXDvLO0Rz185SnVWeqlRqk+YLkwniA+sBKAHi1Tx4iy1ahQn9k9Xb5EG8I+PKl2ZjxAfWAlADlM3gkXeOpvRP1g+UhpGPjCtfClA0e74OgAagZAbPgcG8B0b/YgXLjVDgxsaVL84HimZPB0AHUGUGZyH4F2uoCv2/1cj8zeUJVdH7s9Q2SAdQNoPRPDP4L1bxFRrdaKTL4Q0ZadH7i2Cg8Jm0ACUz6DvQmdUL9P51pHm3T+UY9noDQNH9VQPQA0R+F28GUZnU9r8o9f6VzB8w8nrtxmZvRvA57HnnACbwOGzySr1zgILghtkTXZA9aauRauA/uCt53nOuJ/L2tfSFcXMj7zMS2jBXe5KRZ9IN0+OltyOu7IuorMCI3v1rDqnDaSTHceP3ZFdOs4RNI+Y5cgw04p148t7TaygIT7z+GsYyff4Xbb6f/V21atX/XEat+5v1nav+G60AF2oFuFArwIVaAS7UCnChVoALtQJcqBXgQv0+QE/KB6pU4p+zQLLZtUPMZVuWak6lVnl/md8BqPjNFCIzgDZZJOxlgDc8uG6GfhBgrksZGwL0/Yb8fQ1g4/v61SEU+j2A10K3RI0ZwE4vApyr3wO4067xswKUtQJcKAmg551B6nkeagfy7b79521L7PoAMD6cfT/0iLG6b/tZ4BE6IkYHk1mpHcDM2+JB5sm2nW6fVR57waSCwX7j++6FdLbZ6PAGf8i3T9igq2zQwfb25KdD49zUJ/9UN/TLrwHs+j48PHy/K4otuR6gHYLivDmBAhNOhpW6zuBKBgeTR+oAVnQhKrdrXGPcIz/IBWUNQBq2kwZwnyq57B5c7iDcpqCwowKEIRnji5Vt0ceN280+/jWATBXWAixPwMM/77ovAF0do13xy8YLffTk2j+39sH1AAHAv7h79an3010Wj0HCv56D+5dTdOj11K/dhb/iH9Qh+/1FgFY7kQPBwYWv7hZVsugPr3EA7aL1SkYA7trr1uxl93T1FjzlrHDoP8jrueIxcVjHgry4Pwgw8DsW6OFiXOvowmjByScjn1iAcQgauq8eoEs/PPDsLsgCpEZzQ0HCEk9Lw4PZkv6u8Pv6gwDt9kkhfjhUh4OQrhwZtYvGsQC3/Tn0AGkBhFn7/x6g2138Rj8UANuCFHRt1o3s+AcBNsDftjqRpzlQcnWLiAF4aKeTwTGA3bqdIkCPuzieUoULeAHq9uJnsscfBLgHRdgLP31Z+BmuYme69wAQlc3ep9QD7FYTEgFa3MVbgBkAw8VxZf6TAGvhkAo0uBy2biNTAu0CbyF6E8AATyJg9dMAO4+XB5hLq2nmZGS/3w47Y21g003VJD4i0TKAMBSSNT8MMO/qpAAwK8BROCYFx2tfXjk35tItmVZ1BXQhwEpYifL3AN66O0eg2sSS4AdWwBOOIQN/uywU70hX4JzRXdqKvxBghAcJM/o9gBFw25bz3i0X1wOkscCjAHc61t1p98QrXfapAx5gRhtLvJ41/VnOhQCR6+TSSpyV9DJhexO/AjA7Afde4XoSu6DY3K37pqDPEIGi8vCnHEUHG+9eDT6Zxwz/5QHiFUqIp4ci2lNlWZW7EGB5BsD17t65uLe3e76TT78CEJLBmyQBkCVkDG+R0rwLvPiAxgFlQqaSnLZdtb2G574j4JF6zB8ctYZkN7sio9f9DZfx3vZrZ6fU5EbhgfkDYRK2b+ncZhOCPRldWpwbemkXUM/+ZwAicE42fHRKpo8k6zfEjiNOm5pW6TjapXTnKDuyd9Xe1A8B/JtaAS7UCnCh/keP8h2tABdqBbhQK8CFWgEu1H92Efs3Gce5SgAAAABJRU5ErkJggg==" on-error-src="assets/images/harno_logo.png" alt="school logo; link to front page;" aria-label="kooli logo; link esilehele;">
+          </a>
+          <!----><div ng-if="!productionEnvironment" class="testing-environment-sign">TEST</div><!---->
+        </div>
+
+        <div id="breadcrumb-wrapper" tabindex="-1" layout-align="start center" class="layout-align-start-center">
+          <span ng-show="!state.currentUser &amp;&amp; !Menu.currentPage &amp;&amp; !Menu.currentSection" hide-lt-lg="" aria-hidden="true" class="ng-hide">Õppeinfosüsteem Tahvel</span>
+          <!----><span ng-if="Menu.currentPage.name !== Menu.currentSection.name" hide-lt-lg="" class="">
+            <span hide-lt-lg="">Õppetöö</span>
+            <md-icon class="material-icons" role="img" aria-label="chevron_right">chevron_right</md-icon>
+          </span><!---->
+          <span hide-lt-md="">Õppijad</span>
+        </div>
+
+      </div>
+
+      <div layout-align="end center" ng-controller="LoginController" layout="row" flex="" class="layout-align-end-center layout-row flex">
+        <div id="lang-buttons" md-colors="{color: 'background-500'}" layout="row" class="layout-row">
+          <button class="md-button md-ink-ripple md-primary" type="button" ng-transclude="" ng-class="{'md-primary': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="eesti keel;">Est</button>
+          <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-class="{'md-primary': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="inglise keel;">Eng</button>
+        </div>
+        <md-menu id="help-menu" md-position-mode="target bottom" class="md-menu _md">
+          <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="$mdMenu.open($event)" aria-label="abi menüü;" aria-haspopup="true" aria-expanded="false" aria-owns="menu_container_0">
+            Abi
+            <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-hidden="true">arrow_drop_down</md-icon>
+          </button>
+          
+        <div class="_md md-open-menu-container md-whiteframe-z2" id="menu_container_0" aria-hidden="true"><md-menu-content id="help-menu-content" role="menu">
+            <md-menu-item>
+              <a class="md-button md-ink-ripple" ng-transclude="" href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID" target="_blank" role="menuitem">Juhendid</a>
+            </md-menu-item>
+            <md-menu-item ng-show="state.currentUser.school" aria-hidden="false" class="">
+              <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="openSchoolContacts()" role="menuitem">Kooli kontaktid</button>
+            </md-menu-item>
+<!--            <md-menu-item>-->
+<!--              <md-button href="">{{ 'home.tahvelHelp' | translate }}</md-button>-->
+<!--            </md-menu-item>-->
+          </md-menu-content></div></md-menu>
+        <div ng-show="state.currentUser &amp;&amp; state.currentUser.roleCode !== 'ROLL_X'" layout="column" layout-align="center center" class="layout-align-center-center layout-column" aria-hidden="false">
+          <a class="md-button md-ink-ripple layout-align-center-center layout-column" ng-transclude="" id="messages-button" layout="column" layout-align="center center" ng-href="#/messages/received?_menu" aria-label="teated, 0 lugemata teadet;" href="#/messages/received?_menu">
+            <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-hidden="true">email</md-icon>
+            <!---->
+          </a>
+        </div>
+        <div id="toolbar-user-section" layout="column" layout-align="end center" class="maxWidth-200 layout-align-end-center layout-column" ng-show="state.currentUser" aria-hidden="false">
+          <a id="user-menu-name" ng-href="#/persons/settings" href="#/persons/settings">Anonüümne1</a>
+          <md-menu id="user-menu" md-position-mode="right bottom" class="md-menu _md">
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="user-menu-button" ng-click="$mdMenu.open($event)" aria-label="rolli vahetuse menüü, hetkel Õpetaja VIKK;" aria-haspopup="true" aria-expanded="false" aria-owns="menu_container_1">
+              Õpetaja VIKK
+              <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-hidden="true">arrow_drop_down</md-icon>
+            </button>
+            
+          <div class="_md md-open-menu-container md-whiteframe-z2" id="menu_container_1" aria-hidden="true"><md-menu-content id="user-menu-content" role="menu">
+              <!----><md-menu-item ng-repeat="user in state.currentUser.users" class="">
+                <button class="md-button md-ink-ripple" type="button" ng-transclude="" aria-label="vali rolliks Admin. töötaja VIKK;" ng-click="setAndChangeUser(user);" role="menuitem">Admin. töötaja VIKK</button>
+              </md-menu-item><!----><md-menu-item ng-repeat="user in state.currentUser.users" class="">
+                <button class="md-button md-ink-ripple" type="button" ng-transclude="" aria-label="vali rolliks Õpetaja VIKK;" ng-click="setAndChangeUser(user);" role="menuitem">Õpetaja VIKK</button>
+              </md-menu-item><!---->
+              <hr>
+              <!---->
+              <md-menu-item>
+                <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="logout()" role="menuitem">Logi välja</button>
+              </md-menu-item>
+            </md-menu-content></div></md-menu>
+        </div>
+        <div ng-show="!state.currentUser" aria-hidden="true" class="ng-hide">
+          <div id="login-button-hitarea" ng-click="showLogin()" role="button" tabindex="0">
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="login-button">
+              <span id="login-button-text">Logi sisse</span>
+              <md-icon class="material-icons" role="img" aria-label="lock">lock</md-icon>
+            </button>
+          </div>
+        </div>
+        <a id="nn-mobile-top-right" class="new-ui">
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-show="state.currentUser &amp;&amp; state.currentUser.roleCode !== 'ROLL_X'" ng-click="showMessages()" aria-label="teated, 0 lugemata teadet;" aria-hidden="false">
+              <!---->
+              <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">mail</md-icon>
+              <div class="button-text">Teated</div>
+            </button>
+          <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="logout()" ng-controller="MainController" aria-label="Toggle navigation menu">
+            <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">logout</md-icon>
+            <div class="button-text">Logi välja</div>
+          </button>
+          <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggleSidenavMobile()" ng-controller="MainController" aria-label="Toggle navigation menu">
+            <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">menu</md-icon>
+            <div class="button-text">Menüü</div>
+          </button>
+        </a>
+      </div>
+
+      <!----><md-toolbar id="main-menu-toolbar" ng-if="showNavigation" role="banner" class="new-ui _md _md-toolbar-transitions">
+        <div id="nn-top-bar-mobile">
+          <div id="nn-language-buttons-mobile">
+            <button class="md-button md-ink-ripple nn-language-active-mobile" type="button" ng-transclude="" ng-class="{'nn-language-active-mobile': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="eesti keel;">
+              EST
+            </button>
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-class="{'nn-language-active-mobile': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="inglise keel;">
+              ENG
+            </button>
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="mobile-help-menu-button" ng-click="toggleMobileSubMenu('help')">
+              <md-icon id="mobile-help-menu-icon" md-font-set="material-icons" class="material-icons" role="img" aria-label="help_outline">help_outline</md-icon>
+                <span>Abi</span>
+            </button>
+          </div>
+            <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="nn-mobile-navmenu-close" ng-click="toggleSidenavMobile()">
+              <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="close">close</md-icon>
+            </button>
+        </div>
+
+      </md-toolbar><!---->
+
+    </md-toolbar><!---->
+
+
+
+    <!----><new-navbar ng-if="showNavigation" ng-style="{'display' : newUI ? null : 'none'}"><div id="nn-wrapper">
+  <div id="nn-top">
+    <a ng-href="#/" id="nn-home-link" href="#/">
+      <img ng-src="assets/images/tahvel_logo.svg" alt="school logo; link to front page;" aria-label="kooli logo; link esilehele;" src="assets/images/tahvel_logo.svg">
+      <span>Õppeinfosüsteem Tahvel</span>
+    </a>
+
+    <div id="nn-top-spacer"></div>
+
+    <div id="nn-top-right" ng-controller="LoginController">
+      <div id="nn-language-buttons">
+        <button class="md-button md-ink-ripple nn-language-active" type="button" ng-transclude="" ng-class="{'nn-language-active': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="eesti keel;">
+          EST
+        </button>
+        <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-class="{'nn-language-active': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="inglise keel;">
+          ENG
+        </button>
+      </div>
+      <a class="md-button md-ink-ripple" ng-transclude="" id="nn-help" ng-href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID" target="_blank" href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID">
+        <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="help_outline">help_outline</md-icon>
+        <span>Abi</span>
+      </a>
+
+      <div id="nn-top-separator"></div>
+
+      <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="nn-login" ng-click="showLogin()">
+        <md-icon md-svg-src="assets/icons/svg/account_circle.svg" class="sm-svg" role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="100%" viewBox="0 -960 960 960" width="100%" fill="#e8eaed" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z"></path>
+</svg></md-icon>
+        <span>LOGI SISSE</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="nn-links">
+    <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/academicCalendars" ng-class="{active: currentLink.startsWith('/academicCalendar')}" href="#/academicCalendars">
+      <md-icon md-svg-src="assets/icons/svg/calendar_month.svg" class="x-sm-svg" role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="100%" viewBox="0 -960 960 960" width="100%" fill="#e8eaed" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-160 0q-17 0-28.5-11.5T280-440q0-17 11.5-28.5T320-480q17 0 28.5 11.5T360-440q0 17-11.5 28.5T320-400Zm320 0q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-160 0q-17 0-28.5-11.5T280-280q0-17 11.5-28.5T320-320q17 0 28.5 11.5T360-280q0 17-11.5 28.5T320-240Zm320 0q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z"></path>
+</svg></md-icon>
+      <span>Akadeemiline kalender</span>
+    </a>
+    <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="openHoisTimetable()">
+      <md-icon md-font-set="material-icons" class="x-sm material-icons" role="img" aria-label="access_time">access_time</md-icon>
+      <span>Tunniplaanid</span>
+    </button>
+    <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/curriculums?_menu" ng-class="{active: currentLink.startsWith('/curriculum')}" href="#/curriculums?_menu">
+      <md-icon md-font-set="material-icons" class="x-sm material-icons" role="img" aria-label="list">list</md-icon>
+      <span>Koolide õppekavad</span>
+    </a>
+    <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/stateCurriculum/public?_menu" ng-class="{active: currentLink.startsWith('/stateCurriculum')}" href="#/stateCurriculum/public?_menu">
+      <md-icon md-font-set="material-icons" class="x-sm material-icons" role="img" aria-label="playlist_add_check">playlist_add_check</md-icon>
+      <span>Riiklikud õppekavad</span>
+    </a>
+    <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/subject/public?_menu" ng-class="{active: currentLink.startsWith('/subject')}" href="#/subject/public?_menu">
+      <md-icon md-font-set="material-icons" class="x-sm material-icons" role="img" aria-label="subject">subject</md-icon>
+      <span>Õppeained</span>
+    </a>
+  </div>
+
+  <div id="nn-mobile-top">
+    <a ng-href="#/" id="nn-home-link-mobile" href="#/">
+      <img ng-src="assets/images/tahvel_logo.svg" alt="school logo; link to front page;" aria-label="kooli logo; link esilehele;" src="assets/images/tahvel_logo.svg">
+    </a>
+
+    <div id="nn-mobile-top-right">
+      <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="nn-login-mobile" ng-click="showLogin()" ng-controller="LoginController">
+        <md-icon md-svg-src="assets/icons/svg/account_circle.svg" class="sm-svg" role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="100%" viewBox="0 -960 960 960" width="100%" fill="#e8eaed" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <path d="M234-276q51-39 114-61.5T480-360q69 0 132 22.5T726-276q35-41 54.5-93T800-480q0-133-93.5-226.5T480-800q-133 0-226.5 93.5T160-480q0 59 19.5 111t54.5 93Zm246-164q-59 0-99.5-40.5T340-580q0-59 40.5-99.5T480-720q59 0 99.5 40.5T620-580q0 59-40.5 99.5T480-440Zm0 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q53 0 100-15.5t86-44.5q-39-29-86-44.5T480-280q-53 0-100 15.5T294-220q39 29 86 44.5T480-160Zm0-360q26 0 43-17t17-43q0-26-17-43t-43-17q-26 0-43 17t-17 43q0 26 17 43t43 17Zm0-60Zm0 360Z"></path>
+</svg></md-icon>
+        <div class="button-text">Logi sisse</div>
+      </button>
+
+      <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="nn-menu-mobile" ng-click="isMobileMenuHidden = !isMobileMenuHidden">
+        <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="menu">menu</md-icon>
+        <div class="button-text">Menüü</div>
+      </button>
+    </div>
+
+  </div>
+
+  <div id="nn-mobile-menu" ng-class="{'nn-mobile-menu-hidden': isMobileMenuHidden}" class="nn-mobile-menu-hidden">
+    <div id="nn-top-bar-mobile">
+      <div id="nn-language-buttons-mobile">
+        <button class="md-button md-ink-ripple nn-language-active-mobile" type="button" ng-transclude="" ng-class="{'nn-language-active-mobile': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="eesti keel;">
+          EST
+        </button>
+        <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-class="{'nn-language-active-mobile': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="inglise keel;">
+          ENG
+        </button>
+      </div>
+      <button class="md-button md-ink-ripple" type="button" ng-transclude="" id="nn-mobile-navmenu-close" ng-click="closeMobileMenu()">
+        <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="close">close</md-icon>
+      </button>
+    </div>
+    <navigation-menu on-close="closeMobileMenu()"><div id="nm-links">
+  <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/academicCalendars" ng-click="$ctrl.onClose()" ng-class="{active: currentLink.startsWith('/academicCalendar')}" href="#/academicCalendars">
+    <md-icon md-svg-src="assets/icons/svg/calendar_month.svg" class="sm-svg" role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="100%" viewBox="0 -960 960 960" width="100%" fill="#e8eaed" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <path d="M200-80q-33 0-56.5-23.5T120-160v-560q0-33 23.5-56.5T200-800h40v-80h80v80h320v-80h80v80h40q33 0 56.5 23.5T840-720v560q0 33-23.5 56.5T760-80H200Zm0-80h560v-400H200v400Zm0-480h560v-80H200v80Zm0 0v-80 80Zm280 240q-17 0-28.5-11.5T440-440q0-17 11.5-28.5T480-480q17 0 28.5 11.5T520-440q0 17-11.5 28.5T480-400Zm-160 0q-17 0-28.5-11.5T280-440q0-17 11.5-28.5T320-480q17 0 28.5 11.5T360-440q0 17-11.5 28.5T320-400Zm320 0q-17 0-28.5-11.5T600-440q0-17 11.5-28.5T640-480q17 0 28.5 11.5T680-440q0 17-11.5 28.5T640-400ZM480-240q-17 0-28.5-11.5T440-280q0-17 11.5-28.5T480-320q17 0 28.5 11.5T520-280q0 17-11.5 28.5T480-240Zm-160 0q-17 0-28.5-11.5T280-280q0-17 11.5-28.5T320-320q17 0 28.5 11.5T360-280q0 17-11.5 28.5T320-240Zm320 0q-17 0-28.5-11.5T600-280q0-17 11.5-28.5T640-320q17 0 28.5 11.5T680-280q0 17-11.5 28.5T640-240Z"></path>
+</svg></md-icon>
+    <span>Akadeemiline kalender</span>
+  </a>
+  <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="openHoisTimetable()">
+    <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="access_time">access_time</md-icon>
+    <span>Tunniplaanid</span>
+  </button>
+  <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/curriculums?_menu" ng-click="$ctrl.onClose()" ng-class="{active: currentLink.startsWith('/curriculum')}" href="#/curriculums?_menu">
+    <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="list">list</md-icon>
+    <span>Koolide õppekavad</span>
+  </a>
+  <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/stateCurriculum/public?_menu" ng-click="$ctrl.onClose()" ng-class="{active: currentLink.startsWith('/stateCurriculum')}" href="#/stateCurriculum/public?_menu">
+    <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="playlist_add_check">playlist_add_check</md-icon>
+    <span>Riiklikud õppekavad</span>
+  </a>
+  <a class="md-button md-ink-ripple" ng-transclude="" ng-href="#/subject/public?_menu" ng-click="$ctrl.onClose()" ng-class="{active: currentLink.startsWith('/subject')}" href="#/subject/public?_menu">
+    <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-label="subject">subject</md-icon>
+    <span>Õppeained</span>
+  </a>
+</div>
+</navigation-menu>
+  </div>
+
+</div>
+</new-navbar><!---->
+
+    <md-content id="content-and-sidenav-wrapper" class="_md">
+
+      <div class="nav-menu-wrapper">
+          <dg-navigation-menu-desktop ng-show="state.currentUser" aria-hidden="false" class="menu-expanded" _nghost-ng-c1095520889="" ng-version="18.2.1"><div _ngcontent-ng-c1095520889="" class="scroll-wrapper ng-star-inserted"><div _ngcontent-ng-c1095520889="" class="nav-menu"><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-3 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-3 ng-star-inserted" href="#/"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-3 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-3 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-3 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M19 5V7H15V5H19ZM9 5V11H5V5H9ZM19 13V19H15V13H19ZM9 17V19H5V17H9ZM21 3H13V9H21V3ZM11 3H3V13H11V3ZM21 11H13V21H21V11ZM11 15H3V21H11V15Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-3 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-3">Minu töölaud</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-4 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-4 ng-star-inserted" href="#/curriculum?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-4 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-4 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-4 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M3 13H5V11H3V13ZM3 17H5V15H3V17ZM3 9H5V7H3V9ZM7 13H21V11H7V13ZM7 17H21V15H7V17ZM7 7V9H21V7H7ZM3 13H5V11H3V13ZM3 17H5V15H3V17ZM3 9H5V7H3V9ZM7 13H21V11H7V13ZM7 17H21V15H7V17ZM7 7V9H21V7H7Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-4 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-4">Õppekavad</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-5 ng-star-inserted"><!----><button _ngcontent-ng-c4091864598="" class="menu-item ng-tns-c4091864598-5 toggle ng-star-inserted"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-5 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-5 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-5 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20ZM12.5 7H11V13L16.25 16.15L17 14.92L12.5 12.25V7Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-5 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-5">Tunniplaan ja sündmused</span><!----></div><div _ngcontent-ng-c4091864598="" class="toggle-svg ng-tns-c4091864598-5 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-5 svg-16"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M7.41 8.29492L12 12.8749L16.59 8.29492L18 9.70492L12 15.7049L6 9.70492L7.41 8.29492Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon></div><!----><!----></button><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-6 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-6 ng-star-inserted" href="#/messages/received"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-6 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-6 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-6 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 10.99L4 6H20ZM20 18H4V8L12 13L20 8V18Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-6 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-6">Teated</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-7 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-7 ng-star-inserted" href="#/teachers/myData"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-7 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-7 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-7 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM7.35 18.5C8.66 17.56 10.26 17 12 17C13.74 17 15.34 17.56 16.65 18.5C15.34 19.44 13.74 20 12 20C10.26 20 8.66 19.44 7.35 18.5ZM18.14 17.12C16.45 15.8 14.32 15 12 15C9.68 15 7.55 15.8 5.86 17.12C4.7 15.73 4 13.95 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 13.95 19.3 15.73 18.14 17.12Z" _ngcontent-ng-c4091864598=""></path>
+<path d="M12 6C10.07 6 8.5 7.57 8.5 9.5C8.5 11.43 10.07 13 12 13C13.93 13 15.5 11.43 15.5 9.5C15.5 7.57 13.93 6 12 6ZM12 11C11.17 11 10.5 10.33 10.5 9.5C10.5 8.67 11.17 8 12 8C12.83 8 13.5 8.67 13.5 9.5C13.5 10.33 12.83 11 12 11Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-7 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-7">Minu andmed</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-8 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-8 ng-star-inserted" href="#/academicCalendar"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-8 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-8 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-8 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M19 4H18V2H16V4H8V2H6V4H5C3.89 4 3.01 4.9 3.01 6L3 20C3 21.1 3.89 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM19 8H5V6H19V8ZM9 14H7V12H9V14ZM13 14H11V12H13V14ZM17 14H15V12H17V14ZM9 18H7V16H9V18ZM13 18H11V16H13V18ZM17 18H15V16H17V18Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-8 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-8">Akadeemiline kalender</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-9 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-9 ng-star-inserted" href="#/studyYearSchedule?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-9 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-9 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-9 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M19 4H18V2H16V4H8V2H6V4H5C3.9 4 3 4.9 3 6V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V6C21 4.9 20.1 4 19 4ZM19 20H5V10H19V20ZM5 8V6H19V8H5ZM10.56 18.46L16.49 12.53L15.43 11.47L10.56 16.34L8.45 14.23L7.39 15.29L10.56 18.46Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-9 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-9">Õppetöögraafik</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-10 ng-star-inserted"><!----><button _ngcontent-ng-c4091864598="" class="menu-item ng-tns-c4091864598-10 toggle ng-star-inserted is-expanded"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-10 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-10 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-10 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M9 13.75C6.66 13.75 2 14.92 2 17.25V19H16V17.25C16 14.92 11.34 13.75 9 13.75ZM4.34 17C5.18 16.42 7.21 15.75 9 15.75C10.79 15.75 12.82 16.42 13.66 17H4.34ZM9 12C10.93 12 12.5 10.43 12.5 8.5C12.5 6.57 10.93 5 9 5C7.07 5 5.5 6.57 5.5 8.5C5.5 10.43 7.07 12 9 12ZM9 7C9.83 7 10.5 7.67 10.5 8.5C10.5 9.33 9.83 10 9 10C8.17 10 7.5 9.33 7.5 8.5C7.5 7.67 8.17 7 9 7ZM16.04 13.81C17.2 14.65 18 15.77 18 17.25V19H22V17.25C22 15.23 18.5 14.08 16.04 13.81ZM15 12C16.93 12 18.5 10.43 18.5 8.5C18.5 6.57 16.93 5 15 5C14.46 5 13.96 5.13 13.5 5.35C14.13 6.24 14.5 7.33 14.5 8.5C14.5 9.67 14.13 10.76 13.5 11.65C13.96 11.87 14.46 12 15 12Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-10 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-10">Õppetöö</span><!----></div><div _ngcontent-ng-c4091864598="" class="toggle-svg ng-tns-c4091864598-10 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-10 svg-16"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M7.41 8.29492L12 12.8749L16.59 8.29492L18 9.70492L12 15.7049L6 9.70492L7.41 8.29492Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon></div><!----><!----></button><!----><!----><div _ngcontent-ng-c4091864598="" class="sub-items ng-tns-c4091864598-10 ng-trigger ng-trigger-toggleAnimation ng-star-inserted"><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-20 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-20 is-sub-item ng-star-inserted" href="#/remarks?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-20 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-20 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-20 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-20">Märkused</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-21 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-21 is-sub-item ng-star-inserted" href="#/journals"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-21 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-21 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-21 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-21">Päevikud</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-22 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-22 is-sub-item ng-star-inserted" href="#/studyMaterial/list"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-22 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-22 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-22 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-22">Õppematerjalid</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-23 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-23 is-sub-item ng-star-inserted" href="#/lessonplans/vocational/byteacher?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-23 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-23 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-23 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-23">Planeeritud koormused</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-24 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-24 is-sub-item ng-star-inserted is-selected" href="#/students?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-24 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-24 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-24 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-24">Õppijad</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c4091864598="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-25 ng-tns-c4091864598-10 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-25 is-sub-item ng-star-inserted" href="#/moduleProtocols/module?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-25 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-25 ng-star-inserted"><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-25 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-25">Moodulite protokollid</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><!----></div><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-11 ng-star-inserted"><!----><button _ngcontent-ng-c4091864598="" class="menu-item ng-tns-c4091864598-11 toggle ng-star-inserted"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-11 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-11 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-11 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M15 4V11H5.17L4 12.17V4H15ZM16 2H3C2.45 2 2 2.45 2 3V17L6 13H16C16.55 13 17 12.55 17 12V3C17 2.45 16.55 2 16 2ZM21 6H19V15H6V17C6 17.55 6.45 18 7 18H18L22 22V7C22 6.45 21.55 6 21 6Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-11 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-11">Küsitlused</span><!----></div><div _ngcontent-ng-c4091864598="" class="toggle-svg ng-tns-c4091864598-11 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-11 svg-16"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M7.41 8.29492L12 12.8749L16.59 8.29492L18 9.70492L12 15.7049L6 9.70492L7.41 8.29492Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon></div><!----><!----></button><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-12 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-12 ng-star-inserted" href="#/scholarships/applications/ranking/grants?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-12 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-12 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-12 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M15 18.5C12.49 18.5 10.32 17.08 9.24 15H15V13H8.58C8.53 12.67 8.5 12.34 8.5 12C8.5 11.66 8.53 11.33 8.58 11H15V9H9.24C10.32 6.92 12.5 5.5 15 5.5C16.61 5.5 18.09 6.09 19.23 7.07L21 5.3C19.41 3.87 17.3 3 15 3C11.08 3 7.76 5.51 6.52 9H3V11H6.06C6.02 11.33 6 11.66 6 12C6 12.34 6.02 12.67 6.06 13H3V15H6.52C7.76 18.49 11.08 21 15 21C17.31 21 19.41 20.13 21 18.7L19.22 16.93C18.09 17.91 16.62 18.5 15 18.5Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-12 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-12">Õppetoetuste pingerida</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-13 ng-star-inserted"><!----><button _ngcontent-ng-c4091864598="" class="menu-item ng-tns-c4091864598-13 toggle ng-star-inserted"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-13 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-13 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-13 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3ZM18.82 9L12 12.72L5.18 9L12 5.28L18.82 9ZM17 15.99L12 18.72L7 15.99V12.27L12 15L17 12.27V15.99Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-13 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-13">Praktika ja lõpetamine</span><!----></div><div _ngcontent-ng-c4091864598="" class="toggle-svg ng-tns-c4091864598-13 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-13 svg-16"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M7.41 8.29492L12 12.8749L16.59 8.29492L18 9.70492L12 15.7049L6 9.70492L7.41 8.29492Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon></div><!----><!----></button><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-14 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-14 ng-star-inserted" href="#/apelApplication?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-14 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-14 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-14 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M16.49 15.25V13.5L14 16L16.49 18.5V16.75H22V15.25H16.49ZM19.51 19.5H14V21H19.51V22.75L22 20.25L19.51 17.75V19.5ZM9.5 5.25C10.6 5.25 11.5 4.35 11.5 3.25C11.5 2.15 10.6 1.25 9.5 1.25C8.4 1.25 7.5 2.15 7.5 3.25C7.5 4.35 8.4 5.25 9.5 5.25ZM5.75 8.65L3 22.75H5.1L6.85 14.75L9 16.75V22.75H11V15.2L8.95 13.15L9.55 10.15C10.85 11.75 12.8 12.75 15 12.75V10.75C13.15 10.75 11.55 9.75 10.65 8.3L9.7 6.7C9.35 6.1 8.7 5.75 8 5.75C7.75 5.75 7.5 5.8 7.25 5.9L2 8.05V12.75H4V9.4L5.75 8.65Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-14 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-14">VÕTA</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-15 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-15 ng-star-inserted" href="#/reports/individualcurriculum/statistics?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-15 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-15 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-15 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M10.25 13C10.25 13.69 9.69 14.25 9 14.25C8.31 14.25 7.75 13.69 7.75 13C7.75 12.31 8.31 11.75 9 11.75C9.69 11.75 10.25 12.31 10.25 13ZM15 11.75C14.31 11.75 13.75 12.31 13.75 13C13.75 13.69 14.31 14.25 15 14.25C15.69 14.25 16.25 13.69 16.25 13C16.25 12.31 15.69 11.75 15 11.75ZM22 12C22 17.52 17.52 22 12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2C17.52 2 22 6.48 22 12ZM10.66 4.12C12.06 6.44 14.6 8 17.5 8C17.96 8 18.41 7.95 18.84 7.88C17.44 5.56 14.9 4 12 4C11.54 4 11.09 4.05 10.66 4.12ZM4.42 9.47C6.13 8.5 7.45 6.92 8.08 5.03C6.37 6 5.05 7.58 4.42 9.47ZM20 12C20 11.22 19.88 10.47 19.67 9.76C18.97 9.91 18.25 10 17.5 10C14.37 10 11.58 8.56 9.74 6.31C8.69 8.87 6.6 10.88 4 11.86C4.01 11.9 4 11.95 4 12C4 16.41 7.59 20 12 20C16.41 20 20 16.41 20 12Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-15 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-15">IÕK statistika</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-16 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-16 ng-star-inserted" href="#/reports/electivestudies?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-16 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-16 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-16 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M19.5 3.5L18 2L16.5 3.5L15 2L13.5 3.5L12 2L10.5 3.5L9 2L7.5 3.5L6 2L4.5 3.5L3 2V22L4.5 20.5L6 22L7.5 20.5L9 22L10.5 20.5L12 22L13.5 20.5L15 22L16.5 20.5L18 22L19.5 20.5L21 22V2L19.5 3.5ZM19 19.09H5V4.91H19V19.09ZM6 15H18V17H6V15ZM6 11H18V13H6V11ZM6 7H18V9H6V7Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-16 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-16">Valikained (kutse)</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><navigation-menu-item _ngcontent-ng-c1095520889="" _nghost-ng-c4091864598="" class="ng-tns-c4091864598-17 ng-star-inserted"><a _ngcontent-ng-c4091864598="" class="menu-item no-hover ng-tns-c4091864598-17 is-last ng-star-inserted" href="#/reports/studentgroupteacher?_menu"><div _ngcontent-ng-c4091864598="" class="ribbon ng-tns-c4091864598-17 ng-star-inserted"></div><div _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-17 ng-star-inserted"><svg-icon _ngcontent-ng-c4091864598="" class="ng-tns-c4091864598-17 ng-star-inserted svg-20"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c4091864598="" aria-label="undefined">
+<path d="M20.5 6C17.89 6.7 14.83 7 12 7C9.17 7 6.11 6.7 3.5 6L3 8C4.86 8.5 7 8.83 9 9V22H11V16H13V22H15V9C17 8.83 19.14 8.5 21 8L20.5 6ZM12 6C13.1 6 14 5.1 14 4C14 2.9 13.1 2 12 2C10.9 2 10 2.9 10 4C10 5.1 10.9 6 12 6Z" _ngcontent-ng-c4091864598=""></path>
+</svg></svg-icon><!----></div><div _ngcontent-ng-c4091864598="" class="item-label-container ng-tns-c4091864598-17 ng-star-inserted"><span _ngcontent-ng-c4091864598="" class="item-label ng-tns-c4091864598-17">Rühmajuhataja aruanne</span><!----></div><!----><!----></a><!----><!----><!----><!----></navigation-menu-item><!----><!----></div><div _ngcontent-ng-c1095520889="" class="representative-wrapper ng-star-inserted"><secondary-button _ngcontent-ng-c1095520889="" _nghost-ng-c3542992316=""><button _ngcontent-ng-c3542992316="" type="button"> Esita avaldus õppija andmete nägemiseks </button></secondary-button></div><!----></div><!----></dg-navigation-menu-desktop>
+      </div>
+
+      <div id="site-sidenav-wrapper" ng-style="{'display' : oldUI ? null : 'none'}">
+        <div id="site-sidenav-scroll-wrapper">
+          <!----><div id="site-sidenav" ng-if="showNavigation" role="navigation" class="slimScrollBar">
+            <div id="mobile-help-menu">
+              <div id="mobile-help-menu-content">
+                <a class="md-button md-ink-ripple" ng-transclude="" href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID" target="_blank">Juhendid</a>
+                <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="openSchoolContacts()" ng-show="state.currentUser.school" aria-hidden="false">Kooli kontaktid</button>
+                <!--            <md-button href="">{{ 'home.tahvelHelp' | translate }}</md-button>-->
+              </div>
+            </div>
+            <div id="mobile-role-menu" ng-controller="LoginController" ng-show="state.currentUser" aria-hidden="false" class="">
+              <div layout="column" class="layout-column">
+                <div layout="row" class="layout-row">
+                <md-icon md-svg-src="assets/icons/svg/account_circle_blue.svg" class="new-ui" role="img" aria-hidden="true"><svg width="100%" height="100%" viewBox="0 0 24.00 24.00" xmlns="http://www.w3.org/2000/svg" fill="#0d47a1" stroke="#0d47a1" transform="matrix(1, 0, 0, 1, 0, 0)" stroke-width="0.00024000000000000003" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+
+<g id="SVGRepo_bgCarrier_cache2" stroke-width="0"></g>
+
+<g id="SVGRepo_tracerCarrier_cache2" stroke-linecap="round" stroke-linejoin="round"></g>
+
+<g id="SVGRepo_iconCarrier_cache2"> <g> <path fill="none" d="M0 0h24v24H0z"></path> <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-4.987-3.744A7.966 7.966 0 0 0 12 20c1.97 0 3.773-.712 5.167-1.892A6.979 6.979 0 0 0 12.16 16a6.981 6.981 0 0 0-5.147 2.256zM5.616 16.82A8.975 8.975 0 0 1 12.16 14a8.972 8.972 0 0 1 6.362 2.634 8 8 0 1 0-12.906.187zM12 13a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path> </g> </g>
+
+</svg></md-icon>
+                <a ng-href="#/persons/settings" href="#/persons/settings">Anonüümne1</a>
+                </div>
+                <button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggleMobileSubMenu('role')" id="mobile-role-menu-button">
+                  Õpetaja VIKK<md-icon md-font-set="material-icons" id="mobile-role-menu-icon" class="material-icons" role="img" aria-label="expand_less">expand_less</md-icon>
+                </button>
+                <div id="mobile-role-menu-content">
+                  <!----><button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-repeat="user in state.currentUser.users" ng-click="setAndChangeUser(user);">Admin. töötaja VIKK</button><!----><button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-repeat="user in state.currentUser.users" ng-click="setAndChangeUser(user);">Õpetaja VIKK</button><!---->
+                </div>
+              </div>
+                </div>
+                <ul id="sidenav-list">
+                  <!----><li ng-repeat="section in Menu.sections" class="parent-list-item" ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/persons/settings" aria-label="Personaalsed seaded;" ng-click="focusSection()" href="#/persons/settings">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Personaalsed seaded
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item" ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/" aria-label="Minu töölaud;" ng-click="focusSection()" href="#/">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">dashboard</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Minu töölaud
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/curriculum?_menu" aria-label="Õppekavad;" ng-click="focusSection()" href="#/curriculum?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">format_list_bulleted</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Õppekavad
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!---->
+                    <!----><menu-toggle section="section" ng-if="section.type === 'toggle' &amp;&amp; !section.hidden"><button class="md-button-toggle md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggle()" aria-label="Tunniplaan ja sündmused;" aria-controls="docs-menu-main.menu.timetableAndEvents.label" aria-expanded="false">
+  <div flex="" layout="row" ng-class="{'active' : isSelected()}" class="layout-row flex">
+      <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">access_time</md-icon>
+    <span ng-class="{'menu-alert-dot-show' : showAlertDot()}" class="menu-alert-dot"></span>
+    Tunniplaan ja sündmused
+    <span flex="" class="flex"></span>
+    <span aria-hidden="true" class="md-toggle-icon" ng-class="{'toggled' : isOpen()}">
+      <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-label="expand_less">expand_less</md-icon>
+    </span>
+  </div>
+  <span class="md-visually-hidden">
+    Toggle collapsed
+  </span>
+</button>
+
+<ul id="docs-menu-main.menu.timetableAndEvents.label" class="menu-toggle-list" aria-hidden="true" ng-style="{ visibility: renderContent ? 'visible' : 'hidden' }">
+
+  <!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/timetable/personalGeneralTimetable?_menu" aria-label="Minu tunniplaan;" ng-click="focusSection()" href="#/timetable/personalGeneralTimetable?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Minu tunniplaan
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!---->
+
+<!----><button class="md-button md-ink-ripple" type="button" ng-transclude="" ng-if="section.type === 'custom'" target="_blank" ng-click="section.action(section)" aria-label="Tunniplaanid;">
+  <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Tunniplaanid
+</button><!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/lessonplans/events?_menu" aria-label="Sündmused;" ng-click="focusSection()" href="#/lessonplans/events?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Sündmused
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/consultations?_menu" aria-label="Konsultatsioonid / Järelvastamised;" ng-click="focusSection()" href="#/consultations?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Konsultatsioonid / Järelvastamised
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!---->
+</ul>
+</menu-toggle><!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/messages/received" aria-label="Teated;" ng-click="focusSection()" href="#/messages/received">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">email</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Teated
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/teachers/myData" aria-label="Minu andmed;" ng-click="focusSection()" href="#/teachers/myData">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">person_outline</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Minu andmed
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/academicCalendar" aria-label="Akadeemiline kalender;" ng-click="focusSection()" href="#/academicCalendar">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">date_range</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Akadeemiline kalender
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/studyYearSchedule?_menu" aria-label="Õppetöögraafik;" ng-click="focusSection()" href="#/studyYearSchedule?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">event_available</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Õppetöögraafik
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item  parentActive" ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!---->
+                    <!----><menu-toggle section="section" ng-if="section.type === 'toggle' &amp;&amp; !section.hidden"><button class="md-button-toggle md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggle()" aria-label="Õppetöö;" aria-controls="docs-menu-main.menu.study.label" aria-expanded="true">
+  <div flex="" layout="row" ng-class="{'active' : isSelected()}" class="layout-row flex">
+      <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">work</md-icon>
+    <span ng-class="{'menu-alert-dot-show' : showAlertDot()}" class="menu-alert-dot"></span>
+    Õppetöö
+    <span flex="" class="flex"></span>
+    <span aria-hidden="true" class="md-toggle-icon toggled" ng-class="{'toggled' : isOpen()}">
+      <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-label="expand_less">expand_less</md-icon>
+    </span>
+  </div>
+  <span class="md-visually-hidden">
+    Toggle expanded
+  </span>
+</button>
+
+<ul id="docs-menu-main.menu.study.label" class="menu-toggle-list" aria-hidden="false" ng-style="{ visibility: renderContent ? 'visible' : 'hidden' }">
+
+  <!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/remarks?_menu" aria-label="Märkused;" ng-click="focusSection()" href="#/remarks?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Märkused
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/journals?_menu" aria-label="Päevikud;" ng-click="focusSection()" href="#/journals?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Päevikud
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/studyMaterial/list" aria-label="Õppematerjalid;" ng-click="focusSection()" href="#/studyMaterial/list">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Õppematerjalid
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/lessonplans/vocational/byteacher?_menu" aria-label="Planeeritud koormused;" ng-click="focusSection()" href="#/lessonplans/vocational/byteacher?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Planeeritud koormused
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple active" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/students?_menu" aria-label="Õppijad;" ng-click="focusSection()" href="#/students?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons active" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Õppijad
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!----><span class="md-visually-hidden" ng-if="isSelected()">
+    current page
+  </span><!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/moduleProtocols/module?_menu" aria-label="Moodulite protokollid;" ng-click="focusSection()" href="#/moduleProtocols/module?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Moodulite protokollid
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!---->
+</ul>
+</menu-toggle><!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!---->
+                    <!----><menu-toggle section="section" ng-if="section.type === 'toggle' &amp;&amp; !section.hidden"><button class="md-button-toggle md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggle()" aria-label="Küsitlused;" aria-controls="docs-menu-main.menu.poll.label" aria-expanded="false">
+  <div flex="" layout="row" ng-class="{'active' : isSelected()}" class="layout-row flex">
+      <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">question_answer</md-icon>
+    <span ng-class="{'menu-alert-dot-show' : showAlertDot()}" class="menu-alert-dot"></span>
+    Küsitlused
+    <span flex="" class="flex"></span>
+    <span aria-hidden="true" class="md-toggle-icon" ng-class="{'toggled' : isOpen()}">
+      <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-label="expand_less">expand_less</md-icon>
+    </span>
+  </div>
+  <span class="md-visually-hidden">
+    Toggle collapsed
+  </span>
+</button>
+
+<ul id="docs-menu-main.menu.poll.label" class="menu-toggle-list" aria-hidden="true" ng-style="{ visibility: renderContent ? 'visible' : 'hidden' }">
+
+  <!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/poll/answers?_menu" aria-label="Minu vastused;" ng-click="focusSection()" href="#/poll/answers?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Minu vastused
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/poll/answers/subjects?_menu" aria-label="Päeviku küsitlused;" ng-click="focusSection()" href="#/poll/answers/subjects?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Päeviku küsitlused
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!---->
+</ul>
+</menu-toggle><!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/scholarships/applications/ranking/grants?_menu" aria-label="Õppetoetuste pingerida;" ng-click="focusSection()" href="#/scholarships/applications/ranking/grants?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">euro_symbol</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Õppetoetuste pingerida
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!---->
+                    <!----><menu-toggle section="section" ng-if="section.type === 'toggle' &amp;&amp; !section.hidden"><button class="md-button-toggle md-button md-ink-ripple" type="button" ng-transclude="" ng-click="toggle()" aria-label="Praktika ja lõpetamine;" aria-controls="docs-menu-main.menu.practiceAndGraduation.label" aria-expanded="false">
+  <div flex="" layout="row" ng-class="{'active' : isSelected()}" class="layout-row flex">
+      <md-icon md-font-set="material-icons" class="sm material-icons" role="img" aria-hidden="true">school</md-icon>
+    <span ng-class="{'menu-alert-dot-show' : showAlertDot()}" class="menu-alert-dot"></span>
+    Praktika ja lõpetamine
+    <span flex="" class="flex"></span>
+    <span aria-hidden="true" class="md-toggle-icon" ng-class="{'toggled' : isOpen()}">
+      <md-icon md-font-set="material-icons" class="material-icons" role="img" aria-label="expand_less">expand_less</md-icon>
+    </span>
+  </div>
+  <span class="md-visually-hidden">
+    Toggle collapsed
+  </span>
+</button>
+
+<ul id="docs-menu-main.menu.practiceAndGraduation.label" class="menu-toggle-list" aria-hidden="true" ng-style="{ visibility: renderContent ? 'visible' : 'hidden' }">
+
+  <!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/practiceJournals?_menu" aria-label="Praktikapäevikud;" ng-click="focusSection()" href="#/practiceJournals?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Praktikapäevikud
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/committees/KOMISJON_K?_menu" aria-label="Kaitsmiskomisjonid;" ng-click="focusSection()" href="#/committees/KOMISJON_K?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Kaitsmiskomisjonid
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/finalThesis?_menu" aria-label="Lõputööde register;" ng-click="focusSection()" href="#/finalThesis?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Lõputööde register
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!----><li ng-repeat="page in section.pages">
+    <menu-link section="page" is-child="true"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/finalVocationalProtocols?_menu" aria-label="Lõp. protokollid (kutse);" ng-click="focusSection()" href="#/finalVocationalProtocols?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true"></md-icon>
+  <!---->
+  Lõp. protokollid (kutse)
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="isChild" class="menu-alert-dot-end"></span><!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link>
+  </li><!---->
+</ul>
+</menu-toggle><!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/apelApplication?_menu" aria-label="VÕTA;" ng-click="focusSection()" href="#/apelApplication?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">transfer_within_a_station</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  VÕTA
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/reports/individualcurriculum/statistics?_menu" aria-label="IÕK statistika;" ng-click="focusSection()" href="#/reports/individualcurriculum/statistics?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">face</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  IÕK statistika
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/reports/electivestudies?_menu" aria-label="Valikained (kutse);" ng-click="focusSection()" href="#/reports/electivestudies?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">receipt</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Valikained (kutse)
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!----><li ng-repeat="section in Menu.sections" class="parent-list-item " ng-class="{'parentActive' : isSectionSelected(section)}" md-colors="productionEnvironment ? {} : {background: 'accent-50'}">
+                    <!----><menu-link section="section" is-child="false" ng-if="(section.type === 'link' || section.type === 'custom') &amp;&amp; !section.hidden"><!----><a class="md-button md-ink-ripple" ng-transclude="" ng-class="{'active' : isSelected()}" ng-if="section.type !== 'custom'" ng-href="#/reports/studentgroupteacher?_menu" aria-label="Rühmajuhataja aruanne;" ng-click="focusSection()" href="#/reports/studentgroupteacher?_menu">
+  <md-icon md-font-set="material-icons" class="sm material-icons" ng-class="{'active' : isSelected()}" role="img" aria-hidden="true">accessibility_new</md-icon>
+  <!----><span ng-class="{'menu-alert-dot-show' : showAlertDot()}" ng-if="!isChild" class="menu-alert-dot"></span><!---->
+  Rühmajuhataja aruanne
+  <!---->
+  <!---->
+</a><!---->
+
+<!---->
+</menu-link><!---->
+                    <!---->
+                    <!---->
+                  </li><!---->
+                </ul>
+
+                <div id="repr-link-wrapper">
+                  <dg-secondary-button ng-show="!!state.currentUser &amp;&amp; state.currentUser.type !== 'OPPUR_K'" ng-click="openRepresentativeLink()" role="button" tabindex="0" aria-hidden="false" class="" _nghost-ng-c3542992316="" ng-version="18.2.1"><button _ngcontent-ng-c3542992316="" type="button">
+                    Esita avaldus õppija andmete nägemiseks
+                  </button></dg-secondary-button>
+                </div>
+
+                <hr class="mobile-sidenav-separator">
+
+                <!--<div id="mobile-help-menu">
+                  <md-button ng-click="toggleMobileSubMenu('help')" id="mobile-help-menu-button">
+                    {{ 'home.help' | translate }}
+                    <md-icon md-font-set="material-icons" id="mobile-help-menu-icon">expand_less</md-icon>
+                  </md-button>
+                  <div id="mobile-help-menu-content">
+                    <md-button href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID"
+                               target="_blank">{{ 'home.instructions' | translate }}</md-button>
+                    <md-button ng-click="openSchoolContacts()" ng-show="state.currentUser.school">{{ 'home.schoolContacts' | translate }}</md-button>-->
+    <!--            <md-button href="">{{ 'home.tahvelHelp' | translate }}</md-button>-->
+              <!--</div>
+            </div>-->
+
+
+
+            <!--<md-button ng-controller="LoginController" id="mobile-logout" ng-click="logout()" ng-show="state.currentUser">{{ 'main.logOut' | translate }}</md-button>
+-->
+<!--            <div>-->
+<!--              <a ng-href="#/new-angular">Uue Angulari leht</a>-->
+<!--            </div>-->
+<!--            <div>-->
+<!--              <a ng-href="#/old-angular">Vana Angulari leht</a>-->
+<!--            </div>-->
+
+            <div ng-show="!state.currentUser" aria-hidden="true" class="ng-hide">
+              <img id="eu-logo" src="assets/images/eu_logo_ja_lipp.jpg">
+            </div>
+
+          </div><!---->
+          </div>
+        </div>
+
+      <!----><md-content id="main-content" ng-view="" tabindex="-1" role="main" ng-class="{'new-ui-background': hideBackground()}" class="_md"><dg-journal-edit-component _nghost-ng-c3452474927="" ng-version="18.2.1"><div _ngcontent-ng-c3452474927="" class="content ng-star-inserted"><journal-info _ngcontent-ng-c3452474927="" _nghost-ng-c1327316366=""><tahvel-accordion _ngcontent-ng-c1327316366="" _nghost-ng-c3329462900="" class="ng-tns-c3329462900-45 ng-untouched ng-pristine ng-valid ng-star-inserted"><div _ngcontent-ng-c3329462900="" class="accordion-container ng-tns-c3329462900-45"><button _ngcontent-ng-c3329462900="" class="accordion-header ng-tns-c3329462900-45"><div _ngcontent-ng-c3329462900="" class="label-wrapper ng-tns-c3329462900-45 ng-star-inserted"> Taristuteenused </div><!----><div _ngcontent-ng-c3329462900="" class="label-template ng-tns-c3329462900-45"><span _ngcontent-ng-c1327316366="" class="ng-star-inserted">A: 8/0, I: 12/0, P: 19/0</span><!----><!----><!----><!----></div><svg-icon _ngcontent-ng-c3329462900="" class="ng-tns-c3329462900-45"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c3329462900="" aria-label="undefined">
+<path d="M7.41 8.29492L12 12.8749L16.59 8.29492L18 9.70492L12 15.7049L6 9.70492L7.41 8.29492Z" _ngcontent-ng-c3329462900=""></path>
+</svg></svg-icon></button><div _ngcontent-ng-c3329462900="" class="accordion-expand-section ng-tns-c3329462900-45 ng-trigger ng-trigger-expandAnimation"><div _ngcontent-ng-c3329462900="" class="accordion-content ng-tns-c3329462900-45"><div _ngcontent-ng-c1327316366="" class="fields formatted ng-tns-c3329462900-45"><classifier-field _ngcontent-ng-c1327316366="" _nghost-ng-c3493852484=""><div _ngcontent-ng-c3493852484="" class="field"><span _ngcontent-ng-c3493852484="" class="label">Õppeaasta</span><div _ngcontent-ng-c3493852484=""></div><div _ngcontent-ng-c3493852484="" class="value ng-star-inserted">2025/2026</div><!----><!----></div></classifier-field><classifier-field _ngcontent-ng-c1327316366="" _nghost-ng-c3493852484=""><div _ngcontent-ng-c3493852484="" class="field"><span _ngcontent-ng-c3493852484="" class="label">Päeviku staatus</span><div _ngcontent-ng-c3493852484=""></div><div _ngcontent-ng-c3493852484="" class="value ng-star-inserted">Töös</div><!----><!----></div></classifier-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Päevik</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">Taristuteenused</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727="" class="ng-star-inserted"><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Päeviku lõppkuupäev</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">30.08.2026</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><!----><!----><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Õpperühm(ad)</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">IS25</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Õpetaja(d)</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">Anonüümne23, Anonüümne1</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Moodul(id)</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">IT valdkonna alusteadmised - Põhiõpingud (IS25)</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Mooduli(te) vastutaja(d)</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">Anonüümne23</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><classifier-field _ngcontent-ng-c1327316366="" _nghost-ng-c3493852484="" class="ng-star-inserted"><div _ngcontent-ng-c3493852484="" class="field"><span _ngcontent-ng-c3493852484="" class="label">Hindamisviis</span><div _ngcontent-ng-c3493852484=""></div><div _ngcontent-ng-c3493852484="" class="value ng-star-inserted">Mitteeristav hindamine</div><!----><!----></div></classifier-field><!----><!----><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Planeeritud ja sissekantud</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">39/0</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field><tahvel-field _ngcontent-ng-c1327316366="" _nghost-ng-c3619139727=""><div _ngcontent-ng-c3619139727="" class="field"><div _ngcontent-ng-c3619139727="" class="label ng-star-inserted">Õppetöö liikide planeeritud ja sissekantud tundide arv</div><!----><!----><div _ngcontent-ng-c3619139727="" class="field-data ng-star-inserted">A: 8/0, I: 12/0, P: 19/0</div><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----></div></tahvel-field></div><!----><div _ngcontent-ng-c1327316366="" class="moodle ng-star-inserted"><tahvel-input _ngcontent-ng-c1327316366="" formcontrolname="moodleCourseId" _nghost-ng-c2929524994="" class="ng-untouched ng-pristine ng-valid"><label _ngcontent-ng-c2929524994="" class="normal"><tahvel-form-field-label _ngcontent-ng-c2929524994="" _nghost-ng-c1693372407=""><input _ngcontent-ng-c2929524994="" placeholder="" type="text" class="ng-untouched ng-pristine ng-valid" maxlength="16"><div _ngcontent-ng-c1693372407="" class="label-container normal"><div _ngcontent-ng-c1693372407="" class="label-background ng-star-inserted"><span _ngcontent-ng-c1693372407="" class="background-text ng-star-inserted">Moodle kursuse ID</span><!----><span _ngcontent-ng-c1693372407="" class="asterisk ng-star-inserted">*</span><!----></div><!----><div _ngcontent-ng-c1693372407="" class="label-wrapper"><span _ngcontent-ng-c1693372407="" class="label-text ng-star-inserted">Moodle kursuse ID</span><!----><span _ngcontent-ng-c1693372407="" class="asterisk ng-star-inserted">*</span><!----></div></div></tahvel-form-field-label><div _ngcontent-ng-c2929524994="" class="length-indicator ng-star-inserted">0/16</div><!----></label><tahvel-form-field-errors _ngcontent-ng-c2929524994="" _nghost-ng-c2859924979="" class="ng-tns-c2859924979-46 ng-star-inserted"><!----></tahvel-form-field-errors></tahvel-input><tahvel-button _ngcontent-ng-c1327316366="" type="secondary" label="moodle.saveCourseId" _nghost-ng-c427322288=""><button _ngcontent-ng-c427322288="" class="t-button secondary uppercase disabled ng-star-inserted" disabled="" type="button"><!----><span _ngcontent-ng-c427322288="" class="button-label ng-star-inserted">SALVESTA MOODLE ID</span><!----><!----><!----></button><!----><!----><!----></tahvel-button><!----></div><!----><!----><!----></div></div><div _ngcontent-ng-c3329462900="" class="ribbon ng-tns-c3329462900-45"></div></div></tahvel-accordion><loading-overlay _ngcontent-ng-c1327316366="" _nghost-ng-c3395333481=""><div _ngcontent-ng-c3395333481=""><progress-circle _ngcontent-ng-c3395333481="" _nghost-ng-c1430291129="" class="sticky"><div _ngcontent-ng-c1430291129="" class="wrapper"><svg _ngcontent-ng-c1430291129="" viewBox="0 0 50 50" class="spinner" style="display:none"><circle _ngcontent-ng-c1430291129="" cx="25" cy="25" fill="none" r="20" stroke-width="4" class="path"></circle></svg></div></progress-circle></div></loading-overlay><!----></journal-info><journal-student-selection _ngcontent-ng-c3452474927="" _nghost-ng-c3883722791="" class="ng-star-inserted"><journal-add-student _ngcontent-ng-c3883722791="" _nghost-ng-c3437620502=""><!----></journal-add-student><div _ngcontent-ng-c3883722791="" class="content"><div _ngcontent-ng-c3883722791="" class="tahvel-table-wrapper"><table _ngcontent-ng-c3883722791="" class="tahvel-table ng-untouched ng-pristine ng-valid"><thead _ngcontent-ng-c3883722791=""><tr _ngcontent-ng-c3883722791=""><th _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="allStudentsSelected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></th><th _ngcontent-ng-c3883722791="">Õppija</th><th _ngcontent-ng-c3883722791="">Õpperühm</th><th _ngcontent-ng-c3883722791="">Õppekava kood</th><th _ngcontent-ng-c3883722791=""></th></tr></thead><tbody _ngcontent-ng-c3883722791="" formarrayname="students" class="ng-untouched ng-pristine ng-valid"><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne24</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Õuxonosxqhh Colsid</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne25</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne26</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne27</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne28</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne29</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Üöükfu Iaõlxqa</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne30</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Öössnsdõ Jxzpõxui</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne31</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne32</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne33</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Äöme Mzntüp</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne34</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne35ä</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne36</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Õqjdocanyjx Qljd</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne37</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne38</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><tr _ngcontent-ng-c3883722791="" class="ng-untouched ng-pristine ng-valid ng-star-inserted"><td _ngcontent-ng-c3883722791=""><checkbox _ngcontent-ng-c3883722791="" formcontrolname="selected" _nghost-ng-c4091433185="" class="ng-untouched ng-pristine ng-valid"><button _ngcontent-ng-c4091433185="" type="button" class="c-button"><div _ngcontent-ng-c4091433185="" class="box checked"><svg-icon _ngcontent-ng-c4091433185="" src="assets/icons/svg/check_small.svg"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed" _ngcontent-ng-c4091433185="" aria-label="undefined">
+  <path d="M400-304 240-464l56-56 104 104 264-264 56 56-320 320Z" _ngcontent-ng-c4091433185=""></path>
+</svg></svg-icon></div><!----></button></checkbox></td><td _ngcontent-ng-c3883722791=""><i _ngcontent-ng-c3883722791=""><!----></i><span _ngcontent-ng-c3883722791="">Anonüümne39</span></td><td _ngcontent-ng-c3883722791="">IS25</td><td _ngcontent-ng-c3883722791="">IS25 IT-süsteemide nooremspetsialist</td><td _ngcontent-ng-c3883722791=""><a _ngcontent-ng-c3883722791=""><svg-icon _ngcontent-ng-c3883722791="" class="x-sm"><svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#ba432a" _ngcontent-ng-c3883722791="" aria-label="undefined">
+  <path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" _ngcontent-ng-c3883722791=""></path>
+</svg></svg-icon></a></td></tr><!----></tbody></table></div><div _ngcontent-ng-c3883722791="" class="tahvel-form-buttons pad-top"><tahvel-button _ngcontent-ng-c3883722791="" type="primary" label="journal.addSelectedStudents" _nghost-ng-c427322288=""><button _ngcontent-ng-c427322288="" class="t-button primary has-arrow uppercase ng-star-inserted" type="button"><!----><span _ngcontent-ng-c427322288="" class="button-label ng-star-inserted">LISA VALITUD ÕPPIJAD PÄEVIKUSSE</span><!----><svg-icon _ngcontent-ng-c427322288="" class="right-icon svg-20 ng-star-inserted"><svg width="24" height="24" viewBox="0 0 24 24" fill="#454854" xmlns="http://www.w3.org/2000/svg" _ngcontent-ng-c427322288="" aria-label="undefined">
+<path d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z" _ngcontent-ng-c427322288=""></path>
+</svg></svg-icon><!----><!----></button><!----><!----><!----></tahvel-button><tahvel-button _ngcontent-ng-c3883722791="" type="secondary" label="journal.searchForOtherStudent" _nghost-ng-c427322288=""><button _ngcontent-ng-c427322288="" class="t-button secondary uppercase ng-star-inserted" type="button"><!----><span _ngcontent-ng-c427322288="" class="button-label ng-star-inserted">OTSI MUU ÕPPIJA</span><!----><!----><!----></button><!----><!----><!----></tahvel-button><tahvel-button _ngcontent-ng-c3883722791="" type="secondary" label="main.button.back" _nghost-ng-c427322288=""><button _ngcontent-ng-c427322288="" class="t-button secondary uppercase ng-star-inserted" type="button"><!----><span _ngcontent-ng-c427322288="" class="button-label ng-star-inserted">TAGASI</span><!----><!----><!----></button><!----><!----><!----></tahvel-button></div></div><loading-overlay _ngcontent-ng-c3883722791="" _nghost-ng-c3395333481=""><div _ngcontent-ng-c3395333481="" class=""><progress-circle _ngcontent-ng-c3395333481="" _nghost-ng-c1430291129="" class="sticky"><div _ngcontent-ng-c1430291129="" class="wrapper"><svg _ngcontent-ng-c1430291129="" viewBox="0 0 50 50" class="spinner" style="display:none"><circle _ngcontent-ng-c1430291129="" cx="25" cy="25" fill="none" r="20" stroke-width="4" class="path"></circle></svg></div></progress-circle></div></loading-overlay></journal-student-selection><!----><!----><!----><add-entry _ngcontent-ng-c3452474927="" _nghost-ng-c3426318243="" class="ng-star-inserted"><!----></add-entry><!----><add-outcome _ngcontent-ng-c3452474927="" _nghost-ng-c2898576422="" class="ng-star-inserted"><!----></add-outcome><!----><!----><moodle-enroll-dialog _ngcontent-ng-c3452474927="" _nghost-ng-c598817524=""><!----></moodle-enroll-dialog><moodle-groups-dialog _ngcontent-ng-c3452474927="" _nghost-ng-c4105445468=""><!----></moodle-groups-dialog><moodle-grade-items-dialog _ngcontent-ng-c3452474927="" _nghost-ng-c483494291=""><!----></moodle-grade-items-dialog></div><!----><loading-overlay _ngcontent-ng-c3452474927="" _nghost-ng-c3395333481=""><div _ngcontent-ng-c3395333481="" class=""><progress-circle _ngcontent-ng-c3395333481="" _nghost-ng-c1430291129="" class="sticky"><div _ngcontent-ng-c1430291129="" class="wrapper"><svg _ngcontent-ng-c1430291129="" viewBox="0 0 50 50" class="spinner" style="display:none"><circle _ngcontent-ng-c1430291129="" cx="25" cy="25" fill="none" r="20" stroke-width="4" class="path"></circle></svg></div></progress-circle></div></loading-overlay></dg-journal-edit-component></md-content>
+
+    </md-content>
+
+    <!----><new-footer ng-if="showNavigation" ng-style="{'display' : newUI ? null : 'none'}"><div id="nf-wrapper">
+  <div class="nf-links">
+<!--    <div>-->
+<!--      <a ng-click="openTerms()" tabindex="0">{{'home.terms' | translate}}</a>-->
+<!--    </div>-->
+    <div>
+      <div class="nf-expanding-link">
+        <a ng-href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID" target="_blank" tabindex="0" href="https://projektid.edu.ee/display/IS2/KASUTUSJUHENDID">
+          Juhendid
+        </a>
+      </div>
+      <div class="nf-expanding-link">
+        <a ng-href="https://projektid.edu.ee/spaces/IS2/pages/324971288/Infos%C3%BCsteemi+Tahvel+andmekaitsetingimused" target="_blank" tabindex="0" href="https://projektid.edu.ee/spaces/IS2/pages/324971288/Infos%C3%BCsteemi+Tahvel+andmekaitsetingimused">
+          Andmekaitsetingimused
+        </a>
+      </div>
+    </div>
+    <div>
+      <span>Versioon</span><span> 3.14.0</span>
+    </div>
+  </div>
+  <div class="nf-item">
+    <div>
+      Kasutajatoe kontaktid:
+    </div>
+    <div>
+      <md-icon md-svg-src="assets/icons/svg/call.svg" class="x-sm-svg" role="img" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" height="100%" viewBox="0 -960 960 960" width="100%" fill="#e8eaed" fit="" preserveAspectRatio="xMidYMid meet" focusable="false">
+  <path d="M798-120q-125 0-247-54.5T329-329Q229-429 174.5-551T120-798q0-18 12-30t30-12h162q14 0 25 9.5t13 22.5l26 140q2 16-1 27t-11 19l-97 98q20 37 47.5 71.5T387-386q31 31 65 57.5t72 48.5l94-94q9-9 23.5-13.5T670-390l138 28q14 4 23 14.5t9 23.5v162q0 18-12 30t-30 12ZM241-600l66-66-17-94h-89q5 41 14 81t26 79Zm358 358q39 17 79.5 27t81.5 13v-88l-94-19-67 67ZM241-600Zm358 358Z"></path>
+</svg></md-icon>
+      <span>730 2133 (E-R 9:00 - 16:00)</span>
+    </div>
+    <div>
+      <md-icon md-font-set="material-icons" class="x-sm material-icons" role="img" aria-label="mail_outline">mail_outline</md-icon>
+      <a href="mailto:user1@example.test">user1@example.test</a>
+    </div>
+  </div>
+  <div class="nf-item">
+    <img id="nf-eu-logo" alt="eu logo" src="assets/images/eu_logo_ja_lipp.jpg">
+  </div>
+</div>
+</new-footer><!---->
+
+    <!----><div id="footer" ng-if="showNavigation" role="contentinfo" ng-style="{'display' : oldUI ? null : 'none'}">
+      <div id="footer-content" layout-align="center center" class="layout-align-center-center">
+        <div class="footer-item">
+          <a href="mailto:user1@example.test">user1@example.test</a>
+        </div>
+        <!--<div class="footer-item">
+          <a ng-click="openTerms()" tabindex="0">{{'home.terms' | translate}}</a>
+        </div>-->
+        <div class="footer-item">
+          <span>Versioon</span><span> 3.14.0</span>
+        </div>
+      </div>
+    </div><!---->
+  </div>
+
+  
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div class="md-visually-hidden" role="status" aria-atomic="true" aria-live="polite"></div>
+
+
+
+
+
+
+
+
+
+</body></html>

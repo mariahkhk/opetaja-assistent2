@@ -14,4 +14,14 @@ if ! bun test > /dev/null 2>&1; then
   exit 1
 fi
 
+# Run full E2E suite (~5 min with workers=4). Catches every documented
+# regression class — Tahvel page features, Kriit sync flows, popup,
+# multi-tab crypto rotation. Worth the wait per project policy.
+echo "E2E (full)..."
+if ! bun run test:e2e > /dev/null 2>&1; then
+  echo "❌ E2E failed"
+  bun run test:e2e
+  exit 1
+fi
+
 exit 0

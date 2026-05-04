@@ -2,11 +2,11 @@ import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import TimetableDiscrepancyDetectionFeature from '../../../src/features/header/TimetableDiscrepancyDetectionFeature.js'
 import { cacheService } from '../../../src/services/CacheService.js'
+import { restoreChromeMock } from '../../setup.js'
 
 describe('TimetableDiscrepancyDetectionFeature', () => {
   let feature
   let dom
-  let mockChrome
 
   beforeEach(async () => {
     // Setup DOM
@@ -24,28 +24,12 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     global.window = dom.window
     global.document = dom.window.document
 
-    // Mock chrome.storage
-    mockChrome = {
-      runtime: { lastError: null },
-      storage: {
-        local: {
-          get: mock((keys, callback) => {
-            callback({
-              OA_kriitApiBaseUrl: 'https://kriit.example.com',
-              OA_kriitApiToken: 'test-token',
-              OA_kriitEnabled: true
-            })
-          }),
-          set: mock((items, callback) => {
-            if (callback) callback()
-          }),
-          remove: mock((keys, callback) => {
-            if (callback) callback()
-          })
-        }
-      }
-    }
-    global.chrome = mockChrome
+    restoreChromeMock()
+    await new Promise(resolve => global.chrome.storage.local.set({
+      OA_kriitApiBaseUrl: 'https://kriit.example.com',
+      OA_kriitApiToken: 'test-token',
+      OA_kriitEnabled: true
+    }, resolve))
 
     // Clear cacheService memory cache to prevent leaks between tests
     await cacheService.clearCache()

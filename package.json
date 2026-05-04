@@ -26,10 +26,13 @@
     "build:prod": "bun src/assets/scripts/build.js --prod",
     "watch": "bun src/assets/scripts/watch.js",
     "test": "bun test",
+    "test:e2e": "bun --bun x playwright test",
+    "test:e2e:smoke": "bun --bun x playwright test tests/e2e/popup.e2e.js tests/e2e/sentry.e2e.js tests/e2e/crypto-rotation.e2e.js",
     "lint": "./node_modules/.bin/eslint src/**/*.js --max-warnings 0",
     "lint:fix": "./node_modules/.bin/eslint src/**/*.js --fix",
     "format": "./node_modules/.bin/eslint src/**/*.js --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "[ -n \"$CI\" ] || bun --bun x playwright install chromium"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.8",

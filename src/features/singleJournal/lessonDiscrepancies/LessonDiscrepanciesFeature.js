@@ -35,21 +35,21 @@ import { getSchoolId } from '../../../lib/schoolId.js'
  */
 
 export default class LessonDiscrepanciesFeature extends BaseFeature {
-  #tableCreated = false
-  #currentJournalId = null
-  #saveMonitoringSetup = false
-  #tableObserver = null
-  #dialogObserver = null
-  #isRefreshing = false
+  tableCreated = false
+  currentJournalId = null
+  saveMonitoringSetup = false
+  tableObserver = null
+  dialogObserver = null
+  isRefreshing = false
   lastJournalData = null
-  #originalFetch = null
-  #problematicEntriesCache = null
-  #dialogCloseObserver = null
-  #refreshDebounceTimer = null
-  #lastRefreshTs = 0
-  #refreshInProgress = false
-  #bulkAddInProgress = false
-  #refreshPending = false
+  originalFetch = null
+  problematicEntriesCache = null
+  dialogCloseObserver = null
+  refreshDebounceTimer = null
+  lastRefreshTs = 0
+  refreshInProgress = false
+  bulkAddInProgress = false
+  refreshPending = false
 
   static JOURNAL_ENTRY_CONTACT_TYPES = ['SISSEKANNE_T', 'SISSEKANNE_P', 'SISSEKANNE_E']
   static JOURNAL_ENTRY_DEFAULT_TYPE = 'SISSEKANNE_T'
@@ -63,9 +63,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       api: this.api,
       formatDate: this.formatDisplayDate,
       extractJournalId: () => this.extractJournalId(),
-      calculateDuplicateIndex: discrepancy => this.#calculateDuplicateIndex(discrepancy),
+      calculateDuplicateIndex: discrepancy => this.calculateDuplicateIndex(discrepancy),
       findDuplicateMatches: (entryId, date) => this.findDuplicateMatches(entryId, date),
-      addDiscrepancyButtonListeners: () => this.#addDiscrepancyButtonListeners(),
+      addDiscrepancyButtonListeners: () => this.addDiscrepancyButtonListeners(),
       shouldContinue: () => this.isActive && this.shouldActivate(window.location.href)
     })
   }
@@ -74,16 +74,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     // CSS injection is now handled by the table class
     this.isActive = true
     this.reset()
-    await this.#clearStaleCache()
-    await this.#delay(1000)
-    await this.#createLessonDiscrepanciesTable(false, 'activate')
-    this.#setupJournalSaveMonitoring()
-    this.#setupDialogObserver()
+    await this.clearStaleCache()
+    await this.delay(1000)
+    await this.createLessonDiscrepanciesTable(false, 'activate')
+    this.setupJournalSaveMonitoring()
+    this.setupDialogObserver()
   }
 
   onDeactivate() {
     this.isActive = false
-    this.#cleanupMonitoring()
+    this.cleanupMonitoring()
     this.reset()
     styleService.removeCSS('lesson-discrepancies-styles')
     document.querySelectorAll('[data-oa2-entry-id]').forEach(el => el.removeAttribute('data-oa2-entry-id'))
@@ -91,13 +91,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   reset() {
-    this.#tableCreated = false
-    this.#currentJournalId = null
-    this.#cleanupMonitoring()
+    this.tableCreated = false
+    this.currentJournalId = null
+    this.cleanupMonitoring()
     document.querySelector('[data-discrepancies-table]')?.remove()
   }
 
-  #delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+  delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
   formatDate = date => {
     try {
@@ -144,7 +144,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return `${day}.${month}.${year}`
   }
 
-  #isElementVisible = element => {
+  isElementVisible = element => {
     if (!element) return false
     const style = getComputedStyle(element)
     const rect = element.getBoundingClientRect()
@@ -156,61 +156,61 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return match ? parseInt(match[1], 10) : null
   }
 
-  async #clearStaleCache() {
+  async clearStaleCache() {
     const journalId = this.extractJournalId()
     if (journalId) {
       await cacheService.clearJournalCache(journalId)
     }
   }
 
-  async #createLessonDiscrepanciesTable(forceRefresh = false, trigger = 'unknown') {
+  async createLessonDiscrepanciesTable(forceRefresh = false, trigger = 'unknown') {
     // Lock: only one refresh at a time, queue one extra if needed
-    if (this.#refreshInProgress) {
+    if (this.refreshInProgress) {
       Logger.debug(
         `[${this.name}] Refresh requested (trigger: ${trigger}, forceRefresh: ${forceRefresh}) but refresh is already in progress. Queueing one more.`
       )
-      this.#refreshPending = true
+      this.refreshPending = true
       return
     }
-    this.#refreshInProgress = true
-    this.#refreshPending = false
+    this.refreshInProgress = true
+    this.refreshPending = false
     Logger.debug(`[${this.name}] Starting refresh (trigger: ${trigger}, forceRefresh: ${forceRefresh})`)
 
     // Debounce: only allow one refresh per 750ms window
     const now = Date.now()
-    if (this.#refreshDebounceTimer) {
-      clearTimeout(this.#refreshDebounceTimer)
+    if (this.refreshDebounceTimer) {
+      clearTimeout(this.refreshDebounceTimer)
     }
-    if (now - this.#lastRefreshTs < 750 && !forceRefresh) {
+    if (now - this.lastRefreshTs < 750 && !forceRefresh) {
       Logger.debug(`[${this.name}] Debouncing refresh (trigger: ${trigger})`)
       // Schedule a single refresh after debounce window
-      this.#refreshDebounceTimer = setTimeout(
+      this.refreshDebounceTimer = setTimeout(
         () => {
-          this.#createLessonDiscrepanciesTable(forceRefresh, 'debounce')
+          this.createLessonDiscrepanciesTable(forceRefresh, 'debounce')
         },
-        750 - (now - this.#lastRefreshTs)
+        750 - (now - this.lastRefreshTs)
       )
-      this.#refreshInProgress = false
+      this.refreshInProgress = false
       return
     }
-    this.#lastRefreshTs = now
+    this.lastRefreshTs = now
     try {
       const journalId = this.extractJournalId()
       if (!journalId) {
-        this.#refreshInProgress = false
+        this.refreshInProgress = false
         return
       }
 
-      const { journalData, timetableData } = await this.#fetchJournalAndTimetableData(journalId, forceRefresh)
+      const { journalData, timetableData } = await this.fetchJournalAndTimetableData(journalId, forceRefresh)
       this.lastJournalData = journalData
 
-      const discrepancies = await this.#findLessonDiscrepancies(journalData, timetableData)
+      const discrepancies = await this.findLessonDiscrepancies(journalData, timetableData)
       const capacityProblems = await this.getCapacityTypeProblems(journalData)
 
       // Verify we're still on the correct page before inserting the table
       if (!this.isActive || !this.shouldActivate(window.location.href)) {
         Logger.debug(`[${this.name}] Feature deactivated or URL changed, skipping table insertion`)
-        this.#refreshInProgress = false
+        this.refreshInProgress = false
         return
       }
 
@@ -222,22 +222,22 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       })
 
       if (success) {
-        this.#tableCreated = true
-        this.#currentJournalId = journalId
+        this.tableCreated = true
+        this.currentJournalId = journalId
       }
     } catch (error) {
       Logger.error(`[${this.name}] table error`, error)
     } finally {
-      this.#refreshInProgress = false
-      if (this.#refreshPending) {
-        this.#refreshPending = false
+      this.refreshInProgress = false
+      if (this.refreshPending) {
+        this.refreshPending = false
         Logger.debug(`[${this.name}] Running queued refresh after previous finished`)
-        await this.#createLessonDiscrepanciesTable(true, 'queued')
+        await this.createLessonDiscrepanciesTable(true, 'queued')
       }
     }
   }
 
-  async #fetchJournalAndTimetableData(journalId, forceRefresh = false) {
+  async fetchJournalAndTimetableData(journalId, forceRefresh = false) {
     const cacheExpiration = forceRefresh ? 0 : 6e4
     const cacheBuster = forceRefresh ? Date.now() : undefined
     const params = cacheBuster ? { _t: cacheBuster } : {}
@@ -254,7 +254,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       })
     ])
     const schoolId = await getSchoolId(this.api, info)
-    const timetable = await this.#fetchTimetableData(info, schoolId, forceRefresh)
+    const timetable = await this.fetchTimetableData(info, schoolId, forceRefresh)
     return {
       journalData: {
         info,
@@ -280,7 +280,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * @param {boolean} forceRefresh - Whether to force refresh cache
    * @returns {Promise<Array<TimetableEvent>>} Timetable events
    */
-  async #fetchTimetableData(info, schoolId, forceRefresh = false) {
+  async fetchTimetableData(info, schoolId, forceRefresh = false) {
     try {
       const teacherId = info.journalTeachers?.[0]?.id
       if (!teacherId || !schoolId) return []
@@ -385,7 +385,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return stats
   }
 
-  async #findLessonDiscrepancies(journal, timetable) {
+  async findLessonDiscrepancies(journal, timetable) {
     const schoolId = journal.schoolId
     const journalStats = this.aggregateJournalEntries(journal.entries)
     const timetableStats = await this.aggregateTimetableEvents(timetable, schoolId)
@@ -415,10 +415,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       })
       .filter(Boolean)
 
-    return this.#convertDifferencesToDiscrepancies(differences, journal, timetable)
+    return this.convertDifferencesToDiscrepancies(differences, journal, timetable)
   }
 
-  async #convertDifferencesToDiscrepancies(differences, journal, timetable) {
+  async convertDifferencesToDiscrepancies(differences, journal, timetable) {
     const discrepancies = []
 
     for (const difference of differences) {
@@ -428,7 +428,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       const timetableEntries = timetable.filter(event => this.formatDate(event.date) === date)
 
       if (!journalCount && timetableCount) {
-        await this.#createMissingLessonDiscrepancies(
+        await this.createMissingLessonDiscrepancies(
           {
             date,
             tEntries: timetableEntries
@@ -437,7 +437,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           discrepancies
         )
       } else if (journalCount && timetableCount) {
-        await this.#createLessonMismatchDiscrepancies(
+        await this.createLessonMismatchDiscrepancies(
           {
             date,
             journalCount,
@@ -456,7 +456,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return discrepancies
   }
 
-  async #createMissingLessonDiscrepancies({ date, tEntries }, journal, discrepancies) {
+  async createMissingLessonDiscrepancies({ date, tEntries }, journal, discrepancies) {
     // Do not create discrepancies for lessons that are strictly in the future.
     // Same-day missing lessons are allowed per AC.
     try {
@@ -503,7 +503,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #createLessonMismatchDiscrepancies(data, journal, discrepancies) {
+  async createLessonMismatchDiscrepancies(data, journal, discrepancies) {
     const [firstTimetableEntry] = data.tEntries
     if (!firstTimetableEntry) return
 
@@ -535,8 +535,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #calculateDuplicateIndex(discrepancy) {
-    // Use the same logic as #findJournalEntryElement to ensure consistency
+  calculateDuplicateIndex(discrepancy) {
+    // Use the same logic as findJournalEntryElement to ensure consistency
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] calculateDuplicateIndex called with:`, discrepancy)
     const duplicateInfo = this.findDuplicateMatches(discrepancy.entryId, discrepancy.date)
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] calculateDuplicateIndex result: targetIndex=${duplicateInfo.targetIndex}`)
@@ -572,11 +572,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
 
     // Try multiple selectors to find journal entry rows.
-    // New page layout may render entries inside #entryTable or table.tahvel-table
+    // New page layout may render entries inside entryTable or table.tahvel-table
     const rowSelectors = [
       'tr[ng-click*="editJournalEntry"]',
       'tr[onclick*="editJournalEntry"]',
-      '#entryTable tr',
+      'entryTable tr',
       'table.tahvel-table tr',
       'tr[ng-click], tr[onclick]'
     ]
@@ -626,7 +626,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Filter by lesson count and type to get the exact matches in DOM order
     const exactMatches = dateMatchingRows.filter(row => {
-      const { lessonCount, entryType } = this.#parseRowLessonInfo(row)
+      const { lessonCount, entryType } = this.parseRowLessonInfo(row)
       return lessonCount === targetLessonCount && entryType === targetEntry.entryType
     })
 
@@ -725,21 +725,21 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #addDiscrepancyButtonListeners() {
+  addDiscrepancyButtonListeners() {
     const buttons = document.querySelectorAll('[data-discrepancies-table] button')
     buttons.forEach(
       /** @param {HTMLElement} button */ button => {
         if (button.dataset.handler) {
-          button.addEventListener('click', event => this.#handleDiscrepancyButtonClick(event, button))
+          button.addEventListener('click', event => this.handleDiscrepancyButtonClick(event, button))
         }
       }
     )
   }
 
-  async #handleDiscrepancyButtonClick(event, button) {
+  async handleDiscrepancyButtonClick(event, button) {
     event.preventDefault()
     event.stopPropagation()
-    if (button.disabled || this.#bulkAddInProgress) return
+    if (button.disabled || this.bulkAddInProgress) return
 
     if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Button clicked - starting click handler`)
     if (Logger.isDebugMode())
@@ -751,8 +751,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         innerHTML: button.innerHTML.substring(0, 200) + (button.innerHTML.length > 200 ? '...' : '')
       })
 
-    const originalState = this.#captureButtonState(button)
-    this.#setButtonProcessingState(button)
+    const originalState = this.captureButtonState(button)
+    this.setButtonProcessingState(button)
 
     let data
     let isLisaButton = false
@@ -760,7 +760,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     let fadeTable = null
     let restorePending = false
     try {
-      data = this.#parseButtonData(button)
+      data = this.parseButtonData(button)
       isLisaButton = data.handler === 'addMissing'
 
       if (Logger.isDebugMode()) {
@@ -781,7 +781,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           Logger.debug(`[${this.name}] Detected duplicate 'Muuda' button - opening entry instead of server-side edit`, { text, data })
           // Prefer entryId camelCase, fall back to lower-case dataset variant
           const entryId = data.entryId ?? data.entryid
-          await this.#handleOpenEntry(entryId, data)
+          await this.handleOpenEntry(entryId, data)
           // Early return: skip the normal execute flow (no API calls)
           return
         }
@@ -803,11 +803,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
       }
 
-      await this.#executeButtonAction(data, button)
+      await this.executeButtonAction(data, button)
       if (data.handler === 'addMissing') {
         Logger.debug(`[${this.name}] Lisa button clicked, waiting for table refresh...`)
-        await this.#delay(1000)
-        await this.#refreshTableWithRetry()
+        await this.delay(1000)
+        await this.refreshTableWithRetry()
         restorePending = true
       }
     } catch (error) {
@@ -821,20 +821,20 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
           // Only restore when the row is actually removed from DOM
           const checkRowRemoved = () => {
             if (!fadeTarget.isConnected) {
-              this.#restoreButtonState(button, originalState, isLisaButton)
+              this.restoreButtonState(button, originalState, isLisaButton)
             } else {
               setTimeout(checkRowRemoved, 200)
             }
           }
           if (restorePending) checkRowRemoved()
         } else {
-          this.#restoreButtonState(button, originalState, isLisaButton)
+          this.restoreButtonState(button, originalState, isLisaButton)
         }
       }
     }
   }
 
-  #captureButtonState(button) {
+  captureButtonState(button) {
     return {
       text: button.textContent,
       background: button.style.background,
@@ -843,14 +843,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #setButtonProcessingState(button) {
+  setButtonProcessingState(button) {
     button.disabled = true
     button.style.background = '#6c757d'
     button.style.opacity = '0.6'
     button.style.cursor = 'not-allowed'
   }
 
-  #parseButtonData(button) {
+  parseButtonData(button) {
     Logger.debug(`[${this.name}] Parsing button data from dataset:`, button.dataset)
 
     const parsedData = {}
@@ -921,7 +921,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return parsedData
   }
 
-  async #executeButtonAction(data, button) {
+  async executeButtonAction(data, button) {
     if (Logger.isDebugMode()) {
       Logger.debug(`[${this.name}] Executing button action with data:`, data)
       Logger.debug(`[${this.name}] Action data analysis:`, {
@@ -938,26 +938,26 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     const actionHandlers = {
       addMissing: () => {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleAddMissingEntry with:`, { date: data.date, startLesson: data.startLesson, lessonCount: data.lessonCount })
-        return this.#handleAddMissingEntry(data.date, data.startLesson, data.lessonCount, data)
+        return this.handleAddMissingEntry(data.date, data.startLesson, data.lessonCount, data)
       },
       editEntry: () => {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleEditEntry with:`, { date: data.date, entryId: data.entryId, type: data.type })
-        return this.#handleEditEntry(data.date, data.entryId, data.type, data)
+        return this.handleEditEntry(data.date, data.entryId, data.type, data)
       },
       fixCapacity: () => {
         if (Logger.isDebugMode()) {
           Logger.debug(`[${this.name}] Calling handleFixCapacity with:`, { date: data.date, entryId: data.entryId })
           Logger.debug(`[${this.name}] Date formatting test - input: ${data.date}, output: ${this.formatDisplayDate(data.date)}`)
         }
-        return this.#handleFixCapacity(data.date, data.entryId, data)
+        return this.handleFixCapacity(data.date, data.entryId, data)
       },
       openEntry: () => {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleOpenEntry with:`, { entryId: data.entryId })
-        return this.#handleOpenEntry(data.entryId, data)
+        return this.handleOpenEntry(data.entryId, data)
       },
       addAllMissing: () => {
         if (Logger.isDebugMode()) Logger.debug(`[${this.name}] Calling handleAddAllMissingEntries`)
-        return this.#handleAddAllMissingEntries(button)
+        return this.handleAddAllMissingEntries(button)
       }
     }
 
@@ -972,7 +972,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #restoreButtonState(button, originalState, isLisaButton = false) {
+  restoreButtonState(button, originalState, isLisaButton = false) {
     const delayTime = isLisaButton ? 5000 : 2000
     setTimeout(() => {
       button.disabled = false
@@ -983,11 +983,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }, delayTime)
   }
 
-  async #handleAddMissingEntry(date, start, count, timetableData = {}) {
+  async handleAddMissingEntry(date, start, count, timetableData = {}) {
     // Show a confirmation overlay that previews what will be inserted and
     // Directly create the missing entry without showing confirmation.
     try {
-      await this.#createMissingEntryDirect({ date, start, count, timetableData })
+      await this.createMissingEntryDirect({ date, start, count, timetableData })
     } catch (err) {
       Logger.error(`[${this.name}] Error creating missing entry directly`, err)
     }
@@ -998,9 +998,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * Collects all individual "Lisa" (addMissing) buttons from the DOM,
    * creates each missing entry sequentially, then reloads once.
    */
-  async #handleAddAllMissingEntries(addAllButton) {
-    if (this.#bulkAddInProgress) return
-    this.#bulkAddInProgress = true
+  async handleAddAllMissingEntries(addAllButton) {
+    if (this.bulkAddInProgress) return
+    this.bulkAddInProgress = true
 
     try {
       const entries = this.table.lastMissingEntries || []
@@ -1028,7 +1028,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
         if (addAllButton) addAllButton.textContent = `Lisamine (${i + 1}/${entries.length})...`
         try {
-          await this.#createMissingEntryDirect({
+          await this.createMissingEntryDirect({
             date: entries[i].date,
             start: entries[i].lessonNumber,
             count: entries[i].lessonCount,
@@ -1042,7 +1042,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
       }
 
-      const journalId = this.#currentJournalId || this.extractJournalId()
+      const journalId = this.currentJournalId || this.extractJournalId()
       if (journalId) {
         try {
           await cacheService.clearJournalCache(journalId)
@@ -1072,24 +1072,24 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       if (failCount > 0) {
         if (addAllButton) addAllButton.textContent = `Lisatud: ${successCount}, ebaõnnestus: ${failCount}`
-        await this.#delay(1000)
-        await this.#refreshTableWithRetry()
+        await this.delay(1000)
+        await this.refreshTableWithRetry()
         return
       }
 
-      await this.#delay(400)
+      await this.delay(400)
       window.location.reload()
     } finally {
-      this.#bulkAddInProgress = false
+      this.bulkAddInProgress = false
     }
   }
 
   // Create and show a lightweight confirmation overlay. When user clicks
   // "Open form" the add-entry modal is opened and pre-filled via existing
-  // helpers (#findAndClickAddButton and #fillAddForm).
+  // helpers (findAndClickAddButton and #fillAddForm).
   // Immediately create a missing journal entry (no confirmation UI).
-  async #createMissingEntryDirect({ date, start, count, timetableData = {}, skipReload = false } = {}) {
-    const journalId = this.#currentJournalId || this.extractJournalId()
+  async createMissingEntryDirect({ date, start, count, timetableData = {}, skipReload = false } = {}) {
+    const journalId = this.currentJournalId || this.extractJournalId()
     if (!journalId) throw new Error('Journal ID puudub')
 
     const effectiveStart = timetableData.timetablestart ?? timetableData.timetableStart ?? start ?? 1
@@ -1126,18 +1126,18 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // Show success message overlay and wait for it to be dismissed before refreshing
       let overlay = null
       try {
-        overlay = await this.#safeNotify({ title: 'Sissekanne lisatud', message: 'Uus sissekanne on loodud.', duration: 3500 })
+        overlay = await this.safeNotify({ title: 'Sissekanne lisatud', message: 'Uus sissekanne on loodud.', duration: 3500 })
       } catch (e) {
         Logger.debug('safeNotify failed', e)
       }
 
       // Give backend a short moment before attempting to refresh
-      await this.#delay(400)
+      await this.delay(400)
 
       // If overlay exists, wait for it to be removed (user clicks OK or it auto-dismisses)
       if (overlay) {
         try {
-          await this.#waitForElementRemoval('#ra-overlay-message', 8000)
+          await this.waitForElementRemoval('#ra-overlay-message', 8000)
         } catch (waitErr) {
           Logger.debug(`[${this.name}] Overlay did not disappear within timeout`, waitErr)
         }
@@ -1150,7 +1150,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       } catch (reloadErr) {
         Logger.debug(`[${this.name}] window.location.reload failed, falling back to table refresh`, reloadErr)
         try {
-          await this.#refreshTableWithRetry()
+          await this.refreshTableWithRetry()
         } catch (e) {
           Logger.debug('Failed to refresh table after create', e)
         }
@@ -1160,7 +1160,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     } catch (err) {
       Logger.error(`[${this.name}] Failed to create missing journal entry`, err)
       try {
-        await this.#safeNotify({ title: 'Viga', message: 'Sissekande loomine ebaõnnestus. Kontrolli konsooli.', duration: 5000 })
+        await this.safeNotify({ title: 'Viga', message: 'Sissekande loomine ebaõnnestus. Kontrolli konsooli.', duration: 5000 })
       } catch (e) {
         Logger.debug('safeNotify failed', e)
       }
@@ -1168,7 +1168,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #waitForElementRemoval(selector, timeout = 5000) {
+  async waitForElementRemoval(selector, timeout = 5000) {
     return new Promise((resolve, reject) => {
       const start = Date.now()
       const check = () => {
@@ -1182,7 +1182,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   }
 
   // Non-blocking notification helper - logs and optionally shows a lightweight banner
-  async #safeNotify({ title = 'Teade', message = '', duration = 3000 } = {}) {
+  async safeNotify({ title = 'Teade', message = '', duration = 3000 } = {}) {
     try {
       // Prefer centralized BannerService if available to avoid modal overlays
       if (window.raBannerService && typeof window.raBannerService.show === 'function') {
@@ -1210,18 +1210,18 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * @param {string} type - Entry type
    * @param {ButtonData} data - Button data object
    */
-  async #handleEditEntry(date, entryId, type, data) {
+  async handleEditEntry(date, entryId, type, data) {
     try {
       const actualEntryId = entryId || data.entryid
       const duplicateIndex = data.duplicateindex || 0
       // multiEntryFix buttons don't carry timetable data, so the extension lacks
       // the data to construct a meaningful PUT. Open the entry for manual editing instead.
       if (type === 'multiEntryFix') {
-        return this.#handleOpenEntry(actualEntryId, data)
+        return this.handleOpenEntry(actualEntryId, data)
       }
 
       // Preferred flow: perform a server-side fetch -> modify -> PUT to update the entry
-      const journalId = this.#currentJournalId || this.extractJournalId()
+      const journalId = this.currentJournalId || this.extractJournalId()
       if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
         try {
           const detailUrl = `/journals/${journalId}/journalEntry/${actualEntryId}`
@@ -1235,10 +1235,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
           // Apply changes if provided by the button data (timetable suggested values)
           // Only change startLessonNr, lessons and entryDate/nameEt when the parsed data differs
-          if (this.#isValidValue(data.timetablestart) && Number(data.timetablestart) !== Number(current.startLessonNr)) {
+          if (this.isValidValue(data.timetablestart) && Number(data.timetablestart) !== Number(current.startLessonNr)) {
             putPayload.startLessonNr = Number(data.timetablestart)
           }
-          if (this.#isValidValue(data.timetablecount) && Number(data.timetablecount) !== Number(current.lessons)) {
+          if (this.isValidValue(data.timetablecount) && Number(data.timetablecount) !== Number(current.lessons)) {
             putPayload.lessons = Number(data.timetablecount)
           }
 
@@ -1279,7 +1279,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
               Logger.debug('Failed to clear journal cache', e)
             }
             try {
-              await this.#refreshTableWithRetry()
+              await this.refreshTableWithRetry()
             } catch (e) {
               Logger.debug('Failed to refresh table after PUT', e)
             }
@@ -1309,28 +1309,28 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       // Fallback UX: open the edit modal and prefill fields if server-side flow is not possible or failed
-      const element = await this.#findJournalEntryElement(actualEntryId, date, duplicateIndex)
+      const element = await this.findJournalEntryElement(actualEntryId, date, duplicateIndex)
       if (!element) {
         Logger.error(`[${this.name}] Entry element not found for ID=${actualEntryId}, date=${date}, duplicateIndex=${duplicateIndex}`)
         throw new Error('entry element not found')
       }
 
-      await this.#clickJournalEntry(element)
-      await this.#waitForDialogContentLoaded()
+      await this.clickJournalEntry(element)
+      await this.waitForDialogContentLoaded()
 
-      await this.#fillEditForm(type, data)
+      await this.fillEditForm(type, data)
     } catch (error) {
       Logger.error(`[${this.name}] edit entry error`, error)
     }
   }
 
-  async #findAndClickAddButton() {
+  async findAndClickAddButton() {
     const selectors = ['button[ng-click*="addEntry"]', 'button[ng-click*="lisa"]', '[aria-label*="Lisa sissekanne"]']
 
     for (const selector of selectors) {
       const button = document.querySelector(selector)
-      if (button && this.#isElementVisible(button) && !button.closest('[data-discrepancies-table]')) {
-        await this.#clickElement(button)
+      if (button && this.isElementVisible(button) && !button.closest('[data-discrepancies-table]')) {
+        await this.clickElement(button)
         return button
       }
     }
@@ -1338,11 +1338,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     // Fallback: search for button by visible text content (case-insensitive, Estonian)
     const allButtons = document.querySelectorAll('button,md-button,[role="button"]')
     const addButton = [...allButtons].find(
-      button => /lisa.*sissekanne|add.*entry/i.test(button.textContent) && this.#isElementVisible(button) && !button.closest('[data-discrepancies-table]')
+      button => /lisa.*sissekanne|add.*entry/i.test(button.textContent) && this.isElementVisible(button) && !button.closest('[data-discrepancies-table]')
     )
 
     if (addButton) {
-      await this.#clickElement(addButton)
+      await this.clickElement(addButton)
       return addButton
     }
 
@@ -1350,16 +1350,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return null
   }
 
-  async #fillAddForm(date, start, count, timetableData) {
+  async fillAddForm(date, start, count, timetableData) {
     const formattedDate = this.formatDisplayDate(date)
     const effectiveStart = timetableData.timetablestart || timetableData.timetableStart || start
     const effectiveCount = timetableData.timetablecount || timetableData.timetableCount || count
 
     // Fill entry type (md-select)
     try {
-      const entryTypeField = this.#findVisibleElement(['md-select[ng-model*="entryType"]'])
+      const entryTypeField = this.findVisibleElement(['md-select[ng-model*="entryType"]'])
       if (entryTypeField) {
-        await this.#selectMdSelectOption(entryTypeField, LessonDiscrepanciesFeature.JOURNAL_ENTRY_DEFAULT_TYPE)
+        await this.selectMdSelectOption(entryTypeField, LessonDiscrepanciesFeature.JOURNAL_ENTRY_DEFAULT_TYPE)
       } else {
         Logger.warning(`[${this.name}] Entry type field not found`)
       }
@@ -1369,9 +1369,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Fill date input
     try {
-      const dateField = this.#findVisibleElement(['md-datepicker input'])
+      const dateField = this.findVisibleElement(['md-datepicker input'])
       if (dateField) {
-        await this.#fillInputField(dateField, formattedDate)
+        await this.fillInputField(dateField, formattedDate)
       } else {
         Logger.warning(`[${this.name}] Date field not found`)
       }
@@ -1380,22 +1380,22 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
 
     await Promise.all([
-      this.#fillStartLessonField(String(effectiveStart)),
-      this.#fillLessonCountField(String(effectiveCount)),
-      this.#checkAuditoriumLearningCheckbox(),
-      this.#checkTeacherCheckbox()
+      this.fillStartLessonField(String(effectiveStart)),
+      this.fillLessonCountField(String(effectiveCount)),
+      this.checkAuditoriumLearningCheckbox(),
+      this.checkTeacherCheckbox()
     ])
 
     // Add teacher checkbox change listeners for validation refresh
-    this.#addTeacherCheckboxListeners()
+    this.addTeacherCheckboxListeners()
   }
 
-  async #fillEditForm(type, data) {
+  async fillEditForm(type, data) {
     try {
       if (type === 'singleEntryFix' || type === 'multiEntryFix') {
         // Both single and multi-entry fixes use the same form filling logic
         // Multi-entry just means multiple buttons are shown, but each operates on a single entry
-        await this.#fillSingleEntryForm(data)
+        await this.fillSingleEntryForm(data)
       } else {
         Logger.warning(`[${this.name}] Unknown edit form type: ${type}`)
       }
@@ -1407,101 +1407,101 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   /**
    * @param {ButtonData} data - Form data object
    */
-  async #fillSingleEntryForm(data) {
+  async fillSingleEntryForm(data) {
     const currentStart = data.currentstart
     const timetableStart = data.timetablestart
     const currentCount = data.currentcount
     const timetableCount = data.timetablecount
 
-    if (this.#isValidValue(timetableStart) && currentStart !== timetableStart) {
-      await this.#fillStartLessonField(String(timetableStart))
+    if (this.isValidValue(timetableStart) && currentStart !== timetableStart) {
+      await this.fillStartLessonField(String(timetableStart))
     }
 
-    if (this.#isValidValue(timetableCount) && currentCount !== timetableCount) {
-      await this.#fillLessonCountField(String(timetableCount))
+    if (this.isValidValue(timetableCount) && currentCount !== timetableCount) {
+      await this.fillLessonCountField(String(timetableCount))
     }
   }
 
-  #isValidValue(value) {
+  isValidValue(value) {
     return value !== Infinity && value !== -Infinity && !isNaN(value) && value != null
   }
 
-  #setFieldState(_field, _state) {
+  setFieldState(_field, _state) {
     // Visual highlighting disabled. Keep method to avoid breaking callers.
     return
   }
 
-  async #fillFieldWithVisualFeedback(selectors, value, logName) {
+  async fillFieldWithVisualFeedback(selectors, value, logName) {
     // Removed: visual feedback helper replaced by direct calls to lower-level helpers.
     // Kept as a placeholder to avoid breaking references during refactor (should be removed).
-    const field = this.#findVisibleElement(selectors)
+    const field = this.findVisibleElement(selectors)
     if (!field) {
       Logger.warning(`[${this.name}] ${logName} field not found`)
       return false
     }
 
     if (field.tagName.toLowerCase() === 'md-select') {
-      return await this.#selectMdSelectOption(field, value)
+      return await this.selectMdSelectOption(field, value)
     }
 
-    return await this.#fillInputField(field, value)
+    return await this.fillInputField(field, value)
   }
 
-  async #fillStartLessonField(value) {
+  async fillStartLessonField(value) {
     const selectors = ['md-select[aria-label*="Algustund"]', 'md-select[ng-model*="startLessonNr"]', '#select_89']
-    const field = this.#findVisibleElement(selectors)
+    const field = this.findVisibleElement(selectors)
     if (!field) {
       Logger.warning(`[${this.name}] Start lesson field not found`)
       return false
     }
-    return await this.#selectMdSelectOption(field, value)
+    return await this.selectMdSelectOption(field, value)
   }
 
-  async #fillLessonCountField(value) {
+  async fillLessonCountField(value) {
     const selectors = ['input[aria-label="lessons"]', 'input[ng-model*="lessons"]', '#input_69']
-    const field = this.#findVisibleElement(selectors)
+    const field = this.findVisibleElement(selectors)
     if (!field) {
       Logger.warning(`[${this.name}] Lesson count field not found`)
       return false
     }
-    return await this.#fillInputField(field, value)
+    return await this.fillInputField(field, value)
   }
 
-  async #fillInputField(field, value) {
+  async fillInputField(field, value) {
     field.value = value
     field.dispatchEvent(new Event('input', { bubbles: true }))
     return true
   }
 
-  async #selectMdSelectOption(field, value) {
+  async selectMdSelectOption(field, value) {
     field.click()
     field.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
 
-    const contentId = await this.#getOrWaitForContentId(field)
+    const contentId = await this.getOrWaitForContentId(field)
     if (!contentId) return false
 
-    const optionElement = await this.#waitForElement(`md-content[id="${contentId}"] md-option[value="${value}"]`).catch(() => null)
+    const optionElement = await this.waitForElement(`md-content[id="${contentId}"] md-option[value="${value}"]`).catch(() => null)
     if (!optionElement) return false
 
     optionElement.scrollIntoView()
-    await this.#delay(200)
+    await this.delay(200)
     optionElement.click()
     optionElement.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     return true
   }
 
-  async #getOrWaitForContentId(field) {
+  async getOrWaitForContentId(field) {
     const existingId = field.getAttribute('aria-owns')
     if (existingId) return existingId
 
     try {
-      return await this.#waitForAttributeToAppear(field, 'aria-owns', 3000)
+      return await this.waitForAttributeToAppear(field, 'aria-owns', 3000)
     } catch {
       return null
     }
   }
 
-  async #waitForAttributeToAppear(element, attribute, timeout = 3000) {
+  async waitForAttributeToAppear(element, attribute, timeout = 3000) {
     return new Promise((resolve, reject) => {
       const observer = new MutationObserver(() => {
         const attributeValue = element.getAttribute(attribute)
@@ -1519,7 +1519,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     })
   }
 
-  async #waitForElement(selector, timeout = 3000) {
+  async waitForElement(selector, timeout = 3000) {
     const existing = document.querySelector(selector)
     if (existing) return existing
 
@@ -1550,12 +1550,12 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     })
   }
 
-  async #clickElement(element, delay = 500) {
-    await this.#clickElementWithScrollPreservation(element)
-    await this.#delay(delay)
+  async clickElement(element, delay = 500) {
+    await this.clickElementWithScrollPreservation(element)
+    await this.delay(delay)
   }
 
-  #createScrollPreservation() {
+  createScrollPreservation() {
     const originalPosition = {
       x: window.scrollX || document.documentElement.scrollLeft,
       y: window.scrollY || document.documentElement.scrollTop
@@ -1588,8 +1588,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #clickElementWithScrollPreservation(element) {
-    const { restoreScroll, startScrollMonitoring, stopScrollMonitoring } = this.#createScrollPreservation()
+  async clickElementWithScrollPreservation(element) {
+    const { restoreScroll, startScrollMonitoring, stopScrollMonitoring } = this.createScrollPreservation()
 
     try {
       startScrollMonitoring()
@@ -1603,25 +1603,25 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       })
 
       element.dispatchEvent(clickEvent)
-      await this.#delay(100)
+      await this.delay(100)
     } finally {
       stopScrollMonitoring()
       restoreScroll()
     }
   }
 
-  #findVisibleElement(selectors) {
-    return selectors.map(selector => document.querySelector(selector)).find(element => this.#isElementVisible(element))
+  findVisibleElement(selectors) {
+    return selectors.map(selector => document.querySelector(selector)).find(element => this.isElementVisible(element))
   }
 
-  async #findJournalEntryElement(entryId, date, duplicateIndex = 0) {
+  async findJournalEntryElement(entryId, date, duplicateIndex = 0) {
     // New Tahvel (Angular): entries are columns, not rows. Match by column index.
-    const headerLink = this.#findEntryInNewTahvel(entryId)
+    const headerLink = this.findEntryInNewTahvel(entryId)
     if (headerLink) return headerLink
 
     // Old Tahvel (AngularJS): entries are rows with ng-click
     if (document.querySelector('tr[ng-click*="editJournalEntry"]')) {
-      const annotatedRow = await this.#findEntryRowViaAngularScope(entryId)
+      const annotatedRow = await this.findEntryRowViaAngularScope(entryId)
       if (annotatedRow) return annotatedRow
     }
 
@@ -1725,7 +1725,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       const allRows = document.querySelectorAll(
-        'tr[ng-click*="editJournalEntry"], tr[onclick*="editJournalEntry"], #entryTable tr, table.tahvel-table tr, tr[ng-click], tr[onclick]'
+        'tr[ng-click*="editJournalEntry"], tr[onclick*="editJournalEntry"], entryTable tr, table.tahvel-table tr, tr[ng-click], tr[onclick]'
       )
       const dateMatchingRows = [...allRows].filter(row => row.textContent.includes(dateSearchCriteria))
 
@@ -1765,7 +1765,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * Header <th class="header-cell"> elements correspond 1:1 with API entries.
    * Find the column by matching the entry's index in the API data.
    */
-  #findEntryInNewTahvel(entryId) {
+  findEntryInNewTahvel(entryId) {
     const headers = document.querySelectorAll('th.header-cell')
     if (headers.length === 0 || !this.lastJournalData?.entries) return null
 
@@ -1805,7 +1805,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * Content scripts can't access Angular directly (isolated world), so we inject a
    * <script> tag that runs in the main world, annotates rows, then read the result.
    */
-  async #findEntryRowViaAngularScope(entryId) {
+  async findEntryRowViaAngularScope(entryId) {
     try {
       const attrName = 'data-oa2-entry-id'
       const safeId = CSS.escape(String(entryId))
@@ -1868,7 +1868,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return null
   }
 
-  #parseRowLessonInfo(row) {
+  parseRowLessonInfo(row) {
     const cells = row.querySelectorAll('td')
     let lessonCount = null
     let entryType = null
@@ -1926,48 +1926,48 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #clickJournalEntry(element) {
+  async clickJournalEntry(element) {
     // New Tahvel: <a> links navigate the SPA to the entry detail page.
     // No md-dialog will appear, so skip the dialog-waiting logic.
     if (element.tagName === 'A') {
       Logger.debug(`[${this.name}] New Tahvel: clicking <a> link for SPA navigation`)
-      await this.#clickElementWithScrollPreservation(element)
+      await this.clickElementWithScrollPreservation(element)
       return
     }
 
-    const { restoreScroll, startScrollMonitoring, stopScrollMonitoring } = this.#createScrollPreservation()
+    const { restoreScroll, startScrollMonitoring, stopScrollMonitoring } = this.createScrollPreservation()
 
     try {
       startScrollMonitoring()
-      const dialogPromise = this.#waitForDialogToOpen()
+      const dialogPromise = this.waitForDialogToOpen()
 
       // First try: click the element directly
-      await this.#clickElementWithScrollPreservation(element)
-      await this.#delay(300)
+      await this.clickElementWithScrollPreservation(element)
+      await this.delay(300)
 
       // Check if dialog opened
-      let isFormOpen = await this.#isEditFormOpen()
+      let isFormOpen = await this.isEditFormOpen()
       if (!isFormOpen) {
-        await this.#performDoubleClick(element)
-        await this.#delay(300)
-        isFormOpen = await this.#isEditFormOpen()
+        await this.performDoubleClick(element)
+        await this.delay(300)
+        isFormOpen = await this.isEditFormOpen()
       }
 
       // If still not open, try clicking a specific child element
       if (!isFormOpen) {
         const clickableChild = element.querySelector('[ng-click*="editJournalEntry"], [onclick*="editJournalEntry"], td, a')
         if (clickableChild && clickableChild !== element) {
-          await this.#clickElementWithScrollPreservation(clickableChild)
-          await this.#delay(300)
-          isFormOpen = await this.#isEditFormOpen()
+          await this.clickElementWithScrollPreservation(clickableChild)
+          await this.delay(300)
+          isFormOpen = await this.isEditFormOpen()
         }
       }
 
       // Final check and error handling
       if (!isFormOpen) {
         // Sometimes the dialog opens, but we don't detect it immediately
-        await this.#delay(500)
-        isFormOpen = await this.#isEditFormOpen()
+        await this.delay(500)
+        isFormOpen = await this.isEditFormOpen()
       }
 
       if (!isFormOpen) {
@@ -1979,20 +1979,20 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       } catch (error) {
         Logger.error(`[${this.name}] Dialog failed to open:`, error.message)
 
-        if (await this.#isEditFormOpen()) {
+        if (await this.isEditFormOpen()) {
           return
         }
 
         throw new Error('edit form not open')
       }
     } finally {
-      await this.#delay(100)
+      await this.delay(100)
       stopScrollMonitoring()
       restoreScroll()
     }
   }
 
-  async #performDoubleClick(element) {
+  async performDoubleClick(element) {
     const rect = element.getBoundingClientRect()
     const doubleClickEvent = new MouseEvent('dblclick', {
       bubbles: true,
@@ -2002,10 +2002,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       clientY: rect.top + rect.height / 2
     })
     element.dispatchEvent(doubleClickEvent)
-    await this.#delay(200)
+    await this.delay(200)
   }
 
-  async #waitForDialogToOpen(timeout = 15000) {
+  async waitForDialogToOpen(timeout = 15000) {
     return new Promise((resolve, reject) => {
       let observer = null
 
@@ -2017,10 +2017,10 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       observer = new MutationObserver(_mutations => {
         const algustundField = document.querySelector('md-select[aria-label*="Algustund"]')
 
-        if (algustundField && this.#isElementVisible(algustundField)) {
+        if (algustundField && this.isElementVisible(algustundField)) {
           const dialog = algustundField.closest('md-dialog, .md-dialog, [role="dialog"]')
 
-          if (dialog && this.#isElementVisible(dialog)) {
+          if (dialog && this.isElementVisible(dialog)) {
             clearTimeout(timeoutId)
             observer.disconnect()
             resolve(dialog)
@@ -2034,9 +2034,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       })
 
       const existingAlgustundField = document.querySelector('md-select[aria-label*="Algustund"]')
-      if (existingAlgustundField && this.#isElementVisible(existingAlgustundField)) {
+      if (existingAlgustundField && this.isElementVisible(existingAlgustundField)) {
         const existingDialog = existingAlgustundField.closest('md-dialog, .md-dialog, [role="dialog"]')
-        if (existingDialog && this.#isElementVisible(existingDialog)) {
+        if (existingDialog && this.isElementVisible(existingDialog)) {
           clearTimeout(timeoutId)
           observer.disconnect()
           resolve(existingDialog)
@@ -2045,7 +2045,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     })
   }
 
-  async #waitForDialogContentLoaded(timeout = 15000) {
+  async waitForDialogContentLoaded(timeout = 15000) {
     return new Promise((resolve, reject) => {
       let observer = null
 
@@ -2058,9 +2058,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         const algustundField = document.querySelector('md-select[aria-label="Algustund"]')
         const lessonsField = document.querySelector('input[aria-label="lessons"]')
 
-        if (algustundField && lessonsField && this.#isElementVisible(algustundField) && this.#isElementVisible(lessonsField)) {
+        if (algustundField && lessonsField && this.isElementVisible(algustundField) && this.isElementVisible(lessonsField)) {
           const dialog = algustundField.closest('md-dialog, .md-dialog, [role="dialog"]')
-          if (dialog && this.#isElementVisible(dialog)) {
+          if (dialog && this.isElementVisible(dialog)) {
             clearTimeout(timeoutId)
             if (observer) observer.disconnect()
             resolve(dialog)
@@ -2082,19 +2082,19 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     })
   }
 
-  async #isEditFormOpen() {
+  async isEditFormOpen() {
     // Method 1: Check for "Algustund" field
     const algustundField = document.querySelector('md-select[aria-label*="Algustund"]')
-    if (algustundField && this.#isElementVisible(algustundField)) {
+    if (algustundField && this.isElementVisible(algustundField)) {
       const dialog = algustundField.closest('md-dialog, .md-dialog, [role="dialog"]')
-      if (dialog && this.#isElementVisible(dialog)) {
+      if (dialog && this.isElementVisible(dialog)) {
         return true
       }
     }
 
     // Method 2: Check for any visible md-dialog
     const anyDialog = document.querySelector('md-dialog')
-    if (anyDialog && this.#isElementVisible(anyDialog)) {
+    if (anyDialog && this.isElementVisible(anyDialog)) {
       // Check if it contains journal entry fields
       const hasJournalFields = anyDialog.querySelector('md-select[aria-label*="Algustund"], input[aria-label="lessons"], md-select[ng-model*="entryType"]')
       if (hasJournalFields) {
@@ -2104,9 +2104,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Method 3: Check for "lessons" field (another common field in journal entry forms)
     const lessonsField = document.querySelector('input[aria-label="lessons"]')
-    if (lessonsField && this.#isElementVisible(lessonsField)) {
+    if (lessonsField && this.isElementVisible(lessonsField)) {
       const dialog = lessonsField.closest('md-dialog, .md-dialog, [role="dialog"]')
-      if (dialog && this.#isElementVisible(dialog)) {
+      if (dialog && this.isElementVisible(dialog)) {
         return true
       }
     }
@@ -2114,19 +2114,19 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return false
   }
 
-  async #checkAuditoriumLearningCheckbox() {
+  async checkAuditoriumLearningCheckbox() {
     // Disabled: do not programmatically toggle auditorium capacity checkbox.
     // The selection should be performed manually by the user in the form.
     return false
   }
 
-  async #checkTeacherCheckbox() {
+  async checkTeacherCheckbox() {
     // Disabled: do not programmatically toggle teacher checkboxes.
     // Teachers should be selected manually in the add-entry form.
     return false
   }
 
-  #getTeacherCheckboxState() {
+  getTeacherCheckboxState() {
     const teacherCheckboxes = document.querySelectorAll('md-checkbox[ng-model*="selectedTeachers"]')
     const checkboxes = []
     let checkedCount = 0
@@ -2150,24 +2150,24 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #refreshTableWithRetry(maxRetries = 3) {
+  async refreshTableWithRetry(maxRetries = 3) {
     this.maxRetries = maxRetries
-    Logger.debug(`[${this.name}] #refreshTableWithRetry called`)
-    await this.#createLessonDiscrepanciesTable(true, 'refreshTableWithRetry')
+    Logger.debug(`[${this.name}] refreshTableWithRetry called`)
+    await this.createLessonDiscrepanciesTable(true, 'refreshTableWithRetry')
   }
-  #setupJournalSaveMonitoring() {
-    if (this.#saveMonitoringSetup) return
+  setupJournalSaveMonitoring() {
+    if (this.saveMonitoringSetup) return
 
-    this.#setupJournalTableMonitoring()
-    this.#setupJournalDialogSaveMonitoring()
-    this.#saveMonitoringSetup = true
+    this.setupJournalTableMonitoring()
+    this.setupJournalDialogSaveMonitoring()
+    this.saveMonitoringSetup = true
   }
 
-  #setupJournalTableMonitoring() {
+  setupJournalTableMonitoring() {
     const journalTable = document.querySelector('table.journalTable')
     if (journalTable) {
       const tableObserver = new MutationObserver(mutations => {
-        if (this.#isRefreshing) return
+        if (this.isRefreshing) return
 
         let hasTableChanges = false
         for (const mutation of mutations) {
@@ -2182,7 +2182,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         }
 
         if (hasTableChanges) {
-          setTimeout(() => this.#refreshTableWithRetry(), 1000)
+          setTimeout(() => this.refreshTableWithRetry(), 1000)
         }
       })
 
@@ -2191,28 +2191,28 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         subtree: true
       })
 
-      this.#tableObserver = tableObserver
+      this.tableObserver = tableObserver
     }
   }
 
-  #setupJournalDialogSaveMonitoring() {
+  setupJournalDialogSaveMonitoring() {
     // Only set up monitoring once and store original fetch
-    if (!this.#originalFetch) {
-      this.#originalFetch = window.fetch
+    if (!this.originalFetch) {
+      this.originalFetch = window.fetch
 
       // Monitor for journal entry dialog saves by watching for PUT requests to journal entry endpoints
       window.fetch = async(...args) => {
-        const response = await this.#originalFetch.apply(window, args)
+        const response = await this.originalFetch.apply(window, args)
 
         // Check if this is a PUT request to a journal entry endpoint
         const url = args[0]
         if (typeof url === 'string' && url.includes('/journalEntry/') && args[1]?.method === 'PUT') {
           // Extract journal ID from URL
           const journalIdMatch = url.match(/\/journals\/(\d+)\/journalEntry\//)
-          if (journalIdMatch && parseInt(journalIdMatch[1]) === this.#currentJournalId) {
+          if (journalIdMatch && parseInt(journalIdMatch[1]) === this.currentJournalId) {
             // Wait a bit for the save to complete, then refresh validation
             setTimeout(async() => {
-              await this.#refreshCapacityValidationAfterSave()
+              await this.refreshCapacityValidationAfterSave()
             }, 1500)
           }
         }
@@ -2225,23 +2225,23 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   /**
    * Setup observer to monitor for journal entry dialogs being opened and auto-check teacher checkboxes
    */
-  #setupDialogObserver() {
+  setupDialogObserver() {
     // Dialog observer removed - no longer auto-checking teacher checkbox
     // Teacher validation is now handled in table/background validation
   }
 
-  async #refreshCapacityValidationAfterSave() {
+  async refreshCapacityValidationAfterSave() {
     try {
       // Check if we have a current journal ID
-      if (!this.#currentJournalId) {
+      if (!this.currentJournalId) {
         return
       }
 
       // Clear journal cache to get fresh data
-      await cacheService.clearJournalCache(this.#currentJournalId)
+      await cacheService.clearJournalCache(this.currentJournalId)
 
       // Fetch fresh journal data
-      const { journalData } = await this.#fetchJournalAndTimetableData(this.#currentJournalId, true)
+      const { journalData } = await this.fetchJournalAndTimetableData(this.currentJournalId, true)
 
       // Re-run unified validation
       const _capacityProblems = await this.getCapacityTypeProblems(journalData)
@@ -2249,26 +2249,26 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // Instead of only updating capacity problems (which hides timetable discrepancies),
       // perform a full table refresh so both timetable discrepancies and capacity problems
       // are recalculated and displayed consistently.
-      await this.#createLessonDiscrepanciesTable(true, 'refreshCapacityValidationAfterSave')
+      await this.createLessonDiscrepanciesTable(true, 'refreshCapacityValidationAfterSave')
     } catch (error) {
       Logger.error(`[${this.name}] Error refreshing capacity validation:`, error)
     }
   }
 
-  #cleanupMonitoring() {
-    this.#tableObserver?.disconnect()
-    this.#tableObserver = null
+  cleanupMonitoring() {
+    this.tableObserver?.disconnect()
+    this.tableObserver = null
 
-    this.#dialogObserver?.disconnect()
-    this.#dialogObserver = null
+    this.dialogObserver?.disconnect()
+    this.dialogObserver = null
 
     // Restore original fetch if we modified it
-    if (this.#originalFetch) {
-      window.fetch = this.#originalFetch
-      this.#originalFetch = null
+    if (this.originalFetch) {
+      window.fetch = this.originalFetch
+      this.originalFetch = null
     }
 
-    this.#saveMonitoringSetup = false
+    this.saveMonitoringSetup = false
   }
 
   async getCapacityTypeProblems(journalData) {
@@ -2280,7 +2280,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // Log capacity type code mappings
 
       // Get detailed capacity validation results
-      const validationResults = await this.#performDetailedCapacityValidation(journalData, auditoorneCapacity, capacityHours)
+      const validationResults = await this.performDetailedCapacityValidation(journalData, auditoorneCapacity, capacityHours)
 
       // Return problematic entries
       const problematicEntries = validationResults.filter(result => !result.isValid)
@@ -2290,7 +2290,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }))
 
       // Store problematic entries for later access during fixing
-      this.#problematicEntriesCache = enrichedProblematicEntries
+      this.problematicEntriesCache = enrichedProblematicEntries
 
       return enrichedProblematicEntries
     } catch (error) {
@@ -2299,7 +2299,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  async #performDetailedCapacityValidation(journalData, auditoorneCapacity, capacityHours) {
+  async performDetailedCapacityValidation(journalData, auditoorneCapacity, capacityHours) {
     const entries = journalData.entries || []
     const journalId = journalData.info?.id
 
@@ -2315,16 +2315,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
 
     // Fetch detailed data for each target entry
-    const validationResults = await this.#validateEntriesWithDetailedData(journalId, targetEntries, capacityHours)
+    const validationResults = await this.validateEntriesWithDetailedData(journalId, targetEntries, capacityHours)
 
     // Log validation summary
-    this.#logValidationSummary(validationResults, auditoorneCapacity)
+    this.logValidationSummary(validationResults, auditoorneCapacity)
 
     // Return validation results
     return validationResults
   }
 
-  async #validateEntriesWithDetailedData(journalId, targetEntries, journalCapacityHours) {
+  async validateEntriesWithDetailedData(journalId, targetEntries, journalCapacityHours) {
     const validationResults = []
 
     for (const entry of targetEntries) {
@@ -2345,7 +2345,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         const capacityTypes = detailedEntry.journalEntryCapacityTypes
 
         // Validate the entry
-        const validationResult = this.#validateSingleEntry(entry, detailedEntry, capacityTypes, journalCapacityHours)
+        const validationResult = this.validateSingleEntry(entry, detailedEntry, capacityTypes, journalCapacityHours)
         validationResults.push(validationResult)
       } catch (error) {
         validationResults.push({
@@ -2361,7 +2361,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     return validationResults
   }
 
-  #validateSingleEntry(entry, detailedEntry, capacityTypes, journalCapacityHours) {
+  validateSingleEntry(entry, detailedEntry, capacityTypes, journalCapacityHours) {
     // Create a combined entry object with fallback for missing fields
     const combinedEntry = {
       ...entry,
@@ -2452,7 +2452,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Using includes() as the primary method
 
-    return this.#performBusinessLogicValidation(
+    return this.performBusinessLogicValidation(
       combinedEntry,
       detailedEntry,
       {
@@ -2465,7 +2465,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     )
   }
 
-  #performBusinessLogicValidation(entry, detailedEntry, actualState, capacityTypes) {
+  performBusinessLogicValidation(entry, detailedEntry, actualState, capacityTypes) {
     // Log the business rules
 
     // Determine expected state based on entry type
@@ -2612,16 +2612,16 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #logValidationSummary(validationResults, auditoorneCapacity) {
+  logValidationSummary(validationResults, auditoorneCapacity) {
     // Log detailed results for each entry
 
     // Log specific entry IDs that are failing each type of validation
 
     // Root cause analysis logging
-    this.#logRootCauseAnalysis(validationResults, auditoorneCapacity)
+    this.logRootCauseAnalysis(validationResults, auditoorneCapacity)
   }
 
-  #logRootCauseAnalysis(validationResults, _auditoorneCapacity) {
+  logRootCauseAnalysis(validationResults, _auditoorneCapacity) {
     // Investigate potential causes
 
     // a) Incorrect business logic
@@ -2662,11 +2662,11 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     })
   }
 
-  // #createCapacityProblemRow method moved to DiscrepanciesTable class
+  // createCapacityProblemRow method moved to DiscrepanciesTable class
 
-  #highlightProblematicElements(elements, message = '', color = '#ff0000') {
+  highlightProblematicElements(elements, message = '', color = '#ff0000') {
     // Clean up any existing highlights first
-    this.#cleanupHighlights()
+    this.cleanupHighlights()
 
     const highlights = []
 
@@ -2717,13 +2717,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
     // Auto-remove highlights after 15 seconds
     setTimeout(() => {
-      this.#cleanupHighlights()
+      this.cleanupHighlights()
     }, 15000)
 
     return highlights
   }
 
-  #findProblematicElementsForHighlighting(entryType, validationResult) {
+  findProblematicElementsForHighlighting(entryType, validationResult) {
     const elements = []
 
     // Find capacity type checkbox elements specifically
@@ -2904,7 +2904,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * @param {string} entryId - Entry ID
    * @param {ButtonData} data - Button data object
    */
-  async #handleFixCapacity(date, entryId, data = {}) {
+  async handleFixCapacity(date, entryId, data = {}) {
     Logger.debug(`[${this.name}] handleFixCapacity called with parameters:`, {
       date: date,
       dateType: typeof date,
@@ -2951,9 +2951,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       Logger.debug(`[${this.name}] handleFixCapacity called with entryId=${entryId}, data.entryid=${data.entryid}, actualEntryId=${actualEntryId}`)
 
       // Try to refresh journal data if it's missing
-      if (!this.lastJournalData && this.#currentJournalId) {
+      if (!this.lastJournalData && this.currentJournalId) {
         try {
-          const { journalData } = await this.#fetchJournalAndTimetableData(this.#currentJournalId, true)
+          const { journalData } = await this.fetchJournalAndTimetableData(this.currentJournalId, true)
           this.lastJournalData = journalData
         } catch (refreshError) {
           Logger.error(`[${this.name}] Failed to refresh journal data:`, refreshError)
@@ -2962,7 +2962,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
       // Attempt server-side capacity fix first: fetch detailed entry and PUT modified payload
       try {
-        const journalId = this.#currentJournalId || this.extractJournalId()
+        const journalId = this.currentJournalId || this.extractJournalId()
         if (journalId && actualEntryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
           const detailUrl = `/journals/${journalId}/journalEntry/${actualEntryId}`
           // Fetch fresh detailed entry (no cache)
@@ -3018,12 +3018,12 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                   Logger.debug(`[${this.name}] cache clear error after focused PUT:`, cErr)
                 }
                 try {
-                  const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
+                  const { journalData } = await this.fetchJournalAndTimetableData(journalId, true)
                   this.lastJournalData = journalData
                 } catch (e) {
                   Logger.debug(`[${this.name}] refresh after focused PUT failed:`, e)
                 }
-                await this.#refreshTableWithRetry()
+                await this.refreshTableWithRetry()
 
                 // Done - server-side fix applied. Exit without opening UI fallback.
                 return
@@ -3044,7 +3044,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 }
 
                 try {
-                  await this.#safeNotify({
+                  await this.safeNotify({
                     title: 'Parandus ebaõnnestus',
                     message: 'Server ei suutnud automaatselt auditoorset õpet lisada. Palun parandage sissekanne käsitsi.',
                     duration: 7000
@@ -3093,12 +3093,12 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                   Logger.debug(`[${this.name}] cache clear error after focused PUT:`, cErr)
                 }
                 try {
-                  const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
+                  const { journalData } = await this.fetchJournalAndTimetableData(journalId, true)
                   this.lastJournalData = journalData
                 } catch (e) {
                   Logger.debug(`[${this.name}] refresh after focused PUT failed:`, e)
                 }
-                await this.#refreshTableWithRetry()
+                await this.refreshTableWithRetry()
 
                 // Done - server-side fix applied. Exit without opening UI fallback.
                 return
@@ -3119,7 +3119,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                 }
 
                 try {
-                  await this.#safeNotify({
+                  await this.safeNotify({
                     title: 'Parandus ebaõnnestus',
                     message: 'Server ei suutnud automaatselt praktilist tööd lisada. Palun parandage sissekanne käsitsi.',
                     duration: 7000
@@ -3174,14 +3174,14 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
                 // Re-fetch journal data to reflect changes
                 try {
-                  const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
+                  const { journalData } = await this.fetchJournalAndTimetableData(journalId, true)
                   this.lastJournalData = journalData
                 } catch (reErr) {
                   Logger.debug(`[${this.name}] failed to refresh journal data after PUT:`, reErr)
                 }
 
                 // Refresh the discrepancies display
-                await this.#refreshTableWithRetry()
+                await this.refreshTableWithRetry()
 
                 // Server-side fix applied; refresh display and exit early.
                 // Note: UI success overlay removed per user preference.
@@ -3214,7 +3214,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         // Continue to fallback UI flow
       }
 
-      const element = await this.#findJournalEntryElement(actualEntryId, date, duplicateIndex)
+      const element = await this.findJournalEntryElement(actualEntryId, date, duplicateIndex)
       if (!element) {
         // Enhanced error logging
         const debugInfo = {
@@ -3240,21 +3240,21 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         throw new Error(`entry element not found - entryId: ${entryId}, actualEntryId: ${actualEntryId}, date: ${date}, duplicateIndex: ${duplicateIndex}`)
       }
 
-      return this.#continueFixCapacity(element, actualEntryId, date)
+      return this.continueFixCapacity(element, actualEntryId, date)
     } catch (error) {
       Logger.error(`[${this.name}] fix capacity error`, error)
     }
   }
 
-  async #continueFixCapacity(element, entryId, _date) {
+  async continueFixCapacity(element, entryId, _date) {
     try {
       // Get the entry to determine its type and validation result for highlighting
       let entryData = null
       let validationResult = null
 
       // First try to get from cached problematic entries (this is the most reliable source)
-      if (this.#problematicEntriesCache) {
-        const cachedEntry = this.#problematicEntriesCache.find(e => e.id == entryId)
+      if (this.problematicEntriesCache) {
+        const cachedEntry = this.problematicEntriesCache.find(e => e.id == entryId)
         if (cachedEntry) {
           entryData = cachedEntry
           validationResult = cachedEntry.validationResult
@@ -3310,7 +3310,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       // Special handling for teacher validation issues: try server-side assignment BEFORE opening the dialog
       if (validationResult?.errorType === 'no_teacher_selected') {
         try {
-          const journalId = this.#currentJournalId || this.extractJournalId()
+          const journalId = this.currentJournalId || this.extractJournalId()
           if (journalId && entryId && this.api?.tahvel?.get && this.api?.tahvel?.put) {
             const detailUrl = `/journals/${journalId}/journalEntry/${entryId}`
             const detailedEntry = await this.api.tahvel.get(detailUrl, { allStudents: true }, { cache: false, cacheExpiration: 0 })
@@ -3385,15 +3385,15 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
                     Logger.debug(`[${this.name}] cache clear error after teacher PUT:`, e)
                   }
                   try {
-                    const { journalData } = await this.#fetchJournalAndTimetableData(journalId, true)
+                    const { journalData } = await this.fetchJournalAndTimetableData(journalId, true)
                     this.lastJournalData = journalData
                   } catch (e) {
                     Logger.debug(`[${this.name}] refresh after teacher PUT failed:`, e)
                   }
-                  await this.#refreshTableWithRetry()
+                  await this.refreshTableWithRetry()
 
                   try {
-                    await this.#safeNotify({ title: 'Õpetaja lisatud', message: 'Õpetaja on automaatselt määratud ja salvestatud.', duration: 4000 })
+                    await this.safeNotify({ title: 'Õpetaja lisatud', message: 'Õpetaja on automaatselt määratud ja salvestatud.', duration: 4000 })
                   } catch (e) {
                     Logger.debug(`[${this.name}] safeNotify failed:`, e)
                   }
@@ -3417,7 +3417,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
                   // On failure, show message and exit (no UI fallback)
                   try {
-                    await this.#safeNotify({
+                    await this.safeNotify({
                       title: 'Parandus ebaõnnestus',
                       message: 'Server ei suutnud automaatselt õpetajat määrata. Palun valige õpetaja käsitsi.',
                       duration: 6000
@@ -3430,7 +3430,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
               } else {
                 Logger.debug(`[${this.name}] No teacher available to assign for entry ${entryId}`)
                 try {
-                  await this.#safeNotify({
+                  await this.safeNotify({
                     title: 'Õpetajat ei leitud',
                     message: 'Päevikust või sissekandest ei leitud õpetajat, palun valige õpetaja käsitsi.',
                     duration: 6000
@@ -3445,7 +3445,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         } catch (srvAssignErr) {
           Logger.debug(`[${this.name}] Server-side teacher assignment attempt failed:`, srvAssignErr)
           try {
-            await this.#safeNotify({ title: 'Parandus ebaõnnestus', message: 'Serveri päring ebaõnnestus. Palun valige õpetaja käsitsi.', duration: 6000 })
+            await this.safeNotify({ title: 'Parandus ebaõnnestus', message: 'Serveri päring ebaõnnestus. Palun valige õpetaja käsitsi.', duration: 6000 })
           } catch (e) {
             Logger.debug(`[${this.name}] safeNotify failed:`, e)
           }
@@ -3454,8 +3454,8 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
 
       // Open the dialog only for non-teacher issues or if we reached here
-      await this.#clickJournalEntry(element)
-      await this.#waitForDialogContentLoaded()
+      await this.clickJournalEntry(element)
+      await this.waitForDialogContentLoaded()
 
       // Wait a bit for dialog content to fully render
       await new Promise(resolve => setTimeout(resolve, 500))
@@ -3466,35 +3466,35 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         // Just highlight the auditoorne checkbox and let user handle teacher selection manually
       } else {
         // Ensure teacher checkbox is always checked for other validation types
-        await this.#checkTeacherCheckbox()
+        await this.checkTeacherCheckbox()
       }
 
       // Check if teacher is actually selected after auto-checking (skip for lesson_without_auditoorne)
       if (validationResult?.errorType !== 'lesson_without_auditoorne') {
-        const teacherState = this.#getTeacherCheckboxState()
+        const teacherState = this.getTeacherCheckboxState()
 
         // If no teacher is selected, show specific error and highlight teacher checkboxes
         if (!teacherState.hasTeacher) {
           const teacherCheckboxes = document.querySelectorAll('md-checkbox[ng-model*="selectedTeachers"]')
-          const teacherElements = [...teacherCheckboxes].filter(cb => this.#isElementVisible(cb))
+          const teacherElements = [...teacherCheckboxes].filter(cb => this.isElementVisible(cb))
 
           if (teacherElements.length > 0) {
-            this.#highlightProblematicElements(teacherElements, 'Õpetaja pole valitud! Palun valige õpetaja enne salvestamist.')
-            this.#addDialogCloseListeners()
+            this.highlightProblematicElements(teacherElements, 'Õpetaja pole valitud! Palun valige õpetaja enne salvestamist.')
+            this.addDialogCloseListeners()
 
             // Add event listeners to automatically clear the highlight when a teacher is selected
-            this.#addTeacherSelectionMonitoring()
+            this.addTeacherSelectionMonitoring()
 
             return // Exit early - don't process capacity checkboxes until teacher is selected
           }
         }
 
         // Add teacher checkbox change listeners for validation refresh
-        this.#addTeacherCheckboxListeners()
+        this.addTeacherCheckboxListeners()
       }
 
       // Find and highlight problematic elements to guide the user
-      const elementsToHighlight = this.#findProblematicElementsForHighlighting(entryType, validationResult)
+      const elementsToHighlight = this.findProblematicElementsForHighlighting(entryType, validationResult)
 
       // Special green highlight for praktiline töö missing checkbox error
       if (validationResult?.errorType === 'praktiline_too_without_praktiline_checkbox') {
@@ -3509,19 +3509,19 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
 
         // Uncheck and highlight Iseseisev õpe in red if checked
         if (iseseisevCheckbox && iseseisevCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(iseseisevCheckbox)
-          this.#highlightProblematicElements([iseseisevCheckbox], 'Iseseisev õpe linnuke eemaldati!', '#ff0000')
+          await this.clickElement(iseseisevCheckbox)
+          this.highlightProblematicElements([iseseisevCheckbox], 'Iseseisev õpe linnuke eemaldati!', '#ff0000')
         }
         // Check and highlight Praktiline töö in green if not checked
         if (praktiliseCheckbox && praktiliseCheckbox.getAttribute('aria-checked') !== 'true') {
-          await this.#clickElement(praktiliseCheckbox)
-          this.#highlightProblematicElements([praktiliseCheckbox], highlightMessage, '#4CAF50')
+          await this.clickElement(praktiliseCheckbox)
+          this.highlightProblematicElements([praktiliseCheckbox], highlightMessage, '#4CAF50')
         }
-        this.#addDialogCloseListeners()
+        this.addDialogCloseListeners()
       } else if (elementsToHighlight.length > 0) {
-        this.#highlightProblematicElements(elementsToHighlight, highlightMessage)
+        this.highlightProblematicElements(elementsToHighlight, highlightMessage)
         // Add listeners to remove highlights when dialog is closed or saved
-        this.#addDialogCloseListeners()
+        this.addDialogCloseListeners()
       } else {
         Logger.warning(`[${this.name}] No elements found to highlight for error type: ${validationResult?.errorType}`)
         // Show tooltip anyway to guide user
@@ -3572,48 +3572,48 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       if (validationResult?.errorType === 'lesson_without_auditoorne') {
         // Auto-check the auditoorne checkbox but don't auto-save
         if (auditoorneCheckbox && auditoorneCheckbox.getAttribute('aria-checked') !== 'true') {
-          await this.#clickElement(auditoorneCheckbox)
+          await this.clickElement(auditoorneCheckbox)
 
           // Highlight the checkbox in green to show it was automatically fixed
-          this.#highlightProblematicElements(
+          this.highlightProblematicElements(
             [auditoorneCheckbox],
             'Auditoorne õpe on automaatselt sisse lülitatud! Palun salvestage muudatused käsitsi.',
             '#4CAF50'
           )
-          this.#addDialogCloseListeners()
+          this.addDialogCloseListeners()
         }
       } else if (entryType === 'SISSEKANNE_I') {
         // For independent work entries: ensure iseseisevCheckbox is checked, others are unchecked
         if (iseseisevCheckbox && iseseisevCheckbox.getAttribute('aria-checked') !== 'true') {
-          await this.#clickElement(iseseisevCheckbox)
+          await this.clickElement(iseseisevCheckbox)
         }
         if (auditoorneCheckbox && auditoorneCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(auditoorneCheckbox)
+          await this.clickElement(auditoorneCheckbox)
         }
         if (praktiliseCheckbox && praktiliseCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(praktiliseCheckbox)
+          await this.clickElement(praktiliseCheckbox)
         }
       } else if (entryType === 'SISSEKANNE_P') {
         // For practical work entries: ensure praktiline töö is checked, others are unchecked
         if (praktiliseCheckbox && praktiliseCheckbox.getAttribute('aria-checked') !== 'true') {
-          await this.#clickElement(praktiliseCheckbox)
+          await this.clickElement(praktiliseCheckbox)
         }
         if (auditoorneCheckbox && auditoorneCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(auditoorneCheckbox)
+          await this.clickElement(auditoorneCheckbox)
         }
         if (iseseisevCheckbox && iseseisevCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(iseseisevCheckbox)
+          await this.clickElement(iseseisevCheckbox)
         }
       } else {
         // For regular lesson entries (SISSEKANNE_T): ensure auditoorne õpe is checked, others are unchecked
         if (auditoorneCheckbox && auditoorneCheckbox.getAttribute('aria-checked') !== 'true') {
-          await this.#clickElement(auditoorneCheckbox)
+          await this.clickElement(auditoorneCheckbox)
         }
         if (iseseisevCheckbox && iseseisevCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(iseseisevCheckbox)
+          await this.clickElement(iseseisevCheckbox)
         }
         if (praktiliseCheckbox && praktiliseCheckbox.getAttribute('aria-checked') === 'true') {
-          await this.#clickElement(praktiliseCheckbox)
+          await this.clickElement(praktiliseCheckbox)
         }
       }
 
@@ -3623,19 +3623,19 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #addTeacherSelectionMonitoring() {
+  addTeacherSelectionMonitoring() {
     /** @type {NodeListOf<HTMLElement>} */
     const teacherCheckboxes = document.querySelectorAll('md-checkbox[ng-model*="selectedTeachers"]')
 
     for (const checkbox of teacherCheckboxes) {
-      if (checkbox && this.#isElementVisible(checkbox) && !checkbox.dataset.teacherMonitoringAdded) {
+      if (checkbox && this.isElementVisible(checkbox) && !checkbox.dataset.teacherMonitoringAdded) {
         const handleTeacherSelection = () => {
           // Small delay to let the change propagate
           setTimeout(() => {
-            const teacherState = this.#getTeacherCheckboxState()
+            const teacherState = this.getTeacherCheckboxState()
             if (teacherState.hasTeacher) {
               // Teacher is now selected, clear highlights and continue with normal validation
-              this.#cleanupHighlights()
+              this.cleanupHighlights()
               Logger.debug(`[${this.name}] Teacher selected, continuing with capacity validation...`)
             }
           }, 200)
@@ -3648,18 +3648,18 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #addTeacherCheckboxListeners() {
+  addTeacherCheckboxListeners() {
     /** @type {NodeListOf<HTMLElement>} */
     const teacherCheckboxes = document.querySelectorAll('md-checkbox[ng-model*="selectedTeachers"]:not([data-teacher-listener-added])')
 
     for (const checkbox of teacherCheckboxes) {
-      if (checkbox && this.#isElementVisible(checkbox)) {
+      if (checkbox && this.isElementVisible(checkbox)) {
         const handleTeacherChange = async() => {
           Logger.debug(`[${this.name}] Teacher checkbox state changed, refreshing validation...`)
           // Small delay to let the change propagate
-          await this.#delay(300)
+          await this.delay(300)
           // Refresh the capacity validation table
-          await this.#refreshTableWithRetry()
+          await this.refreshTableWithRetry()
         }
 
         // Listen for both click and change events
@@ -3672,7 +3672,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #addDialogCloseListeners() {
+  addDialogCloseListeners() {
     // Remove any existing listeners to avoid duplicates
     if (this.dialogCloseListener) {
       document.removeEventListener('click', this.dialogCloseListener, true)
@@ -3702,7 +3702,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       if (isCloseButton || isSaveButton || isDialogBackdrop || closestCloseButton || closestSaveButton) {
         // Small delay to allow dialog close animation
         setTimeout(() => {
-          this.#cleanupHighlights()
+          this.cleanupHighlights()
         }, 100)
       }
     }
@@ -3718,7 +3718,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
             /** @param {Element} node */ node => {
               // Check if a dialog was removed
               if (node.nodeType === Node.ELEMENT_NODE && (node.matches('md-dialog') || node.querySelector('md-dialog'))) {
-                this.#cleanupHighlights()
+                this.cleanupHighlights()
               }
             }
           )
@@ -3732,7 +3732,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     }
   }
 
-  #cleanupHighlights() {
+  cleanupHighlights() {
     document.querySelectorAll('[data-capacity-highlight="true"]').forEach(el => {
       /** @type {HTMLElement} */ const checkbox = el
 
@@ -3758,9 +3758,9 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
       }
     })
 
-    if (this.#dialogCloseObserver) {
-      this.#dialogCloseObserver.disconnect()
-      this.#dialogCloseObserver = null
+    if (this.dialogCloseObserver) {
+      this.dialogCloseObserver.disconnect()
+      this.dialogCloseObserver = null
     }
   }
 
@@ -3769,26 +3769,26 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
    * @param {string} entryId - Entry ID
    * @param {Object} data - Button data object
    */
-  async #handleOpenEntry(entryId, data = {}) {
+  async handleOpenEntry(entryId, data = {}) {
     try {
       const actualEntryId = entryId || data.entryid
       Logger.debug(`[${this.name}] handleOpenEntry called with entryId=${entryId}, actualEntryId=${actualEntryId}`)
 
       // Find the journal entry element and click it to open
-      const element = await this.#findJournalEntryElement(actualEntryId, data.date)
+      const element = await this.findJournalEntryElement(actualEntryId, data.date)
       if (!element) {
         Logger.error(`[${this.name}] Could not find journal entry element for ID: ${actualEntryId}`)
         return
       }
 
       // Click the element to open the entry (dialog on Old Tahvel, SPA navigation on New Tahvel)
-      await this.#clickElement(element)
+      await this.clickElement(element)
 
       // Old Tahvel: wait for dialog and highlight entry type field
       if (element.tagName !== 'A') {
-        await this.#waitForElement('md-dialog', 5000)
+        await this.waitForElement('md-dialog', 5000)
         setTimeout(() => {
-          this.#highlightEntryTypeField()
+          this.highlightEntryTypeField()
         }, 500)
       }
     } catch (error) {
@@ -3799,7 +3799,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   /**
    * Find and highlight the entry type field with a red box
    */
-  #highlightEntryTypeField() {
+  highlightEntryTypeField() {
     try {
       // Look for entry type related elements
       const entryTypeSelectors = [
@@ -3843,7 +3843,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         // showed the message: "Vigane sissekanne: Kontrollige sissekande liiki! ...".
         // Remove the visual tooltip and heavy highlight; keep a debug log and
         // attach the cleanup listeners so any legacy hooks still work.
-        this.#addEntryTypeHighlightCleanup()
+        this.addEntryTypeHighlightCleanup()
         Logger.debug(`[${this.name}] Entry type field detected but interactive highlighting suppressed`)
       } else {
         Logger.debug(`[${this.name}] Could not find entry type field to highlight`)
@@ -3856,7 +3856,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
   /**
    * Add listeners to clean up entry type highlights when dialog is closed or entry type is clicked
    */
-  #addEntryTypeHighlightCleanup() {
+  addEntryTypeHighlightCleanup() {
     const cleanupHighlights = () => {
       // Remove highlight box
       document.querySelectorAll('[data-entry-type-highlight="true"]').forEach(el => el.remove())

@@ -264,5 +264,51 @@ describe('finalGradeWarning shared utility', () => {
 
       expect(result).toBeNull()
     })
+
+    test('falls through to journalEntries when timetable fetch throws', async () => {
+      const mockApi = {
+        tahvel: {
+          get: mock(url => {
+            if (url === '/journals/123') return Promise.resolve({ school: { id: 9 }, journalTeachers: [{ id: 5 }] })
+            if (url.includes('timetableevents')) return Promise.reject(new Error('network'))
+            if (url.includes('journalEntriesByDate')) return Promise.resolve([{ entryDate: '2024-11-15' }])
+            return Promise.resolve([])
+          })
+        }
+      }
+      const result = await getFinalLessonDate(123, mockApi)
+      expect(result).toBe('2024-11-15')
+    })
+
+    test('returns null for expected 403 on journalEntries fetch', async () => {
+      const mockApi = {
+        tahvel: {
+          get: mock(url => {
+            if (url === '/journals/123') return Promise.resolve({})
+            if (url.includes('journalEntriesByDate')) {
+              const error = new Error('403')
+              error.status = 403
+              return Promise.reject(error)
+            }
+            return Promise.resolve([])
+          })
+        }
+      }
+      const result = await getFinalLessonDate(123, mockApi)
+      expect(result).toBeNull()
+    })
+
+    test('rethrows unexpected journalEntries errors', async () => {
+      const mockApi = {
+        tahvel: {
+          get: mock((url) => {
+            if (url === '/journals/123') return Promise.resolve({})
+            if (url.includes('journalEntriesByDate')) return Promise.reject(new Error('boom-500'))
+            return Promise.resolve([])
+          })
+        }
+      }
+      await expect(getFinalLessonDate(123, mockApi)).rejects.toThrow('boom-500')
+    })
   })
 })

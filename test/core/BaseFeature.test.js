@@ -2,51 +2,21 @@ import { describe, test, expect, beforeEach, mock } from 'bun:test'
 import { BaseFeature, api, getTahvelBaseUrl } from '../../src/core/BaseFeature.js'
 import Logger from '../../src/services/Logger.js'
 import { JSDOM } from 'jsdom'
+import { restoreChromeMock } from '../setup.js'
 
 describe('BaseFeature', () => {
-  beforeEach(() => {
-    global.chrome = {
-      runtime: { lastError: null },
-      storage: {
-        local: {
-          get: mock((keys, callback) => {
-            callback({
-              OA_kriitApiBaseUrl: 'https://api.kriit.test',
-              OA_kriitApiToken: 'test-token',
-              OA_kriitEnabled: true
-            })
-          })
-        }
-      }
-    }
+  beforeEach(async () => {
+    restoreChromeMock()
+    await new Promise(r => global.chrome.storage.local.set({
+      OA_kriitApiBaseUrl: 'https://api.kriit.test',
+      OA_kriitApiToken: 'test-token',
+      OA_kriitEnabled: true
+    }, r))
 
-    global.window = {
-      location: {
-        hostname: 'tahvel.edu.ee',
-        protocol: 'https:'
-      }
-    }
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'https://tahvel.edu.ee/' })
+    global.window = dom.window
+    global.document = dom.window.document
 
-    global.document = {
-      body: {
-        innerHTML: '',
-        appendChild: mock(),
-        querySelector: mock(),
-        querySelectorAll: mock(() => [])
-      },
-      createElement: mock(tag => ({
-        classList: { add: mock(), contains: mock() },
-        setAttribute: mock(),
-        addEventListener: mock(),
-        className: '',
-        tagName: tag.toUpperCase(),
-        appendChild: mock()
-      })),
-      querySelector: mock(),
-      querySelectorAll: mock(() => [])
-    }
-
-    // Reset shared singleton state between tests
     api._kriitInitPromise = null
   })
 
@@ -98,31 +68,41 @@ describe('BaseFeature', () => {
     })
   })
 
+  class CountingFeature extends BaseFeature {
+    constructor(name, urlPattern, requiredSelectors) {
+      super(name, urlPattern, requiredSelectors)
+      this.activateCount = 0
+      this.deactivateCount = 0
+      this.foundElements = null
+    }
+    onActivate() { this.activateCount++ }
+    onDeactivate() {
+      this.deactivateCount++
+      super.onDeactivate()
+    }
+    onRequiredElementsFound(elements) { this.foundElements = elements }
+  }
+
   describe('activate', () => {
     test('should activate feature without required selectors', () => {
-      const feature = new BaseFeature('test', '/test')
-      const onActivateMock = mock(() => {})
-      feature.onActivate = onActivateMock
+      const feature = new CountingFeature('test', '/test')
 
       feature.activate()
 
       expect(feature.isActive).toBe(true)
-      expect(onActivateMock).toHaveBeenCalled()
+      expect(feature.activateCount).toBe(1)
     })
 
     test('should not activate twice', () => {
-      const feature = new BaseFeature('test', '/test')
-      const onActivateMock = mock(() => {})
-      feature.onActivate = onActivateMock
+      const feature = new CountingFeature('test', '/test')
 
       feature.activate()
       feature.activate()
 
-      expect(onActivateMock).toHaveBeenCalledTimes(1)
+      expect(feature.activateCount).toBe(1)
     })
 
     test('should wait for required elements', () => {
-      // Set up real jsdom for MutationObserver
       const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
       global.document = dom.window.document
       global.MutationObserver = dom.window.MutationObserver
@@ -134,58 +114,45 @@ describe('BaseFeature', () => {
       expect(feature.isActive).toBe(true)
       expect(feature.elementsObserver).toBeDefined()
 
-      // Clean up
       if (feature.elementsObserver) {
         feature.elementsObserver.disconnect()
       }
     })
 
     test('should call onActivate when required elements are found', async () => {
-      const feature = new BaseFeature('test', '/test', '.required')
-      const onActivateMock = mock(() => {})
-      feature.onActivate = onActivateMock
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div class="required"></div></body></html>')
+      global.document = dom.window.document
+      global.MutationObserver = dom.window.MutationObserver
 
-      const mockElement = { className: 'required' }
-      global.document.querySelectorAll = mock(selector => {
-        if (selector === '.required') {
-          return [mockElement]
-        }
-        return []
-      })
-
+      const feature = new CountingFeature('test', '/test', '.required')
       feature.activate()
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      expect(onActivateMock).toHaveBeenCalled()
+      expect(feature.activateCount).toBe(1)
     })
   })
 
   describe('deactivate', () => {
     test('should deactivate active feature', () => {
-      const feature = new BaseFeature('test', '/test')
-      const onDeactivateMock = mock(() => {})
-      feature.onDeactivate = onDeactivateMock
+      const feature = new CountingFeature('test', '/test')
 
       feature.activate()
       feature.deactivate()
 
       expect(feature.isActive).toBe(false)
-      expect(onDeactivateMock).toHaveBeenCalled()
+      expect(feature.deactivateCount).toBe(1)
     })
 
     test('should not deactivate inactive feature', () => {
-      const feature = new BaseFeature('test', '/test')
-      const onDeactivateMock = mock(() => {})
-      feature.onDeactivate = onDeactivateMock
+      const feature = new CountingFeature('test', '/test')
 
       feature.deactivate()
 
-      expect(onDeactivateMock).not.toHaveBeenCalled()
+      expect(feature.deactivateCount).toBe(0)
     })
 
     test('should disconnect observers on deactivate', () => {
-      // Set up real jsdom for MutationObserver
       const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
       global.document = dom.window.document
       global.MutationObserver = dom.window.MutationObserver
@@ -193,36 +160,26 @@ describe('BaseFeature', () => {
       const feature = new BaseFeature('test', '/test', '.required')
 
       feature.activate()
-
-      const mockObserver = { disconnect: mock(() => {}) }
-      feature.elementsObserver = mockObserver
+      expect(feature.elementsObserver).not.toBeNull()
 
       feature.deactivate()
-
-      expect(mockObserver.disconnect).toHaveBeenCalled()
       expect(feature.elementsObserver).toBeNull()
     })
   })
 
   describe('onRequiredElementsFound', () => {
     test('should be called with found elements', async () => {
-      const feature = new BaseFeature('test', '/test', '.test-element')
-      const onFoundMock = mock(() => {})
-      feature.onRequiredElementsFound = onFoundMock
+      const dom = new JSDOM('<!DOCTYPE html><html><body><div class="test-element"></div></body></html>')
+      global.document = dom.window.document
+      global.MutationObserver = dom.window.MutationObserver
 
-      const mockElement = { className: 'test-element' }
-      global.document.querySelectorAll = mock(selector => {
-        if (selector === '.test-element') {
-          return [mockElement]
-        }
-        return []
-      })
-
+      const feature = new CountingFeature('test', '/test', '.test-element')
       feature.activate()
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      expect(onFoundMock).toHaveBeenCalled()
+      expect(feature.foundElements).not.toBeNull()
+      expect(feature.foundElements.length).toBe(1)
     })
   })
 
@@ -246,30 +203,25 @@ describe('BaseFeature', () => {
 
   describe('initializeKriitApi', () => {
     test('should load Kriit API settings from storage', async () => {
-      // Reset the shared api singleton
       api.kriit.baseUrl = ''
+      api._kriitInitPromise = null
 
-      let getCalled = false
-      global.chrome.storage.local.get = mock((keys, callback) => {
-        getCalled = true
-        callback({
-          OA_kriitApiToken: 'test-token',
-          OA_kriitApiBaseUrl: 'http://localhost:3000',
-          OA_kriitEnabled: true
-        })
-      })
+      await new Promise(r => global.chrome.storage.local.set({
+        OA_kriitApiToken: 'test-token',
+        OA_kriitApiBaseUrl: 'http://localhost:3000',
+        OA_kriitEnabled: true
+      }, r))
 
       const feature = new BaseFeature('test', '/test')
+      await feature.api._kriitInitPromise
 
-      await new Promise(resolve => setTimeout(resolve, 50))
-
-      expect(getCalled).toBe(true)
+      expect(feature.api.kriit.baseUrl).toBe('http://localhost:3000')
+      expect(feature.api.kriit.authToken).toBe('test-token')
     })
 
     test('should set Kriit API enabled status', async () => {
       const feature = new BaseFeature('test', '/test')
-
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await feature.api._kriitInitPromise
 
       expect(feature.api.kriit.enabled).toBe(true)
     })

@@ -1,0 +1,3082 @@
+[
+  {
+    "entryDate": "2025-09-10T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 2,
+    "lessons": 4,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627437,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {},
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-11T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 9,
+    "lessons": 1,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627238,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22729740,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.155Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22729741,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.159Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22729742,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.160Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22729745,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.164Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22729746,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.166Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22729747,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.167Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22729752,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.173Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22729755,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.178Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22729758,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.182Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22729759,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.184Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22729760,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.185Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22729749,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.170Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22729756,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.180Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22729754,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.176Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22729761,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.187Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22729751,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.172Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22729757,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.181Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22729753,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.175Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22729743,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.162Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22729748,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.169Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22729750,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.171Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22729744,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:12:45.163Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-12T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 4,
+    "lessons": 4,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627246,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22729807,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.487Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22729808,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.488Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22729810,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.490Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22729811,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.491Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22729806,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.485Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22729813,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.493Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22729814,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.495Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22729815,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.496Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22729817,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.498Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22729824,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.507Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22729827,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.512Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22729818,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.500Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22729822,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.505Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22729826,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.510Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22729825,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.508Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22729809,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.489Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22729816,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.497Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22729820,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.502Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22729819,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.501Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22729812,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.492Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22729821,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.504Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22729823,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:27:52.506Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-16T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 2,
+    "lessons": 1,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627155,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22729675,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.040Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22729674,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.037Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22729678,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.043Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22729679,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.044Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22729680,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.046Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22729681,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.047Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22729682,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.048Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22729683,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.049Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22729687,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.052Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22729690,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.054Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22729691,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.055Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22729692,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.055Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22729677,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.042Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22729695,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.057Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22729689,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.054Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22729676,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.041Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22729686,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.051Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22729685,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.051Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22729684,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.050Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22729693,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.056Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22729688,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.053Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22729694,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:25.057Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-16T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 2,
+    "lessons": 5,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627215,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22729653,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.668Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22729657,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.674Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22729658,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.676Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22729659,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.678Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22729660,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.679Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22729661,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.681Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22729663,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.683Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22729668,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.689Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22729652,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.664Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22729669,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.691Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22729672,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.697Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22729673,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.699Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22729666,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.687Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22729654,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.670Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22729667,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.688Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22729671,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.695Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22729670,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.693Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22729664,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.685Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22729662,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.682Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22729655,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.671Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22729656,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.673Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22729665,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-03-25T16:11:17.686Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-17T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 7,
+    "lessons": 2,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627251,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {},
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-18T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 6,
+    "lessons": 2,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627157,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {},
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-09-19T00:00:00Z",
+    "nameEt": "Andmebaasiserverite haldus",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_T",
+    "journalStudent": null,
+    "startLessonNr": 2,
+    "lessons": 6,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627216,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22729763,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.386Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22729764,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.388Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22729768,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.394Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22729769,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.396Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22729770,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.398Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22729762,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.384Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22729774,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.403Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22729775,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.405Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22729779,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.412Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22729781,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.415Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22729783,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.418Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22729765,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.390Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22729772,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.401Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22729776,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.407Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22729773,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.402Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22729780,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.414Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22729766,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.392Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22729767,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.393Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22729782,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.417Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22729771,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.399Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22729777,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.409Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22729778,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2026-04-03T08:16:24.411Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-10-24T00:00:00Z",
+    "nameEt": "test iseseisev l\u00f5petamine",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_I",
+    "journalStudent": null,
+    "startLessonNr": null,
+    "lessons": 2,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627020,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22728910,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.336Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22728911,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.337Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22728909,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.333Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22728913,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.340Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22728915,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.343Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22728916,
+          "journalStudentId": 5316881,
+          "grade": {
+            "code": "KUTSEHINDAMINE_2",
+            "gradingSchemaRowId": null
+          },
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.345Z",
+          "gradeInserted": "2026-04-03T07:43:57.874Z",
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22728917,
+          "journalStudentId": 5316882,
+          "grade": {
+            "code": "KUTSEHINDAMINE_3",
+            "gradingSchemaRowId": null
+          },
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.347Z",
+          "gradeInserted": "2026-04-03T07:43:57.876Z",
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22728918,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.348Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22728920,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.350Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22728921,
+          "journalStudentId": 5316885,
+          "grade": {
+            "code": "KUTSEHINDAMINE_5",
+            "gradingSchemaRowId": null
+          },
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.351Z",
+          "gradeInserted": "2026-05-01T13:27:46.182Z",
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22728923,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.354Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22728922,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.352Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22728928,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.358Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22728924,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.355Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22728926,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.356Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22728912,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.339Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22728929,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.359Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22728930,
+          "journalStudentId": 5316893,
+          "grade": {
+            "code": "KUTSEHINDAMINE_5",
+            "gradingSchemaRowId": null
+          },
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.360Z",
+          "gradeInserted": "2026-05-01T13:27:46.219Z",
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22728927,
+          "journalStudentId": 5316894,
+          "grade": {
+            "code": "KUTSEHINDAMINE_4",
+            "gradingSchemaRowId": null
+          },
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.357Z",
+          "gradeInserted": "2026-05-01T13:27:46.210Z",
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22728919,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.350Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22728914,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.342Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22728925,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:41.356Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-10-24T00:00:00Z",
+    "nameEt": "dwa iseseisev l\u00f5petamine",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_I",
+    "journalStudent": null,
+    "startLessonNr": null,
+    "lessons": 3,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 3627023,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {
+      "5316876": [
+        {
+          "journalEntryStudentId": 22728888,
+          "journalStudentId": 5316876,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.096Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316877": [
+        {
+          "journalEntryStudentId": 22728890,
+          "journalStudentId": 5316877,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.099Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316878": [
+        {
+          "journalEntryStudentId": 22728887,
+          "journalStudentId": 5316878,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.092Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316879": [
+        {
+          "journalEntryStudentId": 22728891,
+          "journalStudentId": 5316879,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.100Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316880": [
+        {
+          "journalEntryStudentId": 22728892,
+          "journalStudentId": 5316880,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.101Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316881": [
+        {
+          "journalEntryStudentId": 22728893,
+          "journalStudentId": 5316881,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.103Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316882": [
+        {
+          "journalEntryStudentId": 22728897,
+          "journalStudentId": 5316882,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.107Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316883": [
+        {
+          "journalEntryStudentId": 22728898,
+          "journalStudentId": 5316883,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.108Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316884": [
+        {
+          "journalEntryStudentId": 22728901,
+          "journalStudentId": 5316884,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.110Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316885": [
+        {
+          "journalEntryStudentId": 22728904,
+          "journalStudentId": 5316885,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.114Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316886": [
+        {
+          "journalEntryStudentId": 22728906,
+          "journalStudentId": 5316886,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.115Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316887": [
+        {
+          "journalEntryStudentId": 22728889,
+          "journalStudentId": 5316887,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.097Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316888": [
+        {
+          "journalEntryStudentId": 22728908,
+          "journalStudentId": 5316888,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.118Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316889": [
+        {
+          "journalEntryStudentId": 22728896,
+          "journalStudentId": 5316889,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.106Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316890": [
+        {
+          "journalEntryStudentId": 22728894,
+          "journalStudentId": 5316890,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.104Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316891": [
+        {
+          "journalEntryStudentId": 22728899,
+          "journalStudentId": 5316891,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.109Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316892": [
+        {
+          "journalEntryStudentId": 22728895,
+          "journalStudentId": 5316892,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.105Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316893": [
+        {
+          "journalEntryStudentId": 22728905,
+          "journalStudentId": 5316893,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.114Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316894": [
+        {
+          "journalEntryStudentId": 22728902,
+          "journalStudentId": 5316894,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.111Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316895": [
+        {
+          "journalEntryStudentId": 22728907,
+          "journalStudentId": 5316895,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.117Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316896": [
+        {
+          "journalEntryStudentId": 22728903,
+          "journalStudentId": 5316896,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.113Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ],
+      "5316897": [
+        {
+          "journalEntryStudentId": 22728900,
+          "journalStudentId": 5316897,
+          "grade": null,
+          "verbalGrade": null,
+          "addInfo": null,
+          "inserted": "2025-12-27T13:34:30.109Z",
+          "gradeInserted": null,
+          "gradeInsertedBy": "[ANON-FREETEXT-9]",
+          "absence": null,
+          "absenceInserted": null,
+          "lessonAbsences": [],
+          "journalEntryStudentHistories": [],
+          "isRemark": false,
+          "gradeDate": null
+        }
+      ]
+    },
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  },
+  {
+    "entryDate": "2025-12-15",
+    "nameEt": "Test l\u00f5pphinne",
+    "nameEn": null,
+    "entryType": "SISSEKANNE_L",
+    "journalStudent": null,
+    "startLessonNr": 2,
+    "lessons": 4,
+    "curriculumModuleOutcomes": null,
+    "outcomeOrderNr": null,
+    "curriculumModule": null,
+    "curriculum": null,
+    "isCurrentJournal": true,
+    "id": 9999999,
+    "teacher": "[ANON-FREETEXT-9]",
+    "moodleGradeItemId": null,
+    "isSubstitute": false,
+    "isBasicJournal": false,
+    "isSecondaryJournal": false,
+    "omoduleThemeNameEt": null,
+    "periodEventValue": null,
+    "journalStudentResults": {},
+    "studentOutcomeResults": null,
+    "otherJournals": null,
+    "otherJournalResults": null
+  }
+]

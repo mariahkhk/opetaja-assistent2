@@ -1,0 +1,52 @@
+{
+  "content": [
+    {
+      "id": 9628,
+      "code": "TAK24",
+      "curriculum": {
+        "id": 855,
+        "nameEt": "TAK24 - Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 - Junior Software Developer",
+        "nameRu": "TAK24 - Noorem tarkvaraarendaja"
+      },
+      "curriculumVersion": null,
+      "curriculumVersionAdmissionYear": null,
+      "studyForm": "OPPEVORM_MS",
+      "teacher": "[ANON-FREETEXT-1]",
+      "teachers": [],
+      "course": 1,
+      "higher": null,
+      "studentCount": 16,
+      "schoolDepartments": [],
+      "hours": null,
+      "validFrom": "2024-08-26T00:00:00Z",
+      "validThru": "2027-08-31T00:00:00Z",
+      "canEdit": null
+    }
+  ],
+  "pageable": {
+    "sort": {
+      "sorted": false,
+      "empty": true,
+      "unsorted": true
+    },
+    "pageNumber": 0,
+    "pageSize": 50,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "last": true,
+  "totalPages": 1,
+  "totalElements": 1,
+  "size": 50,
+  "number": 0,
+  "sort": {
+    "sorted": false,
+    "empty": true,
+    "unsorted": true
+  },
+  "first": true,
+  "numberOfElements": 1,
+  "empty": false
+}

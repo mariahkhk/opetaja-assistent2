@@ -426,4 +426,51 @@ describe('BannerService', () => {
       expect(message.textContent).toBe('Custom message')
     })
   })
+
+  describe('getBannerContainer fallbacks', () => {
+    test('creates an insertion wrapper after .tahvel-form-buttons', () => {
+      const preferred = document.createElement('div')
+      preferred.className = 'tahvel-form-buttons'
+      document.body.appendChild(preferred)
+
+      const wrapper = bannerService.getBannerContainer()
+      expect(wrapper.className).toBe('ta-sync-banner-insertion')
+      expect(preferred.nextElementSibling).toBe(wrapper)
+    })
+
+    test('falls back to document.body when no container or preferred is present', () => {
+      const service = new BannerService('.does-not-exist')
+      const wrapper = service.getBannerContainer()
+      expect(wrapper).toBe(document.body)
+    })
+
+    test('catches errors when insertion-wrapper creation throws', () => {
+      const preferred = document.createElement('div')
+      preferred.className = 'tahvel-form-buttons'
+      document.body.appendChild(preferred)
+
+      const originalInsert = preferred.insertAdjacentElement.bind(preferred)
+      preferred.insertAdjacentElement = () => { throw new Error('insert-broken') }
+
+      const result = bannerService.getBannerContainer()
+      expect(result).toBeTruthy()
+      preferred.insertAdjacentElement = originalInsert
+    })
+  })
+
+  describe('waitForBannerContainer', () => {
+    test('resolves with banner container when preferred element appears', async () => {
+      const preferred = document.createElement('div')
+      preferred.className = 'tahvel-form-buttons'
+      document.body.appendChild(preferred)
+
+      const result = await bannerService.waitForBannerContainer(100)
+      expect(result.className).toBe('ta-sync-banner-insertion')
+    })
+
+    test('falls back gracefully when preferred element never appears', async () => {
+      const result = await bannerService.waitForBannerContainer(100)
+      expect(result).toBeTruthy()
+    })
+  })
 })

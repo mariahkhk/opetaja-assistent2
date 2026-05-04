@@ -19,7 +19,7 @@ const STATUS_CLEAR_DELAY_MS = 2000
  * @param {string} url - The URL to check
  * @returns {boolean}
  */
-function isTahvelUrl(url) {
+export function isTahvelUrl(url) {
   return url && TAHVEL_DOMAINS.some(domain => url.includes(domain))
 }
 
@@ -522,7 +522,7 @@ function toggleCacheDetails() {
  * @param {number} bytes - Size in bytes
  * @returns {string} Formatted size
  */
-function formatSize(bytes) {
+export function formatSize(bytes) {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
@@ -621,7 +621,7 @@ function downloadCapturedRequests() {
  * Toggle the "API key saved" indicator below the API key input.
  * @param {boolean} hasKey - True when a key is stored.
  */
-function setApiKeySavedIndicator(hasKey) {
+export function setApiKeySavedIndicator(hasKey) {
   const apiKeyStatus = document.getElementById('kriit-api-key-status')
   if (!apiKeyStatus) return
   apiKeyStatus.style.display = hasKey ? 'flex' : 'none'

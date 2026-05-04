@@ -1,0 +1,38 @@
+[
+  {
+    "code": "KUTSEHINDAMISVIIS_E",
+    "nameEt": "Eristav hindamine",
+    "nameEn": null,
+    "nameRu": null,
+    "valid": true,
+    "mainClassCode": "KUTSEHINDAMISVIIS",
+    "secondary": true,
+    "vocational": true,
+    "higher": false,
+    "value": "E",
+    "value2": null,
+    "validFrom": null,
+    "validThru": null,
+    "extraval1": null,
+    "extraval2": null,
+    "parents": null
+  },
+  {
+    "code": "KUTSEHINDAMISVIIS_M",
+    "nameEt": "Mitteeristav hindamine",
+    "nameEn": null,
+    "nameRu": null,
+    "valid": true,
+    "mainClassCode": "KUTSEHINDAMISVIIS",
+    "secondary": true,
+    "vocational": true,
+    "higher": true,
+    "value": "M",
+    "value2": null,
+    "validFrom": null,
+    "validThru": null,
+    "extraval1": null,
+    "extraval2": null,
+    "parents": null
+  }
+]

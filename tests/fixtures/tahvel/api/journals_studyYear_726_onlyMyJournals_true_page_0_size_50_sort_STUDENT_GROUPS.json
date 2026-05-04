@@ -1,0 +1,1334 @@
+{
+  "content": [
+    {
+      "id": 404498,
+      "studentGroups": "IS24",
+      "nameEt": "Andmebaasiserverite haldus",
+      "teachers": "[ANON-FREETEXT-2]",
+      "modules": {
+        "id": null,
+        "nameEt": "Rakendusserverid - Põhiõpingud (IS24)",
+        "nameEn": null,
+        "nameRu": "Rakendusserverid - Põhiõpingud (IS24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 14977,
+          "nameEt": "Rakendusserverid - Põhiõpingud (IS24)",
+          "nameEn": "Rakendusserverid - Basic studies (IS24)",
+          "nameRu": "Rakendusserverid - Põhiõpingud (IS24)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 30,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 22,
+      "canEdit": true
+    },
+    {
+      "id": 404490,
+      "studentGroups": "IS24",
+      "nameEt": "Linuxi tööjaamade haldus",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)",
+        "nameEn": null,
+        "nameRu": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 14981,
+          "nameEt": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)",
+          "nameEn": "Linux/BSD operatsioonisüsteemid - Basic studies (IS24)",
+          "nameRu": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 24,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 22,
+      "canEdit": true
+    },
+    {
+      "id": 402872,
+      "studentGroups": "IS25",
+      "nameEt": "Taristuteenused",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 39,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402875,
+      "studentGroups": "IS25",
+      "nameEt": "Programmeerimise alused",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65274,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+          "nameEn": "Programmeerimise alused - Basic studies (IS25)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 65,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402876,
+      "studentGroups": "IS25",
+      "nameEt": "Tarkvaraarenduse projekt",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65274,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+          "nameEn": "Programmeerimise alused - Basic studies (IS25)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 104,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402919,
+      "studentGroups": "IS25",
+      "nameEt": "Windows operatsioonisüsteemide paigaldamine ja haldus",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65282,
+          "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+          "nameEn": "Windows operatsioonisüsteemid - Basic studies (IS25)",
+          "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 65,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402925,
+      "studentGroups": "IS25",
+      "nameEt": "Windows projekt",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65282,
+          "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+          "nameEn": "Windows operatsioonisüsteemid - Basic studies (IS25)",
+          "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 65,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402921,
+      "studentGroups": "IS25",
+      "nameEt": "Windows serveri haldus ja kataloogiteenused",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65282,
+          "nameEt": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)",
+          "nameEn": "Windows operatsioonisüsteemid - Basic studies (IS25)",
+          "nameRu": "Windows operatsioonisüsteemid - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402954,
+      "studentGroups": "IS25",
+      "nameEt": "Majutuskeskkonna riistvara ja komplekteerimine",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65301,
+          "nameEt": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)",
+          "nameEn": "Majutuskeskkonna riistvara - Basic studies (IS25)",
+          "nameRu": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402871,
+      "studentGroups": "IS25",
+      "nameEt": "Sissejuhatus erialasse",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 13,
+      "usedHours": 1,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 21,
+      "canEdit": true
+    },
+    {
+      "id": 402993,
+      "studentGroups": "IS25",
+      "nameEt": "Majutuskeskkonna tõrkehaldus",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65301,
+          "nameEt": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)",
+          "nameEn": "Majutuskeskkonna riistvara - Basic studies (IS25)",
+          "nameRu": "Majutuskeskkonna riistvara - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403000,
+      "studentGroups": "IS25",
+      "nameEt": "Arvutivõrgud",
+      "teachers": "[ANON-FREETEXT-2]",
+      "modules": {
+        "id": null,
+        "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65302,
+          "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+          "nameEn": "Arvutivõrgud - Basic studies (IS25)",
+          "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 104,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403080,
+      "studentGroups": "IS25",
+      "nameEt": "Tulemüürid",
+      "teachers": "[ANON-FREETEXT-2]",
+      "modules": {
+        "id": null,
+        "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65302,
+          "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+          "nameEn": "Arvutivõrgud - Basic studies (IS25)",
+          "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403089,
+      "studentGroups": "IS25",
+      "nameEt": "Võrgumeediumid",
+      "teachers": "[ANON-FREETEXT-2]",
+      "modules": {
+        "id": null,
+        "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65302,
+          "nameEt": "Arvutivõrgud - Põhiõpingud (IS25)",
+          "nameEn": "Arvutivõrgud - Basic studies (IS25)",
+          "nameRu": "Arvutivõrgud - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402865,
+      "studentGroups": "IS25",
+      "nameEt": "Arvutivõrkude alused",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402867,
+      "studentGroups": "IS25",
+      "nameEt": "Erialane füüsika",
+      "teachers": "[ANON-FREETEXT-2]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 91,
+      "usedHours": 63,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 21,
+      "canEdit": true
+    },
+    {
+      "id": 402868,
+      "studentGroups": "IS25",
+      "nameEt": "Operatsioonisüsteemide alused",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402863,
+      "studentGroups": "IS25",
+      "nameEt": "Arenduskeskkonna loomine",
+      "teachers": "[ANON-FREETEXT-3]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402870,
+      "studentGroups": "IS25",
+      "nameEt": "Rakendustarkvara",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65279,
+          "nameEt": "IT valdkonna alusteadmised - Põhiõpingud (IS25)",
+          "nameEn": "IT valdkonna alusteadmised - Basic studies (IS25)",
+          "nameRu": "IT valdkonna alusteadmised - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 39,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 21,
+      "canEdit": true
+    },
+    {
+      "id": 402874,
+      "studentGroups": "IS25",
+      "nameEt": "OOP põhimõtted",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65274,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (IS25)",
+          "nameEn": "Programmeerimise alused - Basic studies (IS25)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 39,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403102,
+      "studentGroups": "IS25",
+      "nameEt": "Küberturvalisuse alused",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "Küberturvalisus - Põhiõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Küberturvalisus - Põhiõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65268,
+          "nameEt": "Küberturvalisus - Põhiõpingud (IS25)",
+          "nameEn": "Küberturvalisus - Basic studies (IS25)",
+          "nameRu": "Küberturvalisus - Põhiõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 13,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403201,
+      "studentGroups": "IS25",
+      "nameEt": "Arengumapi kaitsmine",
+      "teachers": "[ANON-FREETEXT-5]",
+      "modules": {
+        "id": null,
+        "nameEt": "Arengumapp - Valikõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Arengumapp - Valikõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65275,
+          "nameEt": "Arengumapp - Valikõpingud (IS25)",
+          "nameEn": "Arengumapp - Elective studies (IS25)",
+          "nameRu": "Arengumapp - Valikõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 403205,
+      "studentGroups": "IS25",
+      "nameEt": "Arvutite lisaseadmed",
+      "teachers": "[ANON-FREETEXT-4]",
+      "modules": {
+        "id": null,
+        "nameEt": "Arvutite lisaseadmed - Valikõpingud (IS25)",
+        "nameEn": null,
+        "nameRu": "Arvutite lisaseadmed - Valikõpingud (IS25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 65303,
+          "nameEt": "Arvutite lisaseadmed - Valikõpingud (IS25)",
+          "nameEn": "Arvutite lisaseadmed - Elective studies (IS25)",
+          "nameRu": "Arvutite lisaseadmed - Valikõpingud (IS25)"
+        }
+      ],
+      "plannedHours": 39,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "IS2025",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402640,
+      "studentGroups": "TAK24",
+      "nameEt": "Tarkvaraprojekt II",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimine II - Põhiõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Programmeerimine II - Põhiõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15341,
+          "nameEt": "Programmeerimine II - Põhiõpingud (TAK24)",
+          "nameEn": "Programmeerimine II - Basic studies (TAK24)",
+          "nameRu": "Programmeerimine II - Põhiõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 182,
+      "usedHours": 13,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 16,
+      "canEdit": true
+    },
+    {
+      "id": 402629,
+      "studentGroups": "TAK24",
+      "nameEt": "Praktika ja eksamitöö kaitsmine",
+      "teachers": "[ANON-FREETEXT-7]",
+      "modules": {
+        "id": null,
+        "nameEt": "Praktika dokumentatsioon ja kaitsmine - Valikõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Praktika dokumentatsioon ja kaitsmine - Valikõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 66904,
+          "nameEt": "Praktika dokumentatsioon ja kaitsmine - Valikõpingud (TAK24)",
+          "nameEn": "Praktika dokumentatsioon ja kaitsmine - Elective studies (TAK24)",
+          "nameRu": "Praktika dokumentatsioon ja kaitsmine - Valikõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402637,
+      "studentGroups": "TAK24",
+      "nameEt": "Programmeerimine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15332,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (TAK24)",
+          "nameEn": "Programmeerimise alused - Basic studies (TAK24)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 104,
+      "usedHours": 5,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 19,
+      "canEdit": true
+    },
+    {
+      "id": 402636,
+      "studentGroups": "TAK24",
+      "nameEt": "Tarkvara arendus",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15333,
+          "nameEt": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)",
+          "nameEn": "Tarkvara arendusprotsess - Basic studies (TAK24)",
+          "nameRu": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 91,
+      "usedHours": 12,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 19,
+      "canEdit": true
+    },
+    {
+      "id": 402635,
+      "studentGroups": "TAK24",
+      "nameEt": "Projektijuhtimise alused",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15333,
+          "nameEt": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)",
+          "nameEn": "Tarkvara arendusprotsess - Basic studies (TAK24)",
+          "nameRu": "Tarkvara arendusprotsess - Põhiõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 65,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 402639,
+      "studentGroups": "TAK24",
+      "nameEt": "Programmeerimismustrid",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimine II - Põhiõpingud (TAK24)",
+        "nameEn": null,
+        "nameRu": "Programmeerimine II - Põhiõpingud (TAK24)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15341,
+          "nameEt": "Programmeerimine II - Põhiõpingud (TAK24)",
+          "nameEn": "Programmeerimine II - Basic studies (TAK24)",
+          "nameRu": "Programmeerimine II - Põhiõpingud (TAK24)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408502,
+      "studentGroups": "TAK25",
+      "nameEt": "Testimise tüübid ja automatiseerimine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15338,
+          "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+          "nameEn": "Tarkvarasüsteemide testimine - Basic studies (TAK25)",
+          "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408479,
+      "studentGroups": "TAK25",
+      "nameEt": "Andmebaaside alused",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15336,
+          "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+          "nameEn": "Andmebaasisüsteemide alused - Basic studies (TAK25)",
+          "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408503,
+      "studentGroups": "TAK25",
+      "nameEt": "Dokumentatsiooni koostamine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15342,
+          "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+          "nameEn": "Hajusrakenduste alused - Basic studies (TAK25)",
+          "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408357,
+      "studentGroups": "TAK25",
+      "nameEt": "Agiilse tarkvaraarenduse projekt",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15335,
+          "nameEt": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)",
+          "nameEn": "Agiilsed tarkvaraarenduse metoodikad - Basic studies (TAK25)",
+          "nameRu": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408505,
+      "studentGroups": "TAK25",
+      "nameEt": "Veebiteenused",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15342,
+          "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+          "nameEn": "Hajusrakenduste alused - Basic studies (TAK25)",
+          "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408356,
+      "studentGroups": "TAK25",
+      "nameEt": "Agiilne tarkvaraarendus",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15335,
+          "nameEt": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)",
+          "nameEn": "Agiilsed tarkvaraarenduse metoodikad - Basic studies (TAK25)",
+          "nameRu": "Agiilsed tarkvaraarenduse metoodikad - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408504,
+      "studentGroups": "TAK25",
+      "nameEt": "Hajusrakenduste loomine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15342,
+          "nameEt": "Hajusrakenduste alused - Põhiõpingud (TAK25)",
+          "nameEn": "Hajusrakenduste alused - Basic studies (TAK25)",
+          "nameRu": "Hajusrakenduste alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408500,
+      "studentGroups": "TAK25",
+      "nameEt": "Testimise alused",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15338,
+          "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+          "nameEn": "Tarkvarasüsteemide testimine - Basic studies (TAK25)",
+          "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408484,
+      "studentGroups": "TAK25",
+      "nameEt": "Andmebaaside projekteerimine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15336,
+          "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+          "nameEn": "Andmebaasisüsteemide alused - Basic studies (TAK25)",
+          "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 78,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408353,
+      "studentGroups": "TAK25",
+      "nameEt": "Dokumentatsiooni koostamine",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15332,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (TAK25)",
+          "nameEn": "Programmeerimise alused - Basic studies (TAK25)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 13,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408355,
+      "studentGroups": "TAK25",
+      "nameEt": "Sissejuhatus programmeerimisse",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Programmeerimise alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Programmeerimise alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15332,
+          "nameEt": "Programmeerimise alused - Põhiõpingud (TAK25)",
+          "nameEn": "Programmeerimise alused - Basic studies (TAK25)",
+          "nameRu": "Programmeerimise alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408486,
+      "studentGroups": "TAK25",
+      "nameEt": "SQL keele alused",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15336,
+          "nameEt": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)",
+          "nameEn": "Andmebaasisüsteemide alused - Basic studies (TAK25)",
+          "nameRu": "Andmebaasisüsteemide alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408489,
+      "studentGroups": "TAK25",
+      "nameEt": "Javascript",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15337,
+          "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+          "nameEn": "Veebirakenduste loomise alused - Basic studies (TAK25)",
+          "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408491,
+      "studentGroups": "TAK25",
+      "nameEt": "Märgendikeeled",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15337,
+          "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+          "nameEn": "Veebirakenduste loomise alused - Basic studies (TAK25)",
+          "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 52,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408494,
+      "studentGroups": "TAK25",
+      "nameEt": "Veebirakenduste loomine klient-server raamistikul",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15337,
+          "nameEt": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)",
+          "nameEn": "Veebirakenduste loomise alused - Basic studies (TAK25)",
+          "nameRu": "Veebirakenduste loomise alused - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 104,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 0,
+      "canEdit": true
+    },
+    {
+      "id": 408501,
+      "studentGroups": "TAK25",
+      "nameEt": "Testimise põhitüübid",
+      "teachers": "[ANON-FREETEXT-6]",
+      "modules": {
+        "id": null,
+        "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+        "nameEn": null,
+        "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+      },
+      "moduleObjects": [
+        {
+          "id": 15338,
+          "nameEt": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)",
+          "nameEn": "Tarkvarasüsteemide testimine - Basic studies (TAK25)",
+          "nameRu": "Tarkvarasüsteemide testimine - Põhiõpingud (TAK25)"
+        }
+      ],
+      "plannedHours": 26,
+      "usedHours": 0,
+      "status": "PAEVIK_STAATUS_T",
+      "curriculums": "TAK2020",
+      "isReviewOk": null,
+      "reviewDate": null,
+      "studyYear": null,
+      "studentCount": 1,
+      "canEdit": true
+    }
+  ],
+  "pageable": {
+    "sort": {
+      "sorted": true,
+      "empty": false,
+      "unsorted": false
+    },
+    "pageNumber": 0,
+    "pageSize": 50,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "last": true,
+  "totalPages": 1,
+  "totalElements": 45,
+  "size": 50,
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "empty": false,
+    "unsorted": false
+  },
+  "first": true,
+  "numberOfElements": 45,
+  "empty": false
+}

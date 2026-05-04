@@ -647,4 +647,362 @@ describe('kriitSyncCheck', () => {
       expect(calls.count).toBe(2)
     })
   })
+
+  describe('runKriitSyncCheck — extra coverage', () => {
+    it('handles inactive students fetch failure but still completes the pipeline', async () => {
+      // Set up mocks where /students throws during inactive students collection
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals') return { content: [{ id: 42 }], totalPages: 1 }
+        if (endpoint === '/journals/42') return { nameEt: 'Test', journalTeachers: [], studentGroups: [] }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/students') {
+          // Reject first so getInactiveStudentsCache fails
+          throw new Error('inactive students endpoint failure')
+        }
+        return {}
+      })
+
+      mockApi.kriit.post = mock(async () => [])
+
+      const result = await runKriitSyncCheck(mockApi)
+      expect(result).toBeDefined()
+      expect(Array.isArray(result.differences)).toBe(true)
+    })
+
+    it('returns null when collectJournalData yields nothing useful', async () => {
+      // /journals returns one journal id but later calls return invalid data
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals') return { content: [{ id: 42 }], totalPages: 1 }
+        // journalInfo is null so the journal is skipped
+        if (endpoint === '/journals/42') return null
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/students') return { content: [] }
+        return {}
+      })
+
+      const result = await runKriitSyncCheck(mockApi)
+      expect(result).toBeNull()
+    })
+
+    it('caches inactive students by personal code into payload sent to kriit', async () => {
+      let kriitPayloadReceived = null
+      mockApi.tahvel.get = mock(async (endpoint, params) => {
+        if (endpoint === '/journals') return { content: [{ id: 42 }], totalPages: 1 }
+        if (endpoint === '/journals/42') return { nameEt: 'Test', journalTeachers: [], studentGroups: [] }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/students') {
+          // First page returns 1 student, second returns 0
+          const page = params?.page ?? 0
+          if (page === 0) return { content: [{ id: 999, idcode: '50001010001', firstname: 'Jane', lastname: 'Doe', status: 'OPPURSTAATUS_K' }] }
+          return { content: [] }
+        }
+        return {}
+      })
+      mockApi.kriit.post = mock(async (_endpoint, payload) => {
+        kriitPayloadReceived = payload
+        return []
+      })
+
+      await runKriitSyncCheck(mockApi)
+      expect(kriitPayloadReceived).toBeTruthy()
+      expect(Array.isArray(kriitPayloadReceived.inactiveStudents)).toBe(true)
+      expect(kriitPayloadReceived.inactiveStudents.length).toBeGreaterThan(0)
+      const first = kriitPayloadReceived.inactiveStudents[0]
+      expect(first.personalCode).toBe('50001010001')
+      expect(first.name).toBe('Jane Doe')
+    })
+  })
+
+  describe('collectJournalData — extra coverage', () => {
+    it('merges homeworkDuedate from journalEntries into journalEntriesWithGrades', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return { nameEt: 'T', journalTeachers: [], studentGroups: ['G1'] }
+        }
+        if (endpoint === '/journals/42/journalEntry') {
+          return { content: [{ id: 7, homeworkDuedate: '2025-04-15T00:00:00', entryType: 'SISSEKANNE_I' }] }
+        }
+        if (endpoint === '/journals/42/journalEntriesByDate') {
+          return [{ id: 7, nameEt: 'HW', entryType: 'SISSEKANNE_I', journalStudentResults: { '5': [{ grade: { code: 'KUTSEHINDAMINE_5' } }] } }]
+        }
+        if (endpoint === '/journals/42/journalStudents') {
+          return [{ id: 5, studentId: 50, fullname: 'Foo Bar', studentGroup: 'G1' }]
+        }
+        if (endpoint === '/students/50') {
+          return { person: { idcode: '40001010001' }, status: 'OPPURSTAATUS_O' }
+        }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      // Verify assignment dueAt comes from merged homeworkDuedate
+      expect(result[0].assignments[0].assignmentDueAt).toBe('2025-04-15')
+    })
+
+    it('extracts capacity hours and plannedHours from MAHT_i', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return {
+            nameEt: 'CapTest',
+            journalTeachers: [],
+            studentGroups: [],
+            lessonHours: {
+              capacityHours: [
+                { capacity: 'MAHT_i', plannedHours: 50, usedHours: 10 },
+                { capacity: 'MAHT_p', plannedHours: 25, usedHours: 5 },
+                { capacity: 'MAHT_a', plannedHours: 80, usedHours: 60 }
+              ]
+            }
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      expect(result[0].plannedHours).toBe(50)
+      // Only MAHT_i and MAHT_p are kept (MAHT_a filtered out)
+      expect(result[0].capacityHours.length).toBe(2)
+      const types = result[0].capacityHours.map(c => c.capacity).sort()
+      expect(types).toEqual(['MAHT_i', 'MAHT_p'])
+    })
+
+    it('fetches journal theme when curriculumVersions has theme id', async () => {
+      const themeData = { content: '<p>Theme HTML</p>' }
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return {
+            nameEt: 'Themed',
+            journalTeachers: [],
+            studentGroups: [],
+            curriculumVersions: [{ themes: [{ id: 99 }] }]
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/journals/42/theme/99') return themeData
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result[0].journalTheme).toBeTruthy()
+      expect(result[0].journalTheme.id).toBe(99)
+      expect(result[0].journalTheme.content).toEqual(themeData)
+    })
+
+    it('falls back to journalThemes[0].id when curriculumVersions is missing', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return {
+            nameEt: 'JT',
+            journalTeachers: [],
+            studentGroups: [],
+            journalThemes: [{ id: 77 }]
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/journals/42/theme/77') return { content: 'fallback' }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result[0].journalTheme.id).toBe(77)
+    })
+
+    it('falls back to themes[0].id when curriculumVersions is empty', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return {
+            nameEt: 'T',
+            journalTeachers: [],
+            studentGroups: [],
+            themes: [{ id: 88 }]
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint === '/journals/42/theme/88') return { content: 'x' }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result[0].journalTheme.id).toBe(88)
+    })
+
+    it('falls back to journalStudents[0].studentGroup when journalInfo.studentGroups missing', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return { nameEt: 'NoGroup', journalTeachers: [] /* studentGroups omitted */ }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') {
+          return [{ id: 1, studentId: 10, fullname: 'X X', studentGroup: 'FromStudent' }]
+        }
+        if (endpoint === '/students/10') {
+          return { person: { idcode: '38001010001' }, status: 'OPPURSTAATUS_O' }
+        }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      expect(result[0].groupName).toBe('FromStudent')
+    })
+
+    it('returns single entry with empty groupName when no student groups detected', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return { nameEt: 'NoGroup', journalTeachers: [] }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      expect(result[0].groupName).toBe('')
+    })
+
+    it('handles teacher resolution failure (no id) by pushing teacher with empty personalCode', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return {
+            nameEt: 'T',
+            journalTeachers: [{ nameEt: 'No ID Teacher' }], // missing id
+            studentGroups: ['G1']
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      const teacher = result[0].teachers[0]
+      expect(teacher.name).toBe('No ID Teacher')
+      expect(teacher.personalCode).toBe('')
+    })
+
+    it('extracts lesson dates from timetable when present', async () => {
+      mockApi.tahvel.get = mock(async (endpoint, params) => {
+        if (endpoint === '/journals/42') {
+          return {
+            id: 42,
+            nameEt: 'WithLessons',
+            journalTeachers: [{ id: 1, nameEt: 'Teacher' }],
+            studentGroups: [],
+            school: { id: 9 },
+            lessonHours: { capacityHours: [{ capacity: 'MAHT_a', plannedHours: 2, usedHours: 0 }] }
+          }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        if (endpoint.includes('/timetableevents/timetableByTeacher/')) {
+          return {
+            timetableEvents: [
+              { journalId: 42, date: '2024-09-01T08:00:00.000Z' },
+              { journalId: 42, date: '2024-12-01T08:00:00.000Z' }
+            ]
+          }
+        }
+        if (endpoint.includes('/teachers')) {
+          return { content: [{ id: 1, name: 'Teacher', idcode: '38001010001' }] }
+        }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      expect(result[0].firstLessonDate).toBe('2024-09-01T08:00:00.000Z')
+      expect(result[0].lastLessonDate).toBe('2024-12-01T08:00:00.000Z')
+      expect(result[0].lastLessonDateIsApproximate).toBe(false)
+    })
+
+    it('detects overall failure of a single journal and returns null for it', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          throw new Error('catastrophic failure')
+        }
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(0)
+    })
+
+    it('skips journals where journalEntries is not an array', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return { nameEt: 'X', journalTeachers: [], studentGroups: [] }
+        }
+        // Return non-array object that doesn't have content
+        if (endpoint === '/journals/42/journalEntry') return { someKey: 'not array' }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') return []
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      // journalEntries returned as [] from getJournalEntries -> processed normally.
+      expect(Array.isArray(result)).toBe(true)
+    })
+
+    it('returns null for journals with null journalStudents response', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') {
+          return { nameEt: 'X', journalTeachers: [], studentGroups: [] }
+        }
+        if (endpoint === '/journals/42/journalEntry') return { content: [] }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        // journalStudents returns null (treated as null)
+        if (endpoint === '/journals/42/journalStudents') return null
+        return {}
+      })
+
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(0)
+    })
+
+    it('uses journalEntries when journalEntriesWithGrades is empty', async () => {
+      mockApi.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/42') return { nameEt: 'X', journalTeachers: [], studentGroups: ['G1'] }
+        if (endpoint === '/journals/42/journalEntry') {
+          return {
+            content: [
+              { id: 9, nameEt: 'Old', entryType: 'SISSEKANNE_I', entryDate: '2024-01-15' }
+            ]
+          }
+        }
+        if (endpoint === '/journals/42/journalEntriesByDate') return []
+        if (endpoint === '/journals/42/journalStudents') {
+          return [{ id: 1, studentId: 10, studentGroup: 'G1' }]
+        }
+        if (endpoint === '/students/10') return { person: { idcode: '50001010001' }, status: 'OPPURSTAATUS_O' }
+        return {}
+      })
+      const result = await collectJournalData(mockApi, [{ id: 42 }])
+      expect(result.length).toBe(1)
+      expect(result[0].assignments.length).toBe(1)
+    })
+  })
 })

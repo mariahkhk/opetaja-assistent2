@@ -1,0 +1,145 @@
+{
+  "id": 404490,
+  "studyYearId": 726,
+  "studyYear": "OPPEAASTA_2025_26",
+  "studyYearStartDate": "2025-07-28T00:00:00Z",
+  "studyYearEndDate": "2026-08-30T00:00:00Z",
+  "nameEt": "Linuxi tööjaamade haldus",
+  "studentGroups": [
+    "IS24"
+  ],
+  "journalTeachers": [
+    {
+      "id": 1123,
+      "nameEt": "Anonüümne95",
+      "nameEn": "Anonüümne95",
+      "firstname": "Anonüümne96",
+      "lastname": "Anonüümne97",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne95",
+      "nameRu": "Anonüümne95"
+    },
+    {
+      "id": 22816,
+      "nameEt": "Anonüümne4",
+      "nameEn": "Anonüümne4",
+      "firstname": "Anonüümne5",
+      "lastname": "Anonüümne6",
+      "idCode": null,
+      "uniqueCode": null,
+      "personUuid": null,
+      "fullname": "Anonüümne4",
+      "nameRu": "Anonüümne4"
+    }
+  ],
+  "curriculumModules": [
+    {
+      "id": 154489,
+      "nameEt": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)",
+      "nameEn": "Linux/BSD operatsioonisüsteemid - Basic studies (IS24)",
+      "curriculumModuleId": 14981,
+      "credits": null,
+      "assessment": null,
+      "gradeCode": null,
+      "gradeDate": null,
+      "teachers": null,
+      "isAdditional": null,
+      "moduleCode": "KUTSEMOODUL_P",
+      "nameRu": "Linux/BSD operatsioonisüsteemid - Põhiõpingud (IS24)"
+    }
+  ],
+  "responsiblesForModules": [
+    "Anonüümne95"
+  ],
+  "curriculumVersions": [
+    {
+      "id": 8646,
+      "curriculumId": 838,
+      "nameEt": "IS24 IT-süsteemide nooremspetsialist",
+      "nameEn": "IS24 Junior IT systems specialist",
+      "modules": [
+        {
+          "id": 154489,
+          "nameEt": "Linux/BSD operatsioonisüsteemid - Põhiõpingud",
+          "nameEn": "Linux/BSD operatsioonisüsteemid - Basic studies",
+          "curriculumModuleId": 14981,
+          "credits": null,
+          "assessment": null,
+          "gradeCode": null,
+          "gradeDate": null,
+          "teachers": null,
+          "isAdditional": null,
+          "moduleCode": "KUTSEMOODUL_P",
+          "nameRu": "Linux/BSD operatsioonisüsteemid - Põhiõpingud"
+        }
+      ],
+      "themes": [
+        {
+          "id": 405459,
+          "nameEt": "Linuxi tööjaamade haldus",
+          "nameEn": null,
+          "nameRu": "Linuxi tööjaamade haldus"
+        }
+      ],
+      "fictive": null
+    }
+  ],
+  "lessonHours": {
+    "totalPlannedHours": 52,
+    "totalUsedHours": 24,
+    "capacityHours": [
+      {
+        "capacity": "MAHT_a",
+        "plannedHours": 6,
+        "usedHours": 24
+      },
+      {
+        "capacity": "MAHT_i",
+        "plannedHours": 16,
+        "usedHours": 0
+      },
+      {
+        "capacity": "MAHT_p",
+        "plannedHours": 30,
+        "usedHours": 0
+      }
+    ]
+  },
+  "status": "PAEVIK_STAATUS_T",
+  "endDate": null,
+  "hasJournalStudents": true,
+  "journalRooms": [],
+  "includesOutcomes": false,
+  "isIndividual": false,
+  "finalEntryAllowed": true,
+  "assessment": "KUTSEHINDAMISVIIS_E",
+  "isDistinctiveAssessment": true,
+  "moodleCourseId": null,
+  "isReviewOk": null,
+  "reviewDate": null,
+  "reviewInfo": null,
+  "isOther": false,
+  "isStudentGroupTeacherJournal": false,
+  "isBasic": false,
+  "isSecondary": false,
+  "isVocational": true,
+  "isIndividualTheme": false,
+  "isGradeForbidden": false,
+  "isVerbalForbidden": false,
+  "canBeConfirmed": false,
+  "canBeUnconfirmed": false,
+  "canEdit": true,
+  "canViewReview": true,
+  "canReview": false,
+  "canConnectStudyMaterials": true,
+  "journalThemes": [
+    {
+      "id": 678482,
+      "nameEt": "Linuxi tööjaamade haldus - Linux/BSD operatsioonisüsteemid (IS24)",
+      "nameEn": "Linuxi tööjaamade haldus - Linux/BSD operatsioonisüsteemid (IS24)",
+      "nameRu": "Linuxi tööjaamade haldus - Linux/BSD operatsioonisüsteemid (IS24)"
+    }
+  ]
+}

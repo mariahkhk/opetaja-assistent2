@@ -1,0 +1,92 @@
+[
+  {
+    "id": 49,
+    "uuid": null,
+    "code": "OPPEAASTA_2017_18",
+    "nameEt": "2017/2018",
+    "nameEn": null,
+    "startDate": "2017-08-01T00:00:00Z",
+    "endDate": "2018-08-25T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 37,
+    "uuid": null,
+    "code": "OPPEAASTA_2018_19",
+    "nameEt": "2018/2019",
+    "nameEn": null,
+    "startDate": "2018-08-01T00:00:00Z",
+    "endDate": "2019-08-31T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 48,
+    "uuid": null,
+    "code": "OPPEAASTA_2019_20",
+    "nameEt": "2019/2020",
+    "nameEn": null,
+    "startDate": "2019-08-01T00:00:00Z",
+    "endDate": "2020-08-30T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 139,
+    "uuid": null,
+    "code": "OPPEAASTA_2020_21",
+    "nameEt": "2020/2021",
+    "nameEn": null,
+    "startDate": "2020-08-03T00:00:00Z",
+    "endDate": "2021-09-05T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 545,
+    "uuid": null,
+    "code": "OPPEAASTA_2021_22",
+    "nameEt": "2021/2022",
+    "nameEn": null,
+    "startDate": "2021-08-02T00:00:00Z",
+    "endDate": "2022-08-28T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 552,
+    "uuid": null,
+    "code": "OPPEAASTA_2022_23",
+    "nameEt": "2022/2023",
+    "nameEn": null,
+    "startDate": "2022-08-01T00:00:00Z",
+    "endDate": "2023-08-27T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 628,
+    "uuid": null,
+    "code": "OPPEAASTA_2023_24",
+    "nameEt": "2023/2024",
+    "nameEn": null,
+    "startDate": "2023-07-31T00:00:00Z",
+    "endDate": "2024-08-31T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 676,
+    "uuid": null,
+    "code": "OPPEAASTA_2024_25",
+    "nameEt": "2024/2025",
+    "nameEn": null,
+    "startDate": "2024-07-29T00:00:00Z",
+    "endDate": "2025-08-31T00:00:00Z",
+    "count": 0
+  },
+  {
+    "id": 726,
+    "uuid": null,
+    "code": "OPPEAASTA_2025_26",
+    "nameEt": "2025/2026",
+    "nameEn": null,
+    "startDate": "2025-07-28T00:00:00Z",
+    "endDate": "2026-08-30T00:00:00Z",
+    "count": 0
+  }
+]

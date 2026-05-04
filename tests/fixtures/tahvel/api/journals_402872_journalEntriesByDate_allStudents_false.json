@@ -1,0 +1,16 @@
+[
+  {
+    "id": 88001,
+    "entryType": "SISSEKANNE_O",
+    "nameEt": "Õpitulemus 1",
+    "curriculumModuleOutcomes": 555001,
+    "outcomeOrderNr": 0
+  },
+  {
+    "id": 88002,
+    "entryType": "SISSEKANNE_O",
+    "nameEt": "Õpitulemus 2",
+    "curriculumModuleOutcomes": 555002,
+    "outcomeOrderNr": 1
+  }
+]

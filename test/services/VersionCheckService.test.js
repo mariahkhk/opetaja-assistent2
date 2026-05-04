@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
+import { restoreChromeMock, restoreGlobalDOM } from '../setup.js'
 
 describe('VersionCheckService', () => {
   let mockChrome
@@ -16,7 +17,9 @@ describe('VersionCheckService', () => {
     // Track message listeners
     messageListeners = []
 
-    // Mock chrome API
+    // Mock chrome API — preserve setup.js's storage.local so Logger.js's
+    // top-level get() call still works when this is the first test file to
+    // import VersionCheckService.
     mockChrome = {
       runtime: {
         onMessage: {
@@ -24,6 +27,7 @@ describe('VersionCheckService', () => {
         }
       },
       storage: {
+        local: global.chrome?.storage?.local,
         session: {
           get: mock(() => Promise.resolve({})),
           set: mock(() => Promise.resolve())
@@ -41,9 +45,8 @@ describe('VersionCheckService', () => {
     const modal = document.getElementById('oa2-update-modal')
     if (modal) modal.remove()
 
-    delete global.chrome
-    delete global.document
-    delete global.window
+    restoreChromeMock()
+    restoreGlobalDOM()
   })
 
   describe('listenForUpdates', () => {

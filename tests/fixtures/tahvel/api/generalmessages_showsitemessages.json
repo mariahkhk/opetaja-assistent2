@@ -1,0 +1,24 @@
+[
+  {
+    "version": null,
+    "title": "Alates 19.03.2026 töötab Test Tahvel versioonil 3.13.0 NB! Peale uuendust on vajalik teha brauseri seadetest vahemälu ja küpsiste kustutamine!",
+    "content": "Vabandame võimalike ebamugavuste pärast!",
+    "validFrom": null,
+    "validThru": null,
+    "targets": null,
+    "color": "89007A",
+    "id": 3257,
+    "inserted": "2026-02-18T22:00:00Z"
+  },
+  {
+    "version": null,
+    "title": "Testkeskkonda ID-kaardiga sisselogimiseks TARA seadistamise juhend",
+    "content": "Testkeskkonda saab logida kasutades ID-kaarti. Sisselogimiseks tuleb ühe korra läbi teha TARA seadistamine testkeskkonna jaoks https://projektid.edu.ee/display/IS2/Testkeskkonda+logimise+juhend",
+    "validFrom": null,
+    "validThru": null,
+    "targets": null,
+    "color": "89007A",
+    "id": 3258,
+    "inserted": "2025-09-17T21:00:00Z"
+  }
+]

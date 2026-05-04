@@ -1,0 +1,410 @@
+{
+  "studyYearName": "2025/2026",
+  "journals": [
+    {
+      "id": 402867,
+      "nameEt": "Erialane füüsika",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402640,
+      "nameEt": "Tarkvaraprojekt II",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 404498,
+      "nameEt": "Andmebaasiserverite haldus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402637,
+      "nameEt": "Programmeerimine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402636,
+      "nameEt": "Tarkvara arendus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 404490,
+      "nameEt": "Linuxi tööjaamade haldus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402871,
+      "nameEt": "Sissejuhatus erialasse",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402925,
+      "nameEt": "Windows projekt",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402921,
+      "nameEt": "Windows serveri haldus ja kataloogiteenused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402954,
+      "nameEt": "Majutuskeskkonna riistvara ja komplekteerimine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402993,
+      "nameEt": "Majutuskeskkonna tõrkehaldus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403000,
+      "nameEt": "Arvutivõrgud",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403080,
+      "nameEt": "Tulemüürid",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403089,
+      "nameEt": "Võrgumeediumid",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402865,
+      "nameEt": "Arvutivõrkude alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402868,
+      "nameEt": "Operatsioonisüsteemide alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402635,
+      "nameEt": "Projektijuhtimise alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402639,
+      "nameEt": "Programmeerimismustrid",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408484,
+      "nameEt": "Andmebaaside projekteerimine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408486,
+      "nameEt": "SQL keele alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408489,
+      "nameEt": "Javascript",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408491,
+      "nameEt": "Märgendikeeled",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408494,
+      "nameEt": "Veebirakenduste loomine klient-server raamistikul",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408501,
+      "nameEt": "Testimise põhitüübid",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408502,
+      "nameEt": "Testimise tüübid ja automatiseerimine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402863,
+      "nameEt": "Arenduskeskkonna loomine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402870,
+      "nameEt": "Rakendustarkvara",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402874,
+      "nameEt": "OOP põhimõtted",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403102,
+      "nameEt": "Küberturvalisuse alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403201,
+      "nameEt": "Arengumapi kaitsmine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 403205,
+      "nameEt": "Arvutite lisaseadmed",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408353,
+      "nameEt": "Dokumentatsiooni koostamine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408355,
+      "nameEt": "Sissejuhatus programmeerimisse",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408356,
+      "nameEt": "Agiilne tarkvaraarendus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408357,
+      "nameEt": "Agiilse tarkvaraarenduse projekt",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408503,
+      "nameEt": "Dokumentatsiooni koostamine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408505,
+      "nameEt": "Veebiteenused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402629,
+      "nameEt": "Praktika ja eksamitöö kaitsmine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK24",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408479,
+      "nameEt": "Andmebaaside alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408500,
+      "nameEt": "Testimise alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 408504,
+      "nameEt": "Hajusrakenduste loomine",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "TAK25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402872,
+      "nameEt": "Taristuteenused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402875,
+      "nameEt": "Programmeerimise alused",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402876,
+      "nameEt": "Tarkvaraarenduse projekt",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    },
+    {
+      "id": 402919,
+      "nameEt": "Windows operatsioonisüsteemide paigaldamine ja haldus",
+      "reviewDate": null,
+      "isReviewOk": null,
+      "studentGroups": "IS25",
+      "status": "PAEVIK_STAATUS_T",
+      "moodleCourseId": null
+    }
+  ]
+}

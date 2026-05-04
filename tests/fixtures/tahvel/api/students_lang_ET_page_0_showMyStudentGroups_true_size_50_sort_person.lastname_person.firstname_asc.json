@@ -1,0 +1,979 @@
+{
+  "content": [
+    {
+      "id": 178307,
+      "fullname": "Anonüümne98",
+      "firstname": "Anonüümne99",
+      "lastname": "Anonüümne100",
+      "regNr": 2215,
+      "idcode": "50001010001",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 131952,
+      "birthdate": "1994-09-07T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178633,
+      "fullname": "Anonüümne101",
+      "firstname": "Anonüümne102",
+      "lastname": "Anonüümne103",
+      "regNr": 2541,
+      "idcode": "50001010002",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 121002,
+      "birthdate": "1992-12-03T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178437,
+      "fullname": "Anonüümne104",
+      "firstname": "Anonüümne105",
+      "lastname": "Anonüümne106",
+      "regNr": 2345,
+      "idcode": "50001010003",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 201693,
+      "birthdate": "2004-11-11T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178628,
+      "fullname": "Anonüümne107",
+      "firstname": "Anonüümne108",
+      "lastname": "Anonüümne109",
+      "regNr": 2536,
+      "idcode": "50001010004",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 88863,
+      "birthdate": "1992-04-29T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178318,
+      "fullname": "Anonüümne110",
+      "firstname": "Anonüümne111",
+      "lastname": "Anonüümne112",
+      "regNr": 2226,
+      "idcode": "50001010005",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 201611,
+      "birthdate": "1985-12-23T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178453,
+      "fullname": "Anonüümne113",
+      "firstname": "Anonüümne114",
+      "lastname": "Anonüümne115",
+      "regNr": 2361,
+      "idcode": "50001010006",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 80478,
+      "birthdate": "2002-05-20T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178645,
+      "fullname": "Anonüümne116",
+      "firstname": "Anonüümne117",
+      "lastname": "Anonüümne118",
+      "regNr": 2553,
+      "idcode": "50001010007",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 144292,
+      "birthdate": "1997-09-12T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178420,
+      "fullname": "Anonüümne119",
+      "firstname": "Anonüümne120",
+      "lastname": "Anonüümne121",
+      "regNr": 2328,
+      "idcode": "50001010008",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 88478,
+      "birthdate": "1996-08-01T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178328,
+      "fullname": "Anonüümne122",
+      "firstname": "Anonüümne123",
+      "lastname": "Anonüümne124",
+      "regNr": 2236,
+      "idcode": "50001010009",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 127515,
+      "birthdate": "2004-09-02T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178347,
+      "fullname": "Anonüümne125",
+      "firstname": "Anonüümne126",
+      "lastname": "Anonüümne127",
+      "regNr": 2255,
+      "idcode": "50001010010",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 125633,
+      "birthdate": "2004-11-28T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178365,
+      "fullname": "Anonüümne128",
+      "firstname": "Anonüümne129",
+      "lastname": "Anonüümne130",
+      "regNr": 2273,
+      "idcode": "50001010011",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 39765,
+      "birthdate": "1999-10-07T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178545,
+      "fullname": "Anonüümne131",
+      "firstname": "Anonüümne132",
+      "lastname": "Anonüümne133",
+      "regNr": 2453,
+      "idcode": "50001010012",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 199639,
+      "birthdate": "1997-05-27T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178450,
+      "fullname": "Anonüümne134",
+      "firstname": "Anonüümne135",
+      "lastname": "Anonüümne136",
+      "regNr": 2358,
+      "idcode": "50001010013",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 201702,
+      "birthdate": "1996-10-04T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178493,
+      "fullname": "Anonüümne137",
+      "firstname": "Anonüümne138",
+      "lastname": "Anonüümne139",
+      "regNr": 2401,
+      "idcode": "50001010014",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 201727,
+      "birthdate": "1970-05-31T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178415,
+      "fullname": "Anonüümne140",
+      "firstname": "Anonüümne141",
+      "lastname": "Anonüümne142",
+      "regNr": 2323,
+      "idcode": "50001010015",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 113494,
+      "birthdate": "1992-03-11T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178389,
+      "fullname": "Anonüümne143",
+      "firstname": "Anonüümne144",
+      "lastname": "Anonüümne145",
+      "regNr": 2297,
+      "idcode": "50001010016",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 201661,
+      "birthdate": "1991-11-21T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178459,
+      "fullname": "Anonüümne146",
+      "firstname": "Anonüümne147",
+      "lastname": "Anonüümne148",
+      "regNr": 2367,
+      "idcode": "50001010017",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 193398,
+      "birthdate": "1983-02-14T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178483,
+      "fullname": "Anonüümne149",
+      "firstname": "Anonüümne150",
+      "lastname": "Anonüümne151",
+      "regNr": 2391,
+      "idcode": "50001010018",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 201721,
+      "birthdate": "2008-11-25T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178542,
+      "fullname": "Anonüümne152",
+      "firstname": "Anonüümne153",
+      "lastname": "Anonüümne154",
+      "regNr": 2450,
+      "idcode": "50001010019",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 149236,
+      "birthdate": "2002-05-17T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178430,
+      "fullname": "Anonüümne155",
+      "firstname": "Anonüümne156",
+      "lastname": "Anonüümne157",
+      "regNr": 2338,
+      "idcode": "50001010020",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 130380,
+      "birthdate": "1995-07-20T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178378,
+      "fullname": "Anonüümne158",
+      "firstname": "Anonüümne159",
+      "lastname": "Anonüümne160",
+      "regNr": 2286,
+      "idcode": "50001010021",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 199416,
+      "birthdate": "1987-03-07T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 183573,
+      "fullname": "Anonüümne161",
+      "firstname": "Anonüümne162",
+      "lastname": "Anonüümne163",
+      "regNr": 2601,
+      "idcode": "50001010022",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 94506,
+      "birthdate": "1983-01-23T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178511,
+      "fullname": "Anonüümne164",
+      "firstname": "Anonüümne165",
+      "lastname": "Anonüümne166",
+      "regNr": 2419,
+      "idcode": "50001010023",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 125590,
+      "birthdate": "1993-10-28T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178481,
+      "fullname": "Anonüümne167",
+      "firstname": "Anonüümne168",
+      "lastname": "Anonüümne169",
+      "regNr": 2389,
+      "idcode": "50001010024",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_O",
+      "type": null,
+      "personId": 188405,
+      "birthdate": "1988-01-21T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    },
+    {
+      "id": 178461,
+      "fullname": "Anonüümne170",
+      "firstname": "Anonüümne171",
+      "lastname": "Anonüümne172",
+      "regNr": 2369,
+      "idcode": "50001010025",
+      "curriculumVersion": {
+        "id": 8648,
+        "nameEt": "TAK24 Noorem tarkvaraarendaja",
+        "nameEn": "TAK24 Junior Software Developer",
+        "nameRu": "TAK24 Noorem tarkvaraarendaja"
+      },
+      "curriculum": {
+        "id": 855,
+        "nameEt": "Noorem tarkvaraarendaja",
+        "nameEn": "Junior Software Developer",
+        "nameRu": "Noorem tarkvaraarendaja"
+      },
+      "higher": null,
+      "studentGroup": {
+        "id": 9628,
+        "nameEt": "TAK24",
+        "nameEn": "TAK24",
+        "nameRu": "TAK24"
+      },
+      "journals": null,
+      "subjects": null,
+      "studyForm": "OPPEVORM_MS",
+      "status": "OPPURSTAATUS_K",
+      "type": null,
+      "personId": 143478,
+      "birthdate": "2002-10-21T00:00:00Z",
+      "isRepresentativeMandatory": false,
+      "canSelect": true,
+      "freezingDate": null,
+      "protocolGrades": null
+    }
+  ],
+  "pageable": {
+    "sort": {
+      "sorted": true,
+      "empty": false,
+      "unsorted": false
+    },
+    "pageNumber": 0,
+    "pageSize": 50,
+    "offset": 0,
+    "paged": true,
+    "unpaged": false
+  },
+  "last": true,
+  "totalPages": 1,
+  "totalElements": 25,
+  "size": 50,
+  "number": 0,
+  "sort": {
+    "sorted": true,
+    "empty": false,
+    "unsorted": false
+  },
+  "first": true,
+  "numberOfElements": 25,
+  "empty": false
+}

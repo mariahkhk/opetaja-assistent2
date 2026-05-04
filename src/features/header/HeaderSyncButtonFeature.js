@@ -42,16 +42,16 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
     }
 
     // Set up event delegation on document body (survives Angular re-renders)
-    this.#setupClickHandler()
+    this.setupClickHandler()
 
     // Create and inject the sync button
-    this.#createSyncButton(langButtons)
+    this.createSyncButton(langButtons)
 
     // Start checking for pending syncs
-    this.#startSyncCheck()
+    this.startSyncCheck()
 
     // Actively load sync data in the background (don't block activation)
-    this.#fetchSyncData()
+    this.fetchSyncData()
   }
 
   /**
@@ -86,7 +86,7 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    * Runs in the background — failures are silent (button just stays hidden).
    * @private
    */
-  async #fetchSyncData() {
+  async fetchSyncData() {
     try {
       // If window.journalListSync already has data (e.g. user just came from /journals), skip
       if (window.journalListSync && (
@@ -157,7 +157,7 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    * Uses document.body to survive Angular re-renders
    * @private
    */
-  #setupClickHandler() {
+  setupClickHandler() {
     // Remove existing handler if it exists
     if (this.clickHandler) {
       document.body.removeEventListener('click', this.clickHandler)
@@ -196,7 +196,7 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    * @param {HTMLElement} langButtons - The language buttons container element
    * @private
    */
-  #createSyncButton(langButtons) {
+  createSyncButton(langButtons) {
     // Remove existing button if it exists
     const existingButton = document.getElementById('oa2-kriit-sync-header-button')
     if (existingButton) {
@@ -254,13 +254,13 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    *
    * @private
    */
-  #startSyncCheck() {
+  startSyncCheck() {
     // Check immediately
-    this.#updateButtonVisibility()
+    this.updateButtonVisibility()
 
     // Then check every 2 seconds
     this.checkInterval = setInterval(() => {
-      this.#updateButtonVisibility()
+      this.updateButtonVisibility()
     }, 2000)
   }
 
@@ -270,12 +270,12 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    *
    * @private
    */
-  #updateButtonVisibility() {
+  updateButtonVisibility() {
     // Always query from DOM in case Angular re-rendered
     const button = document.getElementById('oa2-kriit-sync-header-button')
     if (!button) return
 
-    const hasPendingSyncs = this.#hasPendingSyncs()
+    const hasPendingSyncs = this.hasPendingSyncs()
 
     if (hasPendingSyncs) {
       button.style.display = 'inline-block'
@@ -290,7 +290,7 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
    * @returns {boolean} True if there are pending syncs, false otherwise
    * @private
    */
-  #hasPendingSyncs() {
+  hasPendingSyncs() {
     const syncState = window.journalListSync
 
     if (!syncState) {

@@ -422,11 +422,6 @@ describe('KriitSyncNotifier', () => {
           post: postMock
         }
       }
-
-      Logger.info = mock()
-      Logger.debug = mock()
-      Logger.warning = mock()
-      Logger.error = mock()
     })
 
     test('should build grades from students and notify Kriit', async () => {

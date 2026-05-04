@@ -393,6 +393,35 @@ export const sentryService = {
 }
 
 // Export internals for testing
-export { parseDsn, buildBaseEvent, buildExceptionEvent, buildMessageEvent, parseStackTrace, serializeEnvelope, SENTRY_DSNS }
+export {
+  parseDsn,
+  shouldSend,
+  flushPendingEvents,
+  sendToAllDsns,
+  buildBaseEvent,
+  buildExceptionEvent,
+  buildMessageEvent,
+  parseStackTrace,
+  serializeEnvelope,
+  SENTRY_DSNS
+}
 
 export default sentryService
+
+export function resetState(overrides = {}) {
+  parsedDsns = overrides.parsedDsns ?? []
+  release = overrides.release ?? 'unknown'
+  environment = overrides.environment ?? 'production'
+  initialized = overrides.initialized ?? false
+  recentEvents = []
+  eventsThisMinute = 0
+  if (minuteResetTimer) {
+    clearTimeout(minuteResetTimer)
+    minuteResetTimer = null
+  }
+  pendingEvents = []
+}
+
+export function getState() {
+  return { parsedDsns, release, environment, initialized, recentEvents, eventsThisMinute, pendingEvents }
+}

@@ -172,4 +172,31 @@ describe('DomService', () => {
       expect(styleElement.tagName).toBe('STYLE')
     })
   })
+
+  describe('observeForElements immediate-find path', () => {
+    test('returns a dummy observer when elements are found immediately', () => {
+      const div = document.createElement('div')
+      div.className = 'instant'
+      document.body.appendChild(div)
+
+      let calledWith = null
+      const observer = domService.observeForElements('.instant', (els, selector) => {
+        calledWith = { count: els.length, selector }
+      })
+      expect(calledWith.count).toBe(1)
+      expect(calledWith.selector).toBe('.instant')
+      expect(typeof observer.disconnect).toBe('function')
+      observer.disconnect()
+    })
+  })
+
+  describe('createAndInsertElement Node-content branch', () => {
+    test('appends a Node child when content is a DOM node', () => {
+      global.Node = window.Node
+      const child = document.createElement('span')
+      child.textContent = 'inner'
+      const wrapper = domService.createAndInsertElement('div', {}, child)
+      expect(wrapper.firstChild).toBe(child)
+    })
+  })
 })

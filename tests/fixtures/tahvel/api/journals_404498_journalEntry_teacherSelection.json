@@ -1,0 +1,38 @@
+[
+  {
+    "id": 2078,
+    "nameEt": "Anonüümne1",
+    "nameEn": "Anonüümne1",
+    "firstname": "Anonüümne2",
+    "lastname": "Anonüümne3",
+    "idCode": null,
+    "uniqueCode": null,
+    "personUuid": null,
+    "color": null,
+    "isSubstitute": null,
+    "isOccupied": null,
+    "addCode": null,
+    "untisCode": null,
+    "teacherUuid": null,
+    "fullname": "Anonüümne1",
+    "nameRu": "Anonüümne1"
+  },
+  {
+    "id": 22816,
+    "nameEt": "Anonüümne4",
+    "nameEn": "Anonüümne4",
+    "firstname": "Anonüümne5",
+    "lastname": "Anonüümne6",
+    "idCode": null,
+    "uniqueCode": null,
+    "personUuid": null,
+    "color": null,
+    "isSubstitute": null,
+    "isOccupied": null,
+    "addCode": null,
+    "untisCode": null,
+    "teacherUuid": null,
+    "fullname": "Anonüümne4",
+    "nameRu": "Anonüümne4"
+  }
+]

@@ -3,17 +3,12 @@ import { JSDOM } from 'jsdom'
 import HeaderSyncButtonFeature from '../../../src/features/header/HeaderSyncButtonFeature.js'
 import { cacheService } from '../../../src/services/CacheService.js'
 
-// Save original cacheService.get before any parallel test file can mock it
-const originalCacheGet = cacheService.get.bind(cacheService)
-
 describe('HeaderSyncButtonFeature', () => {
   let feature
   let dom
   let mockChrome
 
   beforeEach(async () => {
-    // Restore cacheService.get in case a parallel test file replaced it with a mock
-    cacheService.get = originalCacheGet
     // Setup DOM
     dom = new JSDOM(`
       <!DOCTYPE html>
@@ -197,30 +192,20 @@ describe('HeaderSyncButtonFeature', () => {
 
   describe('fetchSyncData', () => {
     it('should load persisted sync results from cache when Kriit is enabled', async () => {
-      // Enable Kriit and skip _kriitInitPromise yield to avoid interleaving
-      // with parallel test files that mock cacheService.get
       feature.api.kriit.enabled = true
       feature.api._kriitInitPromise = null
 
       const cachedDifferences = [{ id: 1, type: 'grade' }]
       const cachedNewAssignments = { assignment1: {} }
 
-      // Mock cacheService.get directly to return our test data.
-      // Must be set last before onActivate to minimize window for parallel
-      // test files to overwrite it.
-      cacheService.get = mock(async (key) => {
-        if (key === 'journalList_lastDifferences') return cachedDifferences
-        if (key === 'journalList_lastNewAssignments') return cachedNewAssignments
-        return null
-      })
+      await cacheService.set('journalList_lastDifferences', cachedDifferences, 0, false)
+      await cacheService.set('journalList_lastNewAssignments', cachedNewAssignments, 0, false)
 
       feature.isActive = true
       feature.onActivate()
 
-      // Wait for async #fetchSyncData to complete
       await new Promise(resolve => setTimeout(resolve, 200))
 
-      // window.journalListSync should be populated from cache
       expect(global.window.journalListSync).toBeTruthy()
       expect(global.window.journalListSync.differences).toEqual(cachedDifferences)
       expect(global.window.journalListSync.newAssignments).toEqual(cachedNewAssignments)
@@ -261,9 +246,6 @@ describe('HeaderSyncButtonFeature', () => {
       feature.api.kriit.post = mock(async () => [{ subjectName: 'Math' }])
       feature.api._kriitInitPromise = null
 
-      // Return no cached results so it falls through to runKriitSyncCheck
-      cacheService.get = mock(async () => null)
-
       feature.api.tahvel.get = mock(async (endpoint) => {
         if (endpoint === '/journals') {
           return { content: [{ id: 101, nameEt: 'Journal' }], totalPages: 1 }
@@ -303,18 +285,13 @@ describe('HeaderSyncButtonFeature', () => {
       feature.api._kriitInitPromise = null
 
       const cachedDifferences = [{ id: 1, type: 'grade' }]
-
-      cacheService.get = mock(async (key) => {
-        if (key === 'journalList_lastDifferences') return cachedDifferences
-        return null
-      })
+      await cacheService.set('journalList_lastDifferences', cachedDifferences, 0, false)
 
       feature.isActive = true
       feature.onActivate()
 
       await new Promise(resolve => setTimeout(resolve, 200))
 
-      // Kriit should NOT have been called since cache had data
       expect(feature.api.kriit.post).not.toHaveBeenCalled()
       expect(global.window.journalListSync.differences).toEqual(cachedDifferences)
     })
@@ -323,10 +300,6 @@ describe('HeaderSyncButtonFeature', () => {
       feature.api.kriit.enabled = true
       feature.api._kriitInitPromise = null
 
-      // Return no cached results so it falls through to runKriitSyncCheck
-      cacheService.get = mock(async () => null)
-
-      // Make Kriit post slow so we can deactivate mid-flight
       feature.api.kriit.post = mock(async () => {
         await new Promise(resolve => setTimeout(resolve, 200))
         return [{ subjectName: 'Math' }]

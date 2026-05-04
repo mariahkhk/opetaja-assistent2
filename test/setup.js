@@ -1,7 +1,7 @@
 import { mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 
-const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'https://tahvel.edu.ee/' })
 const window = dom.window
 const document = window.document
 
@@ -9,6 +9,10 @@ global.window = window
 global.document = document
 global.HTMLElement = window.HTMLElement
 global.MutationObserver = window.MutationObserver
+global.Node = window.Node
+global.Event = window.Event
+global.MouseEvent = window.MouseEvent
+global.getComputedStyle = window.getComputedStyle.bind(window)
 
 // --- Cache API mock ---
 
@@ -163,7 +167,7 @@ export function restoreChromeMock() {
 
 // Export a function to restore the default DOM
 export function restoreGlobalDOM() {
-  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+  const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', { url: 'https://tahvel.edu.ee/' })
   const window = dom.window
   const document = window.document
 
@@ -171,6 +175,8 @@ export function restoreGlobalDOM() {
   global.document = document
   global.HTMLElement = window.HTMLElement
   global.MutationObserver = window.MutationObserver
+  global.Node = window.Node
+  global.getComputedStyle = window.getComputedStyle.bind(window)
 
   // Restore console mock
   global.console = {

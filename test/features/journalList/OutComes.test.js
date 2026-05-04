@@ -6,23 +6,8 @@ import '../../../test/mocks/chrome.js'
 describe('OutComes - sendOutcomeEntriesToKriit', () => {
   let mockApi
   let mockJournalLinks
-  let consoleLogSpy
-  let consoleWarnSpy
-  let consoleErrorSpy
 
   beforeEach(() => {
-    consoleLogSpy = mock(() => {})
-    consoleWarnSpy = mock(() => {})
-    consoleErrorSpy = mock(() => {})
-    global.console = {
-      ...global.console,
-      log: consoleLogSpy,
-      warn: consoleWarnSpy,
-      error: consoleErrorSpy,
-      groupCollapsed: mock(() => {}),
-      groupEnd: mock(() => {})
-    }
-
     mockApi = {
       kriit: {
         authToken: 'test-token',
@@ -39,21 +24,6 @@ describe('OutComes - sendOutcomeEntriesToKriit', () => {
         textContent: 'Test Journal 1'
       }
     ]
-  })
-
-  afterEach(() => {
-    // Restore console methods
-    global.console = {
-      log: () => {},
-      error: () => {},
-      warn: () => {},
-      debug: () => {},
-      info: () => {},
-      group: () => {},
-      groupEnd: () => {},
-      groupCollapsed: () => {},
-      trace: () => {}
-    }
   })
 
   describe('Input Validation', () => {

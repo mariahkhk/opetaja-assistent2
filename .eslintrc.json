@@ -24,6 +24,15 @@
       "rules": {
         "no-console": "off"
       }
+    },
+    {
+      "files": ["tests/e2e/**/*.js"],
+      "env": {
+        "node": true
+      },
+      "globals": {
+        "Bun": "readonly"
+      }
     }
   ],
   "rules": {

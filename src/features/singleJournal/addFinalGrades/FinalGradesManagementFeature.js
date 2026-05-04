@@ -7,7 +7,7 @@ import { injectFinalGradeCSS, markMismatch, clearMismatch } from './FinalGradeHi
 
 class FinalGradesByOvFeature extends BaseFeature {
   // Helper to fetch and transform detailed outcome data for SISSEKANNE_O
-  async #fetchDetailedOutcomeStudents(journalId, outcomeId, students, opts = {}) {
+  async fetchDetailedOutcomeStudents(journalId, outcomeId, students, opts = {}) {
     // opts: { output: 'studentOutcomeResults' | 'existingGradesMap', ovNum }
     try {
       const detailedOutcome = await this.api.tahvel.get(`/journals/${journalId}/journalOutcome/${outcomeId}`)
@@ -91,7 +91,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     return { code, value, nameEt, nameEn }
   }
 
-  async #syncOvGrades({ results, ovNumToOutcomeId, filteredOutput, container, statusDiv = null, button = null }) {
+  async syncOvGrades({ results, ovNumToOutcomeId, filteredOutput, container, statusDiv = null, button = null }) {
     // Prevent concurrent sync runs across different handlers/buttons
     if (this._oaSyncRunning) {
       Logger.debug('FinalGradesByOvFeature: Sync already in progress, skipping second invocation')
@@ -339,9 +339,9 @@ class FinalGradesByOvFeature extends BaseFeature {
               this._lastStudents = students
               this._lastJournalId = journalId
             }
-            const results = await this.#calculateFinalGrades(entries, students)
+            const results = await this.calculateFinalGrades(entries, students)
             Logger.debug('✨ FinalGradesByOvFeature: Results calculated:', results)
-            await this.#showResults(results, btn)
+            await this.showResults(results, btn)
             btn.textContent = 'Valmis!'
             btn.style.background = '#388e3c'
           } catch (e) {
@@ -424,7 +424,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
       const hasSissekanneL = this.detectLGrades(entries)
       Logger.debug('[DEBUG] hasSissekanneL:', hasSissekanneL)
-      const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
+      const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.calculateFinalGrades(entries, students)
       Logger.debug('[DEBUG] Results:', results)
       if (!hasSissekanneL && (!results.allOvNums || results.allOvNums.length === 0)) {
         Logger.debug('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected, feature will not activate')
@@ -479,14 +479,14 @@ class FinalGradesByOvFeature extends BaseFeature {
       try {
         Logger.debug('✨ FinalGradesByOvFeature: Calculating grades on page load')
         const hasSissekanneL = this.detectLGrades(entries)
-        const resultsOnLoad = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
+        const resultsOnLoad = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.calculateFinalGrades(entries, students)
         // Call showResults with autoSync=false so we only compute filteredOutput and update button state/UI
         if (hasSissekanneL) {
           // Use the L feature's showResults which accepts autoSync flag
           await this.showLGradeResults(resultsOnLoad, button, entries, { autoSync: false })
           // Ensure L-grade dropdowns are available on initial load
           try {
-            this.#ensureLGradeDropdowns()
+            this.ensureLGradeDropdowns()
           } catch (e) {
             Logger.debug('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns on load', e)
           }
@@ -499,7 +499,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             Logger.debug('FinalGradesByOvFeature: Failed to attach L DOM observer', e)
           }
         } else {
-          await this.#showResults(resultsOnLoad, button, { autoSync: false })
+          await this.showResults(resultsOnLoad, button, { autoSync: false })
         }
       } catch (err) {
         Logger.debug('FinalGradesByOvFeature: Failed to calculate grades on page load', err)
@@ -626,7 +626,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           }
           const hasSissekanneL = this.detectLGrades(entries)
           Logger.debug('[DEBUG] Delegated click: hasSissekanneL:', hasSissekanneL)
-          const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.#calculateFinalGrades(entries, students)
+          const results = hasSissekanneL ? this.extractFinalGrades(entries, students) : await this.calculateFinalGrades(entries, students)
           Logger.debug('[DEBUG] Delegated click: results:', results)
           if (!hasSissekanneL && (!results.allOvNums || results.allOvNums.length === 0)) {
             Logger.debug('✨ FinalGradesByOvFeature: No ÕV columns or SISSEKANNE_L detected on button click, aborting')
@@ -644,7 +644,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           if (hasSissekanneL) {
             await this.showLGradeResults(results, btn, entries)
           } else {
-            await this.#showResults(results, btn)
+            await this.showResults(results, btn)
           }
           btn.textContent = 'Valmis!'
           btn.style.background = '#388e3c'
@@ -668,7 +668,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                 if (hasL) {
                   btn.textContent = 'Lisa lõpptulemuse hinded'
                 } else {
-                  const hasExistingOv = this.#hasAnyOvGrades(this._lastEntries || [])
+                  const hasExistingOv = this.hasAnyOvGrades(this._lastEntries || [])
                   btn.textContent = hasExistingOv ? 'Uuenda õpiväljundite hinded' : 'Lisa õpiväljundite hinded'
                 }
                 btn.style.background = 'rgb(21, 101, 192)'
@@ -731,10 +731,10 @@ class FinalGradesByOvFeature extends BaseFeature {
                 if (hasLLocal) {
                   newResults = this.extractFinalGrades(newEntries, newStudents)
                 } else {
-                  newResults = await this.#calculateFinalGrades(newEntries, newStudents)
+                  newResults = await this.calculateFinalGrades(newEntries, newStudents)
                 }
                 // Call showResults with autoSync=false to compute filteredOutput and update button state
-                const filtered = await this.#showResults(newResults, button, { autoSync: false })
+                const filtered = await this.showResults(newResults, button, { autoSync: false })
                 // If filtered is an array and has items -> enable button, otherwise disable and set global marker
                 try {
                   if (Array.isArray(filtered) && filtered.length > 0) {
@@ -751,7 +751,7 @@ class FinalGradesByOvFeature extends BaseFeature {
                         if (hasLNow) {
                           button.textContent = 'Lisa lõpptulemuse hinded'
                         } else {
-                          const hasExistingOvNow = this.#hasAnyOvGrades(this._lastEntries || [])
+                          const hasExistingOvNow = this.hasAnyOvGrades(this._lastEntries || [])
                           button.textContent = hasExistingOvNow ? 'Uuenda õpiväljundite hinded' : 'Lisa õpiväljundite hinded'
                         }
                         button.style.background = 'rgb(21, 101, 192)'
@@ -808,7 +808,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     return match ? match[1] : null
   }
 
-  async #calculateFinalGrades(entries, students) {
+  async calculateFinalGrades(entries, students) {
     Logger.debug('✨ FinalGradesByOvFeature: DEBUG students structure:', students)
     const studentMap = {}
     const journalStudentIdToStudentId = {}
@@ -886,7 +886,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         // If studentOutcomeResults is missing, fetch detailed outcome data
         if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
           const journalId = this.extractJournalId()
-          studentOutcomeResults = await this.#fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, students, {
+          studentOutcomeResults = await this.fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, students, {
             output: 'studentOutcomeResults'
           })
         }
@@ -1193,7 +1193,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     }
   }
 
-  async #showResults(results, button, opts = { autoSync: true }) {
+  async showResults(results, button, opts = { autoSync: true }) {
     Logger.debug('✨ FinalGradesByOvFeature: #showResults called', { results, button, opts })
     // Only perform sync logic, do not render a table
     // eslint-disable-next-line no-unused-vars
@@ -1209,7 +1209,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             const studentOutcomeResults = entry.studentOutcomeResults
             if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
               const journalId = this.extractJournalId()
-              const map = await this.#fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, [], { output: 'existingGradesMap', ovNum })
+              const map = await this.fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, [], { output: 'existingGradesMap', ovNum })
               Object.assign(existingGradesMap, map)
             } else if (studentOutcomeResults) {
               Object.entries(studentOutcomeResults).forEach(([studentIdFromResults, results]) => {
@@ -1426,7 +1426,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               // Re-run showResults to update highlights/UI without auto-sync
               setTimeout(() => {
                 try {
-                  this.#showResults(results, button, { autoSync: false })
+                  this.showResults(results, button, { autoSync: false })
                 } catch (e) {
                   Logger.debug('Failed to re-run showResults after grading mode change', e)
                 }
@@ -1560,7 +1560,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       // --- Highlight mismatched cells in the journal table ---
       try {
         // Locate the journal table
-        const table = this.#findJournalTable()
+        const table = this.findJournalTable()
         if (table) {
           // Ensure OA local CSS is available and detect column indices using local helper
           // (avoid depending on HighlightFinalGradesFeature which isn't imported here)
@@ -1862,7 +1862,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
 
       setTimeout(() => {
-        this.#syncOvGrades({ results, ovNumToOutcomeId, filteredOutput, container, button })
+        this.syncOvGrades({ results, ovNumToOutcomeId, filteredOutput, container, button })
           .then(success => {
             if (success) {
               window.location.reload()
@@ -2033,7 +2033,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   _highlightIncorrectCurrentGrades(results) {
     try {
       if (!results || !results.output || !Array.isArray(results.output)) return
-      const table = this.#findJournalTable()
+      const table = this.findJournalTable()
       if (!table) return
 
       // Ensure local CSS is injected for OA final-grade mismatch highlights
@@ -2225,10 +2225,10 @@ class FinalGradesByOvFeature extends BaseFeature {
 
     // Ensure grade selection dropdowns are available for L-grade entries
     try {
-      this.#ensureLGradeDropdowns()
+      this.ensureLGradeDropdowns()
       // Ensure grading-mode select is present next to the L-button so users can pick 'mitte'/'eristav'
       try {
-        this.#attachGradingModeSelectToButton(button)
+        this.attachGradingModeSelectToButton(button)
       } catch (e) {
         Logger.debug('FinalGradesByOvFeature: Failed to attach grading-mode select to L button', e)
       }
@@ -2417,7 +2417,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
             // Decide label: if there are existing L grades, present update action; otherwise present add action
             try {
-              const hasExistingL = this.#hasAnyLGrades(currentEntry ? [currentEntry] : lastEntries || [])
+              const hasExistingL = this.hasAnyLGrades(currentEntry ? [currentEntry] : lastEntries || [])
               if (hasExistingL) {
                 button.textContent = 'Uuenda õpiväljundite hinded'
               } else {
@@ -2574,9 +2574,9 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   // Ensure that L-grade (SISSEKANNE_L) entries have proper grade selection dropdowns in journal table cells
-  #ensureLGradeDropdowns() {
+  ensureLGradeDropdowns() {
     try {
-      const table = this.#findJournalTable()
+      const table = this.findJournalTable()
       if (!table) return
 
       // Find journal entry header that contains "Lõpptulemus" or similar final result text
@@ -2610,7 +2610,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
           if (!existingSelect && !existingInput) {
             // Create a simple grade selection dropdown
-            this.#createLGradeDropdown(lGradeCell, row)
+            this.createLGradeDropdown(lGradeCell, row)
           }
         } catch (e) {
           // Ignore per-row errors
@@ -2622,7 +2622,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   // Create a grade selection dropdown for an L-grade table cell
-  #createLGradeDropdown(cell, row) {
+  createLGradeDropdown(cell, row) {
     try {
       // Extract student identifier from row
       const studentId =
@@ -2669,7 +2669,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
       // Add change event listener to update the grade
       select.addEventListener('change', e => {
-        this.#handleLGradeChange(studentId, e.target.value, cell)
+        this.handleLGradeChange(studentId, e.target.value, cell)
       })
 
       // Replace cell content with the dropdown
@@ -2682,7 +2682,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
   // Ensure the grading-mode select (`oa-grading-mode-select`) exists and is placed next to the provided button.
   // If it already exists elsewhere on the page we simply move it next to the button to reuse the same control.
-  #attachGradingModeSelectToButton(button) {
+  attachGradingModeSelectToButton(button) {
     try {
       if (!button) return
       const existing = document.getElementById('oa-grading-mode-select')
@@ -2766,7 +2766,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
 
   // Handle grade selection change
-  async #handleLGradeChange(studentId, newGrade, cell) {
+  async handleLGradeChange(studentId, newGrade, cell) {
     try {
       if (!newGrade) {
         // Clear grade - could implement grade removal logic here
@@ -2859,7 +2859,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
   // Helper: detect whether there are any existing SISSEKANNE_L grades in provided entries
   // Returns true if at least one journalEntryStudents array contains a grade code
-  #hasAnyLGrades(entries) {
+  hasAnyLGrades(entries) {
     try {
       if (!entries || !Array.isArray(entries)) return false
       for (const entry of entries) {
@@ -2880,7 +2880,7 @@ class FinalGradesByOvFeature extends BaseFeature {
 
   // Helper: detect whether any SISSEKANNE_O outcome grades exist in the provided entries
   // Returns true if at least one student outcome grade exists for any SISSEKANNE_O entry
-  #hasAnyOvGrades(entries) {
+  hasAnyOvGrades(entries) {
     try {
       if (!entries || !Array.isArray(entries)) return false
       for (const entry of entries) {
@@ -2896,7 +2896,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     return false
   }
 
-  #findJournalTable() {
+  findJournalTable() {
     const selectors = [
       '#studentTable table.tahvel-table',
       '#studentTable table',

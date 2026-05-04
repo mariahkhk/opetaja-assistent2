@@ -5,7 +5,7 @@ export function getCurrentStudyYearText(date = new Date()) {
   return `${studyYearStart}/${studyYearStart + 1}`
 }
 
-function getStudyYearsEndpoint(api) {
+export function getStudyYearsEndpoint(api) {
   const base = api?.tahvel?.baseUrl ? String(api.tahvel.baseUrl) : ''
   return base.endsWith('/hois_back') ? '/autocomplete/studyYears' : '/hois_back/autocomplete/studyYears'
 }
@@ -32,7 +32,7 @@ export async function resolveCurrentStudyYearId(api, date = new Date()) {
   return resolveStudyYearIdFromText(api, getCurrentStudyYearText(date))
 }
 
-function getWeekIndex(mahtAWeeks, position) {
+export function getWeekIndex(mahtAWeeks, position) {
   if (position === 'first') {
     return mahtAWeeks.findIndex(hours => hours !== null)
   }
