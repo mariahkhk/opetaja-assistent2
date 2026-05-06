@@ -1,6 +1,6 @@
 {
   "name": "opetaja-assistent2",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Extension for enhancing Tahvel educational platform functionality",
   "type": "module",
   "private": true,
