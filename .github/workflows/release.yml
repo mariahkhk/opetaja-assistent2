@@ -19,8 +19,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
 
       - name: Get version from package.json
         id: version
@@ -32,12 +30,14 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if tag already exists
+      - name: Check if release tag already exists
         id: check_tag
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+          if gh api "repos/$REPO/git/refs/tags/v$VERSION" --silent 2>/dev/null; then
             echo "should_release=false" >> $GITHUB_OUTPUT
             echo "Tag v$VERSION already exists, skipping release"
           else
