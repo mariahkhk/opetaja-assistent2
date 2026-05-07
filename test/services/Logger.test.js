@@ -12,6 +12,7 @@ import Logger, {
   enableDebugMode,
   disableDebugMode
 } from '../../src/services/Logger.js'
+import { sentryService } from '../../src/services/SentryService.js'
 import { restoreChromeMock } from '../setup.js'
 
 describe('Logger', () => {
@@ -130,6 +131,63 @@ describe('Logger', () => {
       expect(console.groupCollapsed).toHaveBeenCalled()
       const call = console.groupCollapsed.mock.calls[0]
       expect(call[1]).toEqual(errorObj)
+    })
+
+    describe('Sentry suppression for expected operational signals', () => {
+      let captureException
+      let captureMessage
+      let originalCaptureException
+      let originalCaptureMessage
+
+      beforeEach(() => {
+        originalCaptureException = sentryService.captureException
+        originalCaptureMessage = sentryService.captureMessage
+        captureException = mock(() => {})
+        captureMessage = mock(() => {})
+        sentryService.captureException = captureException
+        sentryService.captureMessage = captureMessage
+      })
+
+      afterEach(() => {
+        sentryService.captureException = originalCaptureException
+        sentryService.captureMessage = originalCaptureMessage
+      })
+
+      test('suppresses bare "API Error: 403" — original pattern still works', () => {
+        const err = new Error('API Error: 403 Forbidden')
+        error('[tahvel] GET Error:', err)
+        expect(captureException).not.toHaveBeenCalled()
+        expect(captureMessage).not.toHaveBeenCalled()
+      })
+
+      test('suppresses ApiService-wrapped 403 via cause chain', () => {
+        // This is the regression introduced by aa6bd39: the wrapper rebuilds
+        // the message ("GET /hois_back/journals status=403 type=Error message=...")
+        // so it no longer matches `^API Error:`. The fix is to attach the
+        // original as `cause`; Logger.error walks the cause chain.
+        const original = new Error('API Error: 403 Forbidden')
+        const wrapped = new Error('GET /hois_back/journals status=403 type=Error message=API Error: 403 Forbidden')
+        wrapped.cause = original
+        error('[tahvel] GET Error:', wrapped)
+        expect(captureException).not.toHaveBeenCalled()
+        expect(captureMessage).not.toHaveBeenCalled()
+      })
+
+      test('suppresses wrapped Tahvel-host parse error via cause chain', () => {
+        const original = new Error('API Error: empty response from https://test.tahvel.eenet.ee/hois_back/user')
+        const wrapped = new Error('GET /hois_back/user type=Error message=API Error: empty response from https://test.tahvel.eenet.ee/hois_back/user')
+        wrapped.cause = original
+        error('[tahvel] GET Error:', wrapped)
+        expect(captureException).not.toHaveBeenCalled()
+      })
+
+      test('still forwards unexpected wrapped errors to Sentry', () => {
+        const original = new Error('API Error: 500 Internal Server Error')
+        const wrapped = new Error('GET /hois_back/journals status=500 type=Error message=API Error: 500 Internal Server Error')
+        wrapped.cause = original
+        error('[tahvel] GET Error:', wrapped)
+        expect(captureException).toHaveBeenCalledTimes(1)
+      })
     })
   })
 

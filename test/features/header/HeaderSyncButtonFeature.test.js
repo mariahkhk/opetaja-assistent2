@@ -56,13 +56,18 @@ describe('HeaderSyncButtonFeature', () => {
     // Create feature instance
     feature = new HeaderSyncButtonFeature()
 
-    // Mock API to prevent real network calls from #fetchSyncData
+    // Mock API to prevent real network calls from #fetchSyncData.
+    // /user returns a valid person so isTahvelAuthenticated() resolves true;
+    // any other endpoint returns {} unless an individual test overrides.
     feature.api = {
       ...feature.api,
       _kriitInitPromise: Promise.resolve(),
       kriit: { enabled: false },
       tahvel: {
-        get: mock(async () => ({})),
+        get: mock(async (endpoint) => {
+          if (endpoint === '/user') return { person: { id: 123 }, school: { id: 9 } }
+          return {}
+        }),
         baseUrl: 'https://tahvel.edu.ee/hois_back'
       }
     }
@@ -247,6 +252,9 @@ describe('HeaderSyncButtonFeature', () => {
       feature.api._kriitInitPromise = null
 
       feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/user') {
+          return { person: { id: 123 }, school: { id: 9 } }
+        }
         if (endpoint === '/journals') {
           return { content: [{ id: 101, nameEt: 'Journal' }], totalPages: 1 }
         }
@@ -296,6 +304,33 @@ describe('HeaderSyncButtonFeature', () => {
       expect(global.window.journalListSync.differences).toEqual(cachedDifferences)
     })
 
+    it('should skip /journals fetch when /user returns 403 (no Tahvel session)', async () => {
+      feature.api.kriit.enabled = true
+      feature.api.kriit.post = mock(async () => [])
+      feature.api._kriitInitPromise = null
+
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/user') {
+          const err = new Error('API Error: 403 Forbidden')
+          err.status = 403
+          throw err
+        }
+        return {}
+      })
+
+      feature.isActive = true
+      feature.onActivate()
+
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // No /journals probe should have happened — that's the whole point
+      const journalsCalls = feature.api.tahvel.get.mock.calls.filter(c => c[0] === '/journals')
+      expect(journalsCalls.length).toBe(0)
+      // And no Kriit sync, since we never even hit Kriit init
+      expect(feature.api.kriit.post).not.toHaveBeenCalled()
+      expect(global.window.journalListSync).toBeUndefined()
+    })
+
     it('should not write to window.journalListSync if deactivated during sync', async () => {
       feature.api.kriit.enabled = true
       feature.api._kriitInitPromise = null
@@ -306,6 +341,7 @@ describe('HeaderSyncButtonFeature', () => {
       })
 
       feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/user') return { person: { id: 123 }, school: { id: 9 } }
         if (endpoint === '/journals') return { content: [{ id: 101 }], totalPages: 1 }
         if (endpoint === '/journals/101') return { nameEt: 'Journal', journalTeachers: [], studentGroups: [] }
         if (endpoint === '/journals/101/journalEntry') return { content: [] }

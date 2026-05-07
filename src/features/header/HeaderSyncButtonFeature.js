@@ -2,6 +2,7 @@ import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
 import { cacheService } from '../../services/CacheService.js'
 import { runKriitSyncCheck } from '../../lib/kriitSyncCheck.js'
+import { isTahvelAuthenticated } from '../../lib/isTahvelAuthenticated.js'
 
 /**
  * HeaderSyncButtonFeature
@@ -95,6 +96,15 @@ export default class HeaderSyncButtonFeature extends BaseFeature {
       )) {
         return
       }
+
+      // Bail out before any /journals fetch when there's no Tahvel session
+      // (login screen, expired session). runKriitSyncCheck would otherwise
+      // probe /journals and pollute Sentry with 403s.
+      if (!await isTahvelAuthenticated(this.api)) {
+        if (Logger.isDebugMode()) Logger.debug('[HeaderSyncButtonFeature] No Tahvel session, skipping sync fetch')
+        return
+      }
+      if (!this.isActive) return
 
       // Wait for Kriit settings to be loaded
       if (this.api._kriitInitPromise) await this.api._kriitInitPromise

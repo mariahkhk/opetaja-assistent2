@@ -3,6 +3,7 @@ import Logger from '../../services/Logger.js'
 import { cacheService } from '../../services/CacheService.js'
 import { fetchTeacherJournals } from '../../lib/fetchTeacherJournals.js'
 import { getSchoolId } from '../../lib/schoolId.js'
+import { isTahvelAuthenticated } from '../../lib/isTahvelAuthenticated.js'
 
 /**
  * TimetableDiscrepancyDetectionFeature
@@ -22,6 +23,7 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
     )
     this.name = 'TimetableDiscrepancyDetectionFeature'
     this.checkInterval = null
+    this.buttonCheckInterval = null
     this.currentSchoolId = null
     this.currentTeacherId = null
     this.clickHandler = null
@@ -49,6 +51,15 @@ export default class TimetableDiscrepancyDetectionFeature extends BaseFeature {
 
     // Create and inject the button
     this.#createButton(langButtons)
+
+    // Bail out before any /journals fetch when there's no Tahvel session
+    // (login screen, expired session). The button + click handler are still
+    // wired up (cheap, idempotent) so they're ready post-login when the next
+    // navigation re-activates the feature.
+    if (!await isTahvelAuthenticated(this.api)) {
+      if (Logger.isDebugMode()) Logger.debug(`[${this.name}] No Tahvel session, skipping discrepancy check`)
+      return
+    }
 
     // Get current user info
     await this.#getCurrentUserInfo()

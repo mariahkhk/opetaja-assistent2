@@ -614,6 +614,13 @@ class ApiService {
           safeError = new Error(parts.join(' '))
         }
         if (error?.stack) safeError.stack = error.stack
+        // Preserve the original Error as `cause` so Logger.error's
+        // EXPECTED_ERROR_PATTERN suppression can match the unwrapped message
+        // ("API Error: 403 Forbidden", "API Error: empty response from
+        // .../hois_back/user"). Without this, the wrapper string ("GET
+        // /hois_back/journals status=403 ...") no longer matches the `^API
+        // Error:` anchor and expected operational signals leak into Sentry.
+        if (error instanceof Error) safeError.cause = error
         Logger.error(`[${this.name}] ${method} Error:`, safeError)
       }
       throw error

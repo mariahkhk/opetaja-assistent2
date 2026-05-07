@@ -786,6 +786,32 @@ describe('ApiService', () => {
       }
     })
 
+    test('Sentry-bound safeError preserves original error as cause for EXPECTED_ERROR_PATTERN matching', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 403,
+        statusText: 'Forbidden',
+        text: async () => 'Forbidden'
+      }))
+
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      try {
+        await expect(apiService.get('/journals/onlyMyJournals', {}, { cache: false })).rejects.toThrow()
+        const safeError = loggerError.mock.calls[0][1]
+        // The wrapper's own message no longer starts with "API Error:" (it's
+        // the enriched diagnostic form), but the original error must be
+        // attached as `cause` so Logger.error's expected-error suppression
+        // can re-test it.
+        expect(safeError.cause).toBeInstanceOf(Error)
+        expect(safeError.cause.message).toMatch(/^API Error: 403\b/)
+      } finally {
+        Logger.error = originalError
+      }
+    })
+
     test('Sentry-bound safeError redacts PII endpoints with diagnostic metadata only', async () => {
       apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
       global.fetch = mock(async () => ({

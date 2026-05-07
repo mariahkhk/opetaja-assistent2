@@ -135,10 +135,17 @@ export function warning(message, ...args) {
 export function error(message, ...args) {
   log(message, LogLevel.ERROR, ...args)
 
-  // Skip Sentry for expected HTTP errors (auth expired, not found, precondition failed, parse failures)
+  // Skip Sentry for expected HTTP errors (auth expired, not found, precondition failed, parse failures).
+  // Also check `error.cause` — ApiService.request wraps errors with a diagnostic
+  // wrapper whose `.message` no longer starts with "API Error:", so we re-test
+  // the embedded original via the cause chain.
   const errorObj = args.find(a => a instanceof Error)
-  if (message instanceof Error && EXPECTED_ERROR_PATTERN.test(message.message)) return
-  if (errorObj && EXPECTED_ERROR_PATTERN.test(errorObj.message)) return
+  const isExpected = err => err && (
+    EXPECTED_ERROR_PATTERN.test(err.message) ||
+    (err.cause instanceof Error && EXPECTED_ERROR_PATTERN.test(err.cause.message))
+  )
+  if (message instanceof Error && isExpected(message)) return
+  if (errorObj && isExpected(errorObj)) return
 
   // Forward to Sentry
   if (message instanceof Error) {

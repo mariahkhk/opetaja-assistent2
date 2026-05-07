@@ -322,6 +322,30 @@ describe('TimetableDiscrepancyDetectionFeature', () => {
     })
   })
 
+  describe('authentication gating', () => {
+    it('should skip /journals fetch when /user returns 403 (no Tahvel session)', async () => {
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/user') {
+          const err = new Error('API Error: 403 Forbidden')
+          err.status = 403
+          throw err
+        }
+        return {}
+      })
+
+      await feature.onActivate()
+
+      // Button + handler still wired (post-login re-activation needs them)
+      expect(document.getElementById('oa2-timetable-discrepancy-header-button')).toBeTruthy()
+      expect(feature.clickHandler).toBeTruthy()
+      // But no /journals probe and no intervals scheduled
+      const journalsCalls = feature.api.tahvel.get.mock.calls.filter(c => c[0] === '/journals')
+      expect(journalsCalls.length).toBe(0)
+      expect(feature.checkInterval).toBeNull()
+      expect(feature.buttonCheckInterval).toBeNull()
+    })
+  })
+
   describe('journal fetching from API', () => {
     it('should fetch journals from API and check for discrepancies', async () => {
       // API returns journal list then journal info
