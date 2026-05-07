@@ -177,9 +177,15 @@ class ApiService {
       // Allowlist fails closed; consumers verified via grep for `userInfo.*`
       // reads at content.js, schoolId.js, Extension.js, LessonCountWarning,
       // TimetableDiscrepancyDetection.
+      // Tahvel returns `person` as a flat number id for some accounts and as
+      // `{ id, ... }` for others. Canonicalize to `{ id }` so consumers'
+      // `userInfo.person?.id` reads work for both shapes (the captured
+      // tests/fixtures/tahvel/api/user.json shows the flat-number form).
       return {
         school: data.school,
-        person: data.person ? { id: data.person.id } : undefined,
+        person: data.person != null
+          ? { id: typeof data.person === 'object' ? data.person.id : data.person }
+          : undefined,
         roleCode: data.roleCode
       }
     }

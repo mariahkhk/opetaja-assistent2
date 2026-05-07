@@ -1021,6 +1021,16 @@ describe('ApiService — high-PII routing', () => {
     expect(sanitised.person).toEqual({ id: 227928 })
   })
 
+  test('_sanitiseForCache canonicalises flat-number person to { id }', async () => {
+    const { ApiService } = await import('../../src/services/ApiService.js')
+    // tests/fixtures/tahvel/api/user.json captured this shape from real Tahvel:
+    // person is a flat number, not an object. Sanitiser must turn it into
+    // { id: <number> } so consumers' `userInfo.person?.id` reads work.
+    const data = { user: 331113, person: 227928, teacher: 22816, school: { id: 9 }, roleCode: 'ROLL_O' }
+    const sanitised = ApiService._sanitiseForCache('https://tahvel.edu.ee/hois_back/user', data)
+    expect(sanitised.person).toEqual({ id: 227928 })
+  })
+
   test('_sanitiseForCache /user allowlist matches trailing-slash form too', async () => {
     const { ApiService } = await import('../../src/services/ApiService.js')
     const data = { name: '30000000001', school: { id: 9 } }
