@@ -11,6 +11,7 @@
     "bun": ">=1.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/bun": "latest",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^10.1.5",
