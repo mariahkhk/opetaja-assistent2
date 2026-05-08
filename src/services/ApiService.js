@@ -2,7 +2,7 @@
  * API Service - Generic service for API communication
  */
 
-import Logger from './Logger.js'
+import Logger, { EXPECTED_NATIVE_FETCH_ERROR_PATTERN } from './Logger.js'
 import { cacheService } from './CacheService.js'
 import { parseJsonResponse } from '../lib/parseJsonResponse.js'
 
@@ -608,6 +608,16 @@ class ApiService {
           const parts = [`[REDACTED-PII Error on ${method}${safePath ? ' ' + safePath : ''}]`]
           if (status) parts.push(`status=${status}`)
           if (errorType) parts.push(`type=${errorType}`)
+          // Surface the cause's message only when it matches the
+          // EXPECTED_NATIVE_FETCH_ERROR_PATTERN allowlist (defined in
+          // Logger.js — same list the Sentry-suppression check uses).
+          // Those strings are hard-coded browser constants for transport
+          // failures, so they carry no PII and are safe even on redacted
+          // endpoints. Anything else (notably our own apiError from line
+          // 559, which can echo response-body PII) stays redacted.
+          if (error?.message && EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test(error.message)) {
+            parts.push(`message=${error.message}`)
+          }
           safeError = new Error(parts.join(' '))
         } else {
           const fullPath = urlString

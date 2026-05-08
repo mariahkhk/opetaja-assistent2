@@ -2,7 +2,8 @@ import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { JSDOM } from 'jsdom'
 import { ApiService } from '../../src/services/ApiService.js'
 import { cacheService } from '../../src/services/CacheService.js'
-import Logger, { EXPECTED_ERROR_PATTERN } from '../../src/services/Logger.js'
+import Logger, { EXPECTED_ERROR_PATTERN, EXPECTED_NATIVE_FETCH_ERROR_PATTERN, error as loggerErrorFn } from '../../src/services/Logger.js'
+import { sentryService } from '../../src/services/SentryService.js'
 import { parseJsonResponse } from '../../src/lib/parseJsonResponse.js'
 
 describe('ApiService', () => {
@@ -831,8 +832,90 @@ describe('ApiService', () => {
         expect(safeError.message).toContain('status=500')
         expect(safeError.message).not.toContain('30000000001')
         expect(safeError.message).not.toContain('PersonD')
+        // Regression guard: an apiError carrying response-body PII must NEVER
+        // surface its message verbatim, only the generic redaction.
+        expect(safeError.message).not.toContain('message=')
       } finally {
         Logger.error = originalError
+      }
+    })
+
+    test('Sentry-bound safeError on PII endpoint surfaces native fetch failure messages', async () => {
+      apiService.setBaseUrl('https://tahvel.edu.ee/hois_back')
+      global.fetch = mock(async () => {
+        const err = new TypeError('Failed to fetch')
+        err.stack = 'TypeError: Failed to fetch\n    at fetch (mock:1:1)'
+        throw err
+      })
+
+      const originalError = Logger.error
+      const loggerError = mock(() => {})
+      Logger.error = loggerError
+      try {
+        await expect(apiService.get('/journals/123/journalStudents', {}, { cache: false })).rejects.toThrow()
+        const safeError = loggerError.mock.calls.at(-1)[1]
+        expect(safeError.message).toContain('[REDACTED-PII Error on GET /hois_back/journals/<id>/journalStudents]')
+        expect(safeError.message).toContain('type=TypeError')
+        expect(safeError.message).toContain('message=Failed to fetch')
+        expect(safeError.stack).toBe('TypeError: Failed to fetch\n    at fetch (mock:1:1)')
+        expect(safeError.cause).toBeInstanceOf(TypeError)
+      } finally {
+        Logger.error = originalError
+      }
+    })
+  })
+
+  describe('Logger.error native-fetch suppression', () => {
+    let captureException
+    let captureMessage
+    let originalCaptureException
+    let originalCaptureMessage
+
+    beforeEach(() => {
+      originalCaptureException = sentryService.captureException
+      originalCaptureMessage = sentryService.captureMessage
+      captureException = mock(() => {})
+      captureMessage = mock(() => {})
+      sentryService.captureException = captureException
+      sentryService.captureMessage = captureMessage
+    })
+
+    afterEach(() => {
+      sentryService.captureException = originalCaptureException
+      sentryService.captureMessage = originalCaptureMessage
+    })
+
+    test('does NOT forward native fetch TypeError directly to Sentry', () => {
+      loggerErrorFn('[tahvel] GET Error:', new TypeError('Failed to fetch'))
+      expect(captureException).not.toHaveBeenCalled()
+      expect(captureMessage).not.toHaveBeenCalled()
+    })
+
+    test('does NOT forward when native fetch failure is wrapped via .cause', () => {
+      const cause = new TypeError('Failed to fetch')
+      const wrapper = new Error('[REDACTED-PII Error on GET /hois_back/journals/<id>/journalStudents] type=TypeError message=Failed to fetch')
+      wrapper.cause = cause
+      loggerErrorFn('[tahvel] GET Error:', wrapper)
+      expect(captureException).not.toHaveBeenCalled()
+      expect(captureMessage).not.toHaveBeenCalled()
+    })
+
+    test('still forwards a non-allowlisted TypeError to Sentry', () => {
+      loggerErrorFn('boom', new TypeError('Cannot read properties of undefined (reading \'foo\')'))
+      expect(captureException).toHaveBeenCalledTimes(1)
+    })
+
+    test('does NOT forward each cross-browser native fetch string when matched directly', () => {
+      // Sanity: the suppression must NOT be tied to one specific string.
+      for (const msg of [
+        'Failed to fetch',
+        'Load failed',
+        'NetworkError when attempting to fetch resource',
+        'Network request failed'
+      ]) {
+        captureException.mockClear()
+        loggerErrorFn('x', new TypeError(msg))
+        expect(captureException).not.toHaveBeenCalled()
       }
     })
   })
@@ -976,8 +1059,29 @@ describe('Logger EXPECTED_ERROR_PATTERN', () => {
     expect(EXPECTED_ERROR_PATTERN.test('API Error: empty response from https://tahvel.edu.ee/spa/assets/main.js')).toBe(false)
     expect(EXPECTED_ERROR_PATTERN.test('API Error: invalid JSON response from https://test.tahvel.eenet.ee/some/other/path')).toBe(false)
   })
+})
 
-  describe('_recordCapture PII redaction', () => {
+describe('Logger EXPECTED_NATIVE_FETCH_ERROR_PATTERN', () => {
+  test('matches each cross-browser native fetch failure string verbatim', () => {
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('Failed to fetch')).toBe(true)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('Load failed')).toBe(true)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('NetworkError when attempting to fetch resource')).toBe(true)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('Network request failed')).toBe(true)
+  })
+
+  test('does NOT match prefixed, suffixed, or wrapped variants', () => {
+    // Anchors must hold so wrapper strings (which contain the cause's message) do not match
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('TypeError: Failed to fetch')).toBe(false)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('Failed to fetch extra')).toBe(false)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('wrapper: Failed to fetch')).toBe(false)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('[REDACTED-PII Error on GET /hois_back/journals/<id>/journalStudents] type=TypeError message=Failed to fetch')).toBe(false)
+    // Unrelated browser errors stay routed to Sentry
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('Cannot read properties of undefined')).toBe(false)
+    expect(EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test('')).toBe(false)
+  })
+})
+
+describe('_recordCapture PII redaction', () => {
     const PII_BODY = { name: 'Test PersonA', personalCode: '30000000001' }
 
     beforeEach(() => {
@@ -1114,5 +1218,4 @@ describe('Logger EXPECTED_ERROR_PATTERN', () => {
       expect(captured.responseData).toEqual({ content: [{ id: 1 }] })
     })
 
-  })
 })

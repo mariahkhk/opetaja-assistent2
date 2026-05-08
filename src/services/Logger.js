@@ -31,6 +31,13 @@ let debugModeCache = false
 // wrapper strings that merely contain this text still reach Sentry.
 export const EXPECTED_ERROR_PATTERN = /^API Error: (?:(401|403|404|412)\b|(empty response|invalid JSON response) from https?:\/\/(?:tahvel\.edu\.ee|test\.tahvel\.eenet\.ee)\/hois_back\/)/
 
+// Native fetch failures are user-side network conditions (offline / DNS / CORS / connection
+// reset), not actionable bugs. The four strings below are hard-coded browser constants for
+// Chrome/Edge, Safari, Firefox, and older/RN runtimes respectively. Anchored start-and-end
+// so wrapper strings like "[tahvel] GET Error: ... type=TypeError" do not match — only the
+// raw cause's message does.
+export const EXPECTED_NATIVE_FETCH_ERROR_PATTERN = /^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource|Network request failed)$/
+
 // Initialize debug mode from storage
 chrome.storage.local.get([DEBUG_MODE_KEY], function(result) {
   debugModeCache = result[DEBUG_MODE_KEY] === true
@@ -140,9 +147,11 @@ export function error(message, ...args) {
   // wrapper whose `.message` no longer starts with "API Error:", so we re-test
   // the embedded original via the cause chain.
   const errorObj = args.find(a => a instanceof Error)
+  const matchesAnyPattern = msg =>
+    EXPECTED_ERROR_PATTERN.test(msg) || EXPECTED_NATIVE_FETCH_ERROR_PATTERN.test(msg)
   const isExpected = err => err && (
-    EXPECTED_ERROR_PATTERN.test(err.message) ||
-    (err.cause instanceof Error && EXPECTED_ERROR_PATTERN.test(err.cause.message))
+    matchesAnyPattern(err.message) ||
+    (err.cause instanceof Error && matchesAnyPattern(err.cause.message))
   )
   if (message instanceof Error && isExpected(message)) return
   if (errorObj && isExpected(errorObj)) return
