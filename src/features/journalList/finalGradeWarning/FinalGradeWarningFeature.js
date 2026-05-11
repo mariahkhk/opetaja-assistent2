@@ -192,15 +192,16 @@ export default class FinalGradeWarningFeature extends BaseFeature {
   }
 
   /**
-   * Check if a journal has missing final grades (ÕV outcome entries without grades).
+   * Check if a journal has missing final grades.
    *
-   * The /journalEntriesByDate response for SISSEKANNE_O entries has
-   * `studentOutcomeResults` which only contains students who HAVE grades.
-   * Students without grades are absent from the map. So we must compare
-   * the number of graded students against the total journal student count.
+   * Two entry types are considered:
+   * - SISSEKANNE_O (õpiväljundi sissekanne) — `studentOutcomeResults` map keyed by studentId.
+   *   When missing, falls back to /journals/{id}/journalOutcome/{outcomeId}.
+   * - SISSEKANNE_L (lõpptulemus) — `journalStudentResults` map keyed by journalStudentId,
+   *   where each value is an array of result objects with `grade.code`.
    *
-   * When `studentOutcomeResults` is missing entirely, we fall back to
-   * fetching the detailed outcome via /journals/{id}/journalOutcome/{outcomeId}.
+   * Returns true if any outcome OR final-grade entry has fewer graded students than the
+   * total active student count.
    *
    * @param {number} journalId
    * @returns {Promise<boolean>}
@@ -223,7 +224,8 @@ export default class FinalGradeWarningFeature extends BaseFeature {
       if (!Array.isArray(entries)) return false
 
       const outcomeEntries = entries.filter(e => e.entryType === 'SISSEKANNE_O')
-      if (outcomeEntries.length === 0) return false
+      const finalGradeEntries = entries.filter(e => e.entryType === 'SISSEKANNE_L')
+      if (outcomeEntries.length === 0 && finalGradeEntries.length === 0) return false
 
       const activeStudents = Array.isArray(journalStudents)
         ? journalStudents.filter(s => s.status === 'OPPURSTAATUS_O')
@@ -232,6 +234,7 @@ export default class FinalGradeWarningFeature extends BaseFeature {
       if (totalStudents === 0) return false
 
       const activeStudentIds = new Set(activeStudents.map(s => String(s.studentId)))
+      const activeJournalStudentIds = new Set(activeStudents.map(s => String(s.id)))
 
       for (const entry of outcomeEntries) {
         const results = entry.studentOutcomeResults
@@ -273,6 +276,28 @@ export default class FinalGradeWarningFeature extends BaseFeature {
 
         if (gradedCount < totalStudents) return true
       }
+
+      for (const entry of finalGradeEntries) {
+        const results = entry.journalStudentResults
+
+        if (!results || typeof results !== 'object') {
+          // No grade data available at all — treat as missing
+          return true
+        }
+
+        // journalStudentResults is keyed by journalStudentId; values are arrays of results
+        let gradedCount = 0
+        for (const [journalStudentId, resultList] of Object.entries(results)) {
+          if (!activeJournalStudentIds.has(String(journalStudentId))) continue
+          const hasGrade = Array.isArray(resultList)
+            ? resultList.some(r => r && r.grade && r.grade.code)
+            : !!(resultList && resultList.grade && resultList.grade.code)
+          if (hasGrade) gradedCount++
+        }
+
+        if (gradedCount < totalStudents) return true
+      }
+
       return false
     } catch (error) {
       Logger.error(`[${this.name}] Error checking missing final grades for journal ${journalId}:`, error)

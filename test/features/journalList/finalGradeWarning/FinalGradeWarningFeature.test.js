@@ -107,13 +107,102 @@ describe('FinalGradeWarningFeature', () => {
       { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_O' }
     ]
 
-    test('should return false when no outcome entries exist', async () => {
+    test('should return false when no outcome or final-grade entries exist', async () => {
       setupMockApi(
         [
-          { entryType: 'SISSEKANNE_L', entryDate: '2025-01-15' },
+          { entryType: 'SISSEKANNE_T', entryDate: '2025-01-15' },
           { entryType: 'SISSEKANNE_P', entryDate: '2025-01-16' }
         ],
         threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(false)
+    })
+
+    test('should return false when SISSEKANNE_L has grades for all active students', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_L',
+            journalStudentResults: {
+              '4620683': [{ journalStudentId: 4620683, grade: { code: 'KUTSEHINDAMINE_A' } }],
+              '4620684': [{ journalStudentId: 4620684, grade: { code: 'KUTSEHINDAMINE_A' } }],
+              '4620685': [{ journalStudentId: 4620685, grade: { code: 'KUTSEHINDAMINE_A' } }]
+            }
+          }
+        ],
+        threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(false)
+    })
+
+    test('should return true when SISSEKANNE_L has a student with null grade', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_L',
+            journalStudentResults: {
+              '4620683': [{ journalStudentId: 4620683, grade: { code: 'KUTSEHINDAMINE_A' } }],
+              '4620684': [{ journalStudentId: 4620684, grade: null }],
+              '4620685': [{ journalStudentId: 4620685, grade: { code: 'KUTSEHINDAMINE_A' } }]
+            }
+          }
+        ],
+        threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should return true when SISSEKANNE_L is missing students from journalStudentResults', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_L',
+            journalStudentResults: {
+              '4620683': [{ journalStudentId: 4620683, grade: { code: 'KUTSEHINDAMINE_A' } }]
+              // 4620684 and 4620685 absent
+            }
+          }
+        ],
+        threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should return true when SISSEKANNE_L has no journalStudentResults', async () => {
+      setupMockApi(
+        [{ entryType: 'SISSEKANNE_L' }],
+        threeStudents
+      )
+
+      const result = await feature.hasMissingFinalGrades(123)
+      expect(result).toBe(true)
+    })
+
+    test('should exclude academic break students from SISSEKANNE_L grade count', async () => {
+      setupMockApi(
+        [
+          {
+            entryType: 'SISSEKANNE_L',
+            journalStudentResults: {
+              '4620683': [{ journalStudentId: 4620683, grade: { code: 'KUTSEHINDAMINE_A' } }],
+              '4620684': [{ journalStudentId: 4620684, grade: { code: 'KUTSEHINDAMINE_A' } }]
+              // 4620685 absent — but they're on academic break, so shouldn't count
+            }
+          }
+        ],
+        [
+          { id: 4620683, studentId: 178481, status: 'OPPURSTAATUS_O' },
+          { id: 4620684, studentId: 178420, status: 'OPPURSTAATUS_O' },
+          { id: 4620685, studentId: 178399, status: 'OPPURSTAATUS_A' }
+        ]
       )
 
       const result = await feature.hasMissingFinalGrades(123)
