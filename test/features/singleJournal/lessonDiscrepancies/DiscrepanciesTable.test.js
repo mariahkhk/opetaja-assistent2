@@ -290,7 +290,7 @@ describe("DiscrepanciesTable", () => {
         ['lesson_without_auditoorne', 'tund, aga auditoorne'],
         ['independent_work_with_auditory', 'Iseseisev tööl ei saa olla'],
         ['praktiline_too_without_praktiline_checkbox', 'praktilise töö linnukest'],
-        ['missing_iseseisev_checkbox', 'Iseseisev õpe puudub'],
+        ['missing_iseseisev_checkbox', 'iseseiseva õppe linnukest'],
         ['missing_praktiline_checkbox', 'Praktiline töö puudub'],
         ['missing_auditoorne_checkbox', 'Auditoorne õpe puudub']
       ]

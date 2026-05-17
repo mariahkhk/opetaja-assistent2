@@ -625,7 +625,7 @@ export class DiscrepanciesTable {
       } else if (entry.validationResult.errorType === 'missing_auditoorne_checkbox') {
         message = 'Auditoorne õpe puudub'
       } else if (entry.validationResult.errorType === 'missing_iseseisev_checkbox') {
-        message = 'Iseseisev õpe puudub'
+        message = 'Sissekande liik on iseseisev õpe, aga iseseiseva õppe linnukest ei ole sees'
       } else if (entry.validationResult.errorType === 'journal_missing_independent_work') {
         message = 'Vigane sissekanne: päevikule pole määratud iseisevaid töid'
       } else if (entry.validationResult.errorType === 'missing_praktiline_checkbox') {
