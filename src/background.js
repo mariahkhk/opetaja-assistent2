@@ -11,46 +11,19 @@ sentryService.initBackground()
 Logger.info('Background script loaded')
 console.log('📔 Background script loaded - ' + new Date().toISOString())
 
-/**
- * Send update notification to all open Tahvel tabs
- * @param {string|null} version - Available version string or null
- */
-async function notifyTahvelTabsOfUpdate(version) {
-  const tabs = await chrome.tabs.query({
-    url: [
-      '*://tahvel.edu.ee/*',
-      '*://test.tahvel.eenet.ee/*'
-    ]
-  })
-
-  for (const tab of tabs) {
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'updateAvailable',
-      version
-    }).catch(() => {
-      // Tab may not have content script loaded yet, ignore
-    })
+// On fresh install, seed the banner-dismissed key to the current version so
+// first-time users don't see a "you updated" modal. Updates leave the key
+// untouched — the content script's checkForUpdate() then sees a mismatch
+// against the new manifest version and shows the modal on the next Tahvel
+// page load. Key kept in sync with DISMISS_KEY in VersionCheckService.js.
+function seedDismissKeyOnFreshInstall(details) {
+  if (details?.reason === 'install') {
+    chrome.storage.local.set({
+      OA_updateBannerDismissed: chrome.runtime.getManifest().version
+    }).catch(() => {})
   }
 }
-
-// Check for updates on service worker startup
-chrome.runtime.requestUpdateCheck()
-  .then(([status, details]) => {
-    if (status === 'update_available') {
-      Logger.info('Update available on startup:', details?.version)
-      notifyTahvelTabsOfUpdate(details?.version || null)
-    }
-  })
-  .catch(error => {
-    // Expected for sideloaded/dev installs
-    Logger.debug('Update check not available:', error.message)
-  })
-
-// Listen for Chrome-initiated update notifications (do NOT auto-reload)
-chrome.runtime.onUpdateAvailable.addListener(details => {
-  Logger.info('Update available via onUpdateAvailable:', details?.version)
-  notifyTahvelTabsOfUpdate(details?.version || null)
-})
+chrome.runtime.onInstalled.addListener(seedDismissKeyOnFreshInstall)
 
 // --- Cache maintenance alarm ---
 // Every 6 h: ask each open Tahvel tab to evict cache entries past their

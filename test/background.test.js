@@ -20,7 +20,7 @@ const onInstalledAdd = mock()
 const onStartupAdd = mock()
 const sessionGet = mock(async () => ({}))
 const sessionSet = mock(async () => undefined)
-const requestUpdateCheck = mock(async () => ['no_update', null])
+const storageLocalSet = mock(async () => undefined)
 
 global.chrome = {
   ...global.chrome,
@@ -41,13 +41,12 @@ global.chrome = {
     onMessage: { addListener: onMessageAdd },
     onInstalled: { addListener: onInstalledAdd },
     onStartup: { addListener: onStartupAdd },
-    onUpdateAvailable: { addListener: mock(handler => { global.__bgOnUpdateAvailable = handler }) },
-    requestUpdateCheck,
     getURL: path => `chrome-extension://test/${path}`,
     getManifest: () => ({ version: '1.0.0' })
   },
   storage: {
     ...global.chrome?.storage,
+    local: { ...global.chrome?.storage?.local, set: storageLocalSet },
     session: { get: sessionGet, set: sessionSet }
   }
 }
@@ -63,6 +62,8 @@ const onMessageHandler = onMessageAdd.mock.calls[0][0]
 const onAlarmHandler = onAlarmAdd.mock.calls[0][0]
 const onActivatedHandler = onActivatedAdd.mock.calls[0][0]
 const onUpdatedHandler = onUpdatedAdd.mock.calls[0][0]
+// First onInstalled listener is the dismiss-key seeder; second is cache maintenance
+const onInstalledSeederHandler = onInstalledAdd.mock.calls[0][0]
 
 describe('background.js', () => {
   beforeEach(() => {
@@ -295,38 +296,42 @@ describe('background.js', () => {
     })
   })
 
-  describe('update notification', () => {
-    it('fires sendMessage to all Tahvel tabs when onUpdateAvailable fires', async () => {
-      tabsQuery.mockClear()
-      tabsSendMessage.mockClear()
-      tabsQuery.mockImplementation(async () => [{ id: 1 }, { id: 2 }])
-
-      await global.__bgOnUpdateAvailable({ version: '1.2.3' })
-      await new Promise(r => setTimeout(r, 30))
-
-      expect(tabsQuery).toHaveBeenCalled()
-      expect(tabsSendMessage).toHaveBeenCalledTimes(2)
+  describe('onInstalled dismiss-key seeder', () => {
+    beforeEach(() => {
+      storageLocalSet.mockClear()
     })
 
-    it('handles onUpdateAvailable without details argument', async () => {
-      tabsQuery.mockClear()
-      tabsSendMessage.mockClear()
-      tabsQuery.mockImplementation(async () => [])
-
-      await global.__bgOnUpdateAvailable(null)
-      await new Promise(r => setTimeout(r, 30))
-
-      expect(tabsQuery).toHaveBeenCalled()
+    it('seeds OA_updateBannerDismissed on fresh install', () => {
+      onInstalledSeederHandler({ reason: 'install' })
+      expect(storageLocalSet).toHaveBeenCalledWith({
+        OA_updateBannerDismissed: '1.0.0'
+      })
     })
 
-    it('swallows sendMessage errors when notifying tabs of update', async () => {
-      tabsQuery.mockImplementation(async () => [{ id: 1 }])
-      tabsSendMessage.mockImplementation(() => Promise.reject(new Error('no-listener')))
+    it('does NOT seed on update reason', () => {
+      onInstalledSeederHandler({ reason: 'update' })
+      expect(storageLocalSet).not.toHaveBeenCalled()
+    })
 
-      await global.__bgOnUpdateAvailable({ version: '1.0.0' })
-      await new Promise(r => setTimeout(r, 30))
+    it('does NOT seed on chrome_update reason', () => {
+      onInstalledSeederHandler({ reason: 'chrome_update' })
+      expect(storageLocalSet).not.toHaveBeenCalled()
+    })
 
-      expect(tabsSendMessage).toHaveBeenCalled()
+    it('does NOT seed on shared_module_update reason', () => {
+      onInstalledSeederHandler({ reason: 'shared_module_update' })
+      expect(storageLocalSet).not.toHaveBeenCalled()
+    })
+
+    it('handles missing details argument without crashing', () => {
+      expect(() => onInstalledSeederHandler(null)).not.toThrow()
+      expect(() => onInstalledSeederHandler(undefined)).not.toThrow()
+      expect(storageLocalSet).not.toHaveBeenCalled()
+    })
+
+    it('swallows storage.local.set errors', () => {
+      storageLocalSet.mockImplementationOnce(() => Promise.reject(new Error('quota')))
+      expect(() => onInstalledSeederHandler({ reason: 'install' })).not.toThrow()
     })
   })
 

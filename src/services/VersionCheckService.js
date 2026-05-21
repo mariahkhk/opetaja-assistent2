@@ -1,16 +1,19 @@
 /**
- * VersionCheckService - Shows update modal when background script detects an update
+ * VersionCheckService - Shows a one-time "extension updated" modal on Tahvel.
  *
  * Architecture:
- * - background.js calls requestUpdateCheck() and listens for onUpdateAvailable
- * - When an update is detected, background.js sends a message to content script tabs
- * - This service listens for that message and shows a modal overlay on the Tahvel page
- * - Dismiss state is persisted to chrome.storage.session so the modal only shows once per version
+ * - background.js seeds OA_updateBannerDismissed = manifest.version on fresh
+ *   install (reason === 'install') so brand-new installs don't see a banner.
+ * - On every Tahvel page load, Extension.init() calls checkForUpdate(), which
+ *   reads chrome.storage.local and compares the dismissed version to
+ *   chrome.runtime.getManifest().version. If they differ, the modal renders.
+ * - Dismissing writes the current manifest version, suppressing the banner
+ *   until the next update.
  */
 
 import Logger from './Logger.js'
 
-const DISMISS_KEY = 'oa2_update_banner_dismissed'
+export const DISMISS_KEY = 'OA_updateBannerDismissed'
 
 class VersionCheckService {
   constructor() {
@@ -18,27 +21,16 @@ class VersionCheckService {
   }
 
   /**
-   * Register message listener for update notifications from background script.
-   * Call once during extension initialization.
+   * Show the update modal if the running extension version differs from the
+   * last version the user dismissed. Safe to call multiple times — at most
+   * one modal renders.
    */
-  listenForUpdates() {
-    chrome.runtime.onMessage.addListener(message => {
-      if (message.action === 'updateAvailable') {
-        Logger.info('[VersionCheckService] Received update notification:', message.version)
-        this.#showUpdateIfNotDismissed(message.version || null)
-      }
-    })
-  }
-
-  /**
-   * Check dismiss state before showing modal
-   * @param {string|null} version - Available version string
-   */
-  async #showUpdateIfNotDismissed(version) {
+  async checkForUpdate() {
+    const version = chrome.runtime.getManifest().version
     try {
-      const result = await chrome.storage.session.get(DISMISS_KEY)
-      if (result[DISMISS_KEY] && result[DISMISS_KEY] === version) {
-        Logger.debug('[VersionCheckService] Update already shown for this version, skipping')
+      const result = await chrome.storage.local.get(DISMISS_KEY)
+      if (result[DISMISS_KEY] === version) {
+        Logger.debug('[VersionCheckService] Banner already dismissed for this version, skipping')
         return
       }
     } catch (error) {
@@ -51,16 +43,16 @@ class VersionCheckService {
   /**
    * Dismiss and remove the modal
    * @param {HTMLElement} overlay - The modal overlay element
-   * @param {string|null} version - Version to persist as dismissed
+   * @param {string} version - Version to persist as dismissed
    */
   #dismiss(overlay, version) {
     overlay.remove()
-    chrome.storage.session.set({ [DISMISS_KEY]: version }).catch(() => {})
+    chrome.storage.local.set({ [DISMISS_KEY]: version }).catch(() => {})
   }
 
   /**
    * Show update notification as a modal overlay on the current page
-   * @param {string|null} version - Available version string
+   * @param {string} version - Current manifest version
    */
   #showModal(version) {
     if (this.shown || document.getElementById('oa2-update-modal')) return
@@ -100,16 +92,14 @@ class VersionCheckService {
     header.appendChild(icon)
     header.appendChild(title)
 
-    if (version) {
-      const versionEl = document.createElement('div')
-      versionEl.style.cssText = 'font-size:15px;color:#666;margin-bottom:16px'
-      versionEl.textContent = `Versioon ${version}`
-      header.appendChild(versionEl)
-    }
+    const versionEl = document.createElement('div')
+    versionEl.style.cssText = 'font-size:15px;color:#666;margin-bottom:16px'
+    versionEl.textContent = `Versioon ${version}`
+    header.appendChild(versionEl)
 
     const hint = document.createElement('p')
     hint.style.cssText = 'font-size:14px;color:#888;line-height:1.5;margin:0'
-    hint.textContent = 'Uus versioon on saadaval ja rakendub automaatselt.'
+    hint.textContent = 'Versioon on edukalt uuendatud.'
     header.appendChild(hint)
 
     // Footer

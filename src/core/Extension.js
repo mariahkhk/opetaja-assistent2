@@ -17,8 +17,11 @@ const tahvelExtension = {
   async init() {
     Logger.success('Initializing Õpetaja Assistent 2...')
 
-    // Register listener for update notifications from background script
-    versionCheckService.listenForUpdates()
+    // Show "extension updated" modal if the running version differs from the
+    // last dismissed one
+    versionCheckService.checkForUpdate().catch(err =>
+      Logger.debug('[VersionCheckService] checkForUpdate failed:', err?.message)
+    )
 
     // Add visual indicator to show the extension is active
     this.addVisualIndicator()
