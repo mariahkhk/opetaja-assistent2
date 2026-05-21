@@ -162,6 +162,24 @@ const domService = {
     style.textContent = css
     document.head.appendChild(style)
     return style
+  },
+
+  /**
+   * Write a value into an Angular reactive-form input so the bound model
+   * picks it up. The native `value` property setter is called via the
+   * prototype descriptor — assigning to `.value` directly bypasses the
+   * setter React/Angular monkey-patches, so the framework never sees the
+   * change. Then dispatch a bubbling `input` event for the framework
+   * listener.
+   * @param {HTMLInputElement} input
+   * @param {string} newValue
+   */
+  setReactiveInputValue(input, newValue) {
+    if (!input) return
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
+    if (setter) setter.call(input, newValue)
+    else input.value = newValue
+    input.dispatchEvent(new Event('input', { bubbles: true }))
   }
 }
 

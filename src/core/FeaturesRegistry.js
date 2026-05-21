@@ -159,6 +159,16 @@ export async function loadFeatures() {
     Logger.error('Error loading FinalGradesManagementFeature:', error)
   }
 
+  // Load attach ÕV to SISSEKANNE_I feature (always enabled)
+  try {
+    const AttachOvToSissekanneIFeature = (await import('../features/singleJournal/attachOvToSissekanneI/AttachOvToSissekanneIFeature.js')).default
+    const attachOvToSissekanneIFeature = new AttachOvToSissekanneIFeature()
+    allAvailableFeatures.singleJournal.push(attachOvToSissekanneIFeature)
+    Logger.debug('Feature "AttachOvToSissekanneIFeature" created')
+  } catch (error) {
+    Logger.error('Error loading AttachOvToSissekanneIFeature:', error)
+  }
+
   // Create a copy of the features structure for returning
   const featureGroups = {
     header: [...allAvailableFeatures.header],
