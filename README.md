@@ -16,7 +16,7 @@ effort and ensures data consistency across systems.
 - **Sync notifier**: Highlights journals where Kriit and Tahvel have diverged so the teacher can act before the next lesson.
 - **Outcomes sync**: Pushes Tahvel curriculum outcome assessments to Kriit and skips inaccessible journals gracefully.
 - **New assignment sync**: Mirrors freshly created Tahvel assignments to Kriit in the background.
-- **Final grade warning**: Flags journals where the study period has ended but final grades are still missing.
+- **Final grade warning**: Flags journals with missing final grades — yellow pill 7–2 days before the final lesson, red pill within 1 day of or past the final lesson.
 - **Lesson count warning**: Flags journals where the planned lesson count and timetable disagree.
 
 **Single journal page:**
@@ -24,6 +24,7 @@ effort and ensures data consistency across systems.
 - **Last lesson notification**: Strobing yellow banner showing the date of the final lesson so teachers don't forget independent-work entries.
 - **Highlight missing grades**: Marks empty grade cells red once an independent-work due date has passed.
 - **Highlight grade cells**: Color-codes grade cells by result so teachers can scan a journal at a glance.
+- **Assignment title helper row**: Injects an extra header row in the assignment table with shortened titles and learning-outcome badges (ÕV{n}) so teachers can identify columns at a glance, with a tooltip showing the full title on hover.
 - **Final grade tools**: Highlights students who already qualify for a final grade, and offers a one-click "add final grades" management UI.
 
 **Header (all Tahvel pages):**
@@ -32,7 +33,7 @@ effort and ensures data consistency across systems.
 
 **Cross-cutting:**
 - **Encrypted cache**: All persisted API responses are AES-256-GCM encrypted at rest with a per-install key stored in `chrome.storage.local`. Cache keys are HMAC-hashed so other extensions enumerating the Cache API see only opaque hex. Eviction runs every 6 h via `chrome.alarms`.
-- **Update notification**: Shows a banner when a new extension version is installed.
+- **Update notification**: Shows a modal overlay on the Tahvel page when Chrome detects a new extension version is available; dismissal is remembered per version so it only appears once.
 - **Sentry error reporting**: Captures crash reports filtered for known PII; expected 401/403/404/412 responses are excluded.
 - **Privacy-aware popup**: Settings stay in `chrome.storage.local` (never synced to Google's servers); the saved Kriit API key is never loaded into the popup field — a separate indicator shows whether one is stored — and the URL is HTTPS-only (with a `localhost` exception for development).
 - **Debug mode**: Toggleable via the popup; logs are tagged with "✨" for easy filtering, and request/response bodies for known-PII Kriit endpoints are scrubbed to `[REDACTED-PII]` in the debug buffer.
@@ -58,7 +59,7 @@ src/
 │   ├── icons/                             # SVG icon assets (incompleteScore.svg)
 │   ├── scripts/                           # Build and watch scripts (build.js, watch.js)
 │   ├── styles/                            # CSS for injected UI
-│   └── templates/                         # manifest.json template, icon.svg
+│   └── templates/                         # manifest.json, popup.html, icon.svg
 ├── core/
 │   ├── Extension.js                       # Main controller
 │   ├── BaseFeature.js                     # Lifecycle base class for features
@@ -77,6 +78,7 @@ src/
 │   │   └── lessonCountWarning/LessonCountWarningFeature.js
 │   └── singleJournal/                     # Features for an individual journal page
 │       ├── addFinalGrades/                # FinalGradeHighlighter + FinalGradesManagementFeature
+│       ├── assignmentTitleRow/            # AssignmentTitleRowFeature (assignment header helper row)
 │       ├── highlightFinalGrades/          # HighlightFinalGradesFeature
 │       ├── highlightGradeCells/           # HighlightGradeCellsFeature (color-by-result)
 │       ├── highlightMissingGrades/        # HighlightMissingGradesFeature
@@ -84,11 +86,16 @@ src/
 │       └── lessonDiscrepancies/           # DiscrepanciesTable + LessonDiscrepanciesFeature
 │                                          # + IndependentWorkCapacityFeature + LessonTimes.json
 ├── lib/                                   # Pure helpers shared across features
+│   ├── EstonianHyphenator.js
+│   ├── extractOutcomeNumbersFromEntryName.js
 │   ├── fetchTeacherJournals.js
 │   ├── finalGradeWarning.js
+│   ├── isTahvelAuthenticated.js
+│   ├── journalTableHeaders.js
 │   ├── kriitSyncCheck.js
 │   ├── parseJsonResponse.js
-│   └── schoolId.js
+│   ├── schoolId.js
+│   └── studyYear.js
 └── services/                              # Shared singletons
     ├── ApiService.js                      # HTTP client for Tahvel & Kriit
     ├── BannerService.js                   # In-page banner UI
@@ -174,7 +181,7 @@ Run the test suite:
 bun test
 ```
 
-[Husky](https://typicode.github.io/husky/) is installed automatically via the `prepare` script in `package.json`. The `pre-push` hook runs `bun run lint` and `bun test`; `git push` is blocked if either fails, so fix them locally first.
+[Husky](https://typicode.github.io/husky/) is installed automatically via the `prepare` script in `package.json`. The `pre-push` hook runs `bun run lint`, `bun test`, and the full Playwright E2E suite (`bun run test:e2e`); `git push` is blocked if any of them fails, so fix them locally first.
 
 > If you install dependencies in a directory that isn't a Git working tree (e.g. a downloaded zip), the `prepare` script will fail trying to set up Husky. Clone via `git clone` instead.
 
