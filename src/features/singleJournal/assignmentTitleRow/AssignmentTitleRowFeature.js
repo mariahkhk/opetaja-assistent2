@@ -8,6 +8,7 @@ import {
   ASSIGNMENT_TITLE_ROW_CLASS,
   getNativeJournalHeaderRows
 } from '../../../lib/journalTableHeaders.js'
+import { findEntryIndexForHeader } from '../../../lib/journalEntryColumnMatcher.js'
 
 const CONTENT_FALLBACK_LABELS = new Set([
   'e-õpe',
@@ -609,49 +610,7 @@ class AssignmentTitleRowFeature extends BaseFeature {
   }
 
   _findEntryIndexForHeader(headerCell, journalEntries, usedEntryIndexes) {
-    const headerDate = this._getHeaderDayMonth(headerCell)
-    if (!headerDate || !journalEntries.length) return null
-
-    const headerEntryType = this._getHeaderEntryType(headerCell)
-    let fallbackIndex = null
-
-    for (let index = 0; index < journalEntries.length; index++) {
-      if (usedEntryIndexes.has(index)) continue
-
-      const entry = journalEntries[index]
-      if (this._getEntryDayMonth(entry) !== headerDate) continue
-      if (headerEntryType && entry.entryType === headerEntryType) return index
-      if (fallbackIndex === null) fallbackIndex = index
-    }
-
-    return fallbackIndex
-  }
-
-  _getHeaderDayMonth(headerCell) {
-    const match = (headerCell.textContent || '').match(/(\d{1,2})[./](\d{1,2})/)
-    if (!match) return null
-    return `${String(match[1]).padStart(2, '0')}.${String(match[2]).padStart(2, '0')}`
-  }
-
-  _getEntryDayMonth(entry) {
-    if (!entry?.entryDate) return null
-    const date = new Date(entry.entryDate)
-    if (Number.isNaN(date.getTime())) return null
-    return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`
-  }
-
-  _getHeaderEntryType(headerCell) {
-    const background = this._getBackgroundColor(headerCell)
-    if (background === 'rgb(252,231,243)' || background === '#fce7f3') return 'SISSEKANNE_H'
-    if (background === 'rgb(236,252,203)' || background === '#ecfccb') return 'SISSEKANNE_I'
-    if (background === 'rgb(204,251,241)' || background === '#ccfbf1') return 'SISSEKANNE_P'
-    return null
-  }
-
-  _getBackgroundColor(element) {
-    const inline = element.style?.backgroundColor
-    const computed = window.getComputedStyle ? window.getComputedStyle(element).backgroundColor : ''
-    return (inline || computed || '').replace(/\s+/g, '').toLowerCase()
+    return findEntryIndexForHeader(headerCell, journalEntries, usedEntryIndexes)
   }
 
   _getEntryTitle(entry) {

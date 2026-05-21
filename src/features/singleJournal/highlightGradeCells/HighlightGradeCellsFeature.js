@@ -2,6 +2,7 @@ import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { styleService } from '../../../services/StyleService.js'
 import { getNativeJournalHeaderCells } from '../../../lib/journalTableHeaders.js'
+import { findEntryIndexForHeader } from '../../../lib/journalEntryColumnMatcher.js'
 
 const POSITIVE_GRADES = new Set(['A', '3', '4', '5'])
 const NEGATIVE_GRADES = new Set(['MA', '1', '2', 'X'])
@@ -568,48 +569,7 @@ class HighlightGradeCellsFeature extends BaseFeature {
   }
 
   _findEntryIndexForHeader(header, usedEntryIndexes) {
-    const headerDate = this._getHeaderDayMonth(header)
-    if (!headerDate) return null
-
-    const headerEntryType = this._getHeaderEntryType(header)
-    let fallbackIndex = null
-    for (let index = 0; index < this._journalEntries.length; index++) {
-      if (usedEntryIndexes.has(index)) continue
-
-      const entry = this._journalEntries[index]
-      if (this._getEntryDayMonth(entry) !== headerDate) continue
-      if (headerEntryType && entry.entryType === headerEntryType) return index
-      if (fallbackIndex === null) fallbackIndex = index
-    }
-
-    return fallbackIndex
-  }
-
-  _getHeaderDayMonth(header) {
-    const match = (header.textContent || '').match(/(\d{1,2})[./](\d{1,2})/)
-    if (!match) return null
-    return `${String(match[1]).padStart(2, '0')}.${String(match[2]).padStart(2, '0')}`
-  }
-
-  _getEntryDayMonth(entry) {
-    if (!entry?.entryDate) return null
-    const date = new Date(entry.entryDate)
-    if (Number.isNaN(date.getTime())) return null
-    return `${String(date.getDate()).padStart(2, '0')}.${String(date.getMonth() + 1).padStart(2, '0')}`
-  }
-
-  _getHeaderEntryType(header) {
-    const background = this._getBackgroundColor(header)
-    if (background === 'rgb(252,231,243)' || background === '#fce7f3') return 'SISSEKANNE_H'
-    if (background === 'rgb(236,252,203)' || background === '#ecfccb') return 'SISSEKANNE_I'
-    if (background === 'rgb(204,251,241)' || background === '#ccfbf1') return 'SISSEKANNE_P'
-    return null
-  }
-
-  _getBackgroundColor(element) {
-    const inline = element.style?.backgroundColor
-    const computed = window.getComputedStyle ? window.getComputedStyle(element).backgroundColor : ''
-    return (inline || computed || '').replace(/\s+/g, '').toLowerCase()
+    return findEntryIndexForHeader(header, this._journalEntries, usedEntryIndexes)
   }
 
   _setupTooltipListeners() {

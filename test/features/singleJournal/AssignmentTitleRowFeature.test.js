@@ -374,6 +374,64 @@ describe('AssignmentTitleRowFeature', () => {
     expect(document.querySelector('thead tr.oa2-assignment-outcome-row .oa2-assignment-outcome-row__badge')?.textContent.trim()).toBe('ÕV1')
   })
 
+  test('renders title + ÕV badges for a dateless entry whose header has no date text', async () => {
+    // Tahvel renders the column for an entry saved without a date as a
+    // header with no date string. Pre-fix, _findEntryIndexForHeader
+    // short-circuited on null headerDate so the title row and ÕV badge
+    // row stayed empty above this column. The shared matcher now falls
+    // back to the first unmatched dateless entry, preferring one whose
+    // entryType matches the column background colour.
+    const wrapper = document.createElement('div')
+    wrapper.id = 'studentTable'
+    const table = document.createElement('table')
+    table.className = 'tahvel-table with-borders'
+    const thead = document.createElement('thead')
+    const headerRow = document.createElement('tr')
+    const nrTh = document.createElement('th')
+    nrTh.textContent = 'Nr'
+    const oppijaTh = document.createElement('th')
+    oppijaTh.textContent = 'Õppija'
+    const datelessTh = document.createElement('th')
+    datelessTh.style.backgroundColor = 'rgb(236, 252, 203)'
+    const datedTh = document.createElement('th')
+    datedTh.style.backgroundColor = 'rgb(204, 251, 241)'
+    datedTh.textContent = '13.04'
+    headerRow.append(nrTh, oppijaTh, datelessTh, datedTh)
+    thead.appendChild(headerRow)
+    table.appendChild(thead)
+    const tbody = document.createElement('tbody')
+    const studentRow = document.createElement('tr')
+    for (const cellText of ['1', 'Student 1', 'A', 'A']) {
+      const td = document.createElement('td')
+      td.textContent = cellText
+      studentRow.appendChild(td)
+    }
+    tbody.appendChild(studentRow)
+    table.appendChild(tbody)
+    wrapper.appendChild(table)
+    document.body.appendChild(wrapper)
+
+    feature.api = {
+      tahvel: {
+        get: mock(async () => [
+          { id: 1, entryDate: null, entryType: 'SISSEKANNE_I', nameEt: 'Iseseisev töö (ÕV3)', content: '' },
+          { id: 2, entryDate: '2026-04-13', entryType: 'SISSEKANNE_P', nameEt: 'Praktiline töö', content: '' }
+        ])
+      }
+    }
+
+    await feature.run()
+
+    const titleRow = document.querySelector('thead tr.oa2-assignment-title-row')
+    const titleCells = Array.from(titleRow.children).map(cell => stripSoftHyphens(cell.textContent.trim()))
+    expect(titleCells).toEqual(['', 'Iseseisev töö', 'Praktiline töö'])
+
+    const outcomeRow = document.querySelector('thead tr.oa2-assignment-outcome-row')
+    expect(outcomeRow).not.toBeNull()
+    const badges = Array.from(outcomeRow.querySelectorAll('.oa2-assignment-outcome-row__badge')).map(b => b.textContent.trim())
+    expect(badges).toEqual(['ÕV3'])
+  })
+
   test('renders an ÕV badge row when at least one entry has outcomes', async () => {
     document.body.innerHTML = `
       <div id="studentTable">
