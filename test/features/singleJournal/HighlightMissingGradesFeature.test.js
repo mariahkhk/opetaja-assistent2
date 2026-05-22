@@ -793,6 +793,82 @@ describe('HighlightMissingGradesFeature', () => {
       })
     })
 
+    test('does not highlight cells whose inner text shows grade history "4 * / 4 * / 3"', async () => {
+      // Regression: Tahvel renders grade-modification history inside the cell
+      // as e.g. "4 * / 4 * / 3" — only the trailing segment is the current
+      // grade, and validation must extract it instead of failing the whole
+      // string. See journal 426365 row "Ujoü Nqõkytküõ".
+      const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html><body>
+          <table class="journalTable">
+            <thead><tr><th>Name</th><th>Code</th><th style="background-color: rgb(236, 252, 203)">01.05</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Student With History</td>
+                <td>12345</td>
+                <td><div class="grade-cell"><span> 4</span><span> *</span><span> / </span><span> 4</span><span> *</span><span> / </span><span> 3 </span></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </body></html>
+      `)
+      global.document = dom.window.document
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' }, journalListSync: null, getComputedStyle: (el) => ({ backgroundColor: el.style.backgroundColor }) }
+
+      feature.api = {
+        tahvel: {
+          get: mock(async () => [{ id: 1, entryDate: '2024-05-01', entryType: 'SISSEKANNE_I', homeworkDuedate: '2024-05-01' }])
+        }
+      }
+
+      feature._isUpdating = false
+      await feature.run()
+
+      const cell = dom.window.document.querySelector('tbody tr td:nth-child(3)')
+      expect(cell.classList.contains('highlight-missing-grade')).toBe(false)
+    })
+
+    test('does not highlight cells whose API result is { code: "KUTSEHINDAMINE_4" }', async () => {
+      // Regression: ApiService returns grade as { code: "KUTSEHINDAMINE_4" }.
+      // Without prefix stripping, validation rejected every API-sourced grade.
+      const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html><body>
+          <table class="journalTable">
+            <thead><tr><th>Name</th><th>Code</th><th style="background-color: rgb(236, 252, 203)">01.05</th></tr></thead>
+            <tbody>
+              <tr>
+                <td data-student-id="555">Student</td>
+                <td>12345</td>
+                <td data-journal-student="555"></td>
+              </tr>
+            </tbody>
+          </table>
+        </body></html>
+      `)
+      global.document = dom.window.document
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' }, journalListSync: null, getComputedStyle: (el) => ({ backgroundColor: el.style.backgroundColor }) }
+
+      feature.api = {
+        tahvel: {
+          get: mock(async () => [{
+            id: 1,
+            entryDate: '2024-05-01',
+            entryType: 'SISSEKANNE_I',
+            homeworkDuedate: '2024-05-01',
+            journalStudentResults: { '555': [{ grade: { code: 'KUTSEHINDAMINE_4' }, absence: null }] }
+          }])
+        }
+      }
+
+      feature._isUpdating = false
+      await feature.run()
+
+      const cell = dom.window.document.querySelector('tbody tr td[data-journal-student="555"]')
+      expect(cell.classList.contains('highlight-missing-grade')).toBe(false)
+    })
+
     test('falls back to "Hinne puudub" tooltip when due date cannot be parsed from header', async () => {
       const dom = new JSDOM(`
         <!DOCTYPE html>

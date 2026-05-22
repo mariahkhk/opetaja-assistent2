@@ -404,6 +404,17 @@ class HighlightMissingGradesFeature extends BaseFeature {
         return (c.textContent || '').trim()
       }
 
+      // Normalize a grade value from either API (`KUTSEHINDAMINE_4`) or DOM
+      // text. The DOM cell renders grade history as `"4 * / 4 * / 3"` where
+      // the last segment is the current grade and `*` marks a modification.
+      const normalizeGrade = raw => {
+        if (raw === null || raw === undefined) return ''
+        const stripped = String(raw).replace(/KUTSEHINDAMINE_/g, '')
+        const segments = stripped.split('/')
+        const last = segments[segments.length - 1] || ''
+        return last.replace(/\*/g, '').replace(/\s+/g, '').toUpperCase()
+      }
+
       rows.forEach((row, _rowIdx) => {
         const cells = Array.from(row.children)
         // Check if student has AP status in their name cell (check first 3 columns to be safe)
@@ -452,6 +463,7 @@ class HighlightMissingGradesFeature extends BaseFeature {
               else if (/^\s*[HP]\s*$/i.test(txt)) absence = txt.trim().toUpperCase()
             }
           }
+          grade = normalizeGrade(grade)
           // Unified valid grades set
           const validGrades = new Set(['A', 'MA', '1', '2', '3', '4', '5'])
           // Highlight if grade is missing (not in validGrades) and absence is empty or PUUDUMINE_H/PUUDUMINE_P/H/P

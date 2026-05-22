@@ -404,7 +404,13 @@ class HighlightGradeCellsFeature extends BaseFeature {
   }
 
   _normalizeGradeValue(value) {
-    return (value || '').replace(/\s+/g, ' ').trim().toUpperCase()
+    // Cells with grade-modification history render as "4 * / 4 * / 3" where
+    // only the trailing segment is the current grade and `*` marks a change.
+    // Take just the last grade so classification reflects the current value.
+    const collapsed = (value || '').replace(/\s+/g, ' ').trim().toUpperCase()
+    if (!collapsed.includes('/')) return collapsed
+    const segments = collapsed.split('/')
+    return (segments[segments.length - 1] || '').replace(/\*/g, '').replace(/\s+/g, '').toUpperCase()
   }
 
   _getGradeType(value) {

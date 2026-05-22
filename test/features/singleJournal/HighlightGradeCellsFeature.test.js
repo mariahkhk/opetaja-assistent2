@@ -34,6 +34,27 @@ describe('HighlightGradeCellsFeature', () => {
     expect(feature._getGradeType('V')).toBeNull()
   })
 
+  test('normalises grade-history strings to the trailing current grade', () => {
+    // Regression: cells with grade-modification history render as
+    // "4 * / 4 * / 3" (current=3) or "4 * / 2" (current=2). The classifier
+    // must read only the trailing segment, otherwise the full string matches
+    // neither POSITIVE nor NEGATIVE and the cell loses its colour.
+    expect(feature._normalizeGradeValue('4 * / 4 * / 3')).toBe('3')
+    expect(feature._normalizeGradeValue(' 4 * /  4 * /  3 ')).toBe('3')
+    expect(feature._normalizeGradeValue('4 * / 2')).toBe('2')
+    expect(feature._normalizeGradeValue('X * / 5')).toBe('5')
+    // No history → unchanged behaviour
+    expect(feature._normalizeGradeValue('4')).toBe('4')
+    expect(feature._normalizeGradeValue(' MA ')).toBe('MA')
+    expect(feature._normalizeGradeValue('')).toBe('')
+  })
+
+  test('classifies cells whose text shows grade history by the current grade', () => {
+    expect(feature._getGradeType(feature._normalizeGradeValue('4 * / 4 * / 3'))).toBe('positive')
+    expect(feature._getGradeType(feature._normalizeGradeValue('4 * / 2'))).toBe('negative')
+    expect(feature._getGradeType(feature._normalizeGradeValue('5 * / X'))).toBe('negative')
+  })
+
   test('injects green text color for positive grade text', () => {
     feature.injectCSS()
 
