@@ -822,9 +822,18 @@ export class JournalSyncBannerService {
 
     // Add error title - use different titles based on error type
     let errorTitle = 'Viga'
+    let displayMessage = error
     const normalizedError = String(error || '').toLowerCase()
 
-    if (error && normalizedError.includes('403')) {
+    // Friendly mapping for HTTP-status and network errors. The raw error
+    // (e.g. "Error calling Kriit API: API Error: 404 ([REDACTED-PII])") is
+    // not user-actionable — replace it with Estonian guidance. The raw
+    // string stays in console via Logger.error at the call site.
+    const friendly = this._getFriendlyErrorInfo(error)
+    if (friendly) {
+      errorTitle = friendly.title
+      displayMessage = friendly.message
+    } else if (error && normalizedError.includes('403')) {
       if (error.includes('Permission denied') || error.includes('rights to modify')) {
         errorTitle = 'Õiguste viga'
       } else {
@@ -842,7 +851,7 @@ export class JournalSyncBannerService {
 
     // Add error message as text, not HTML. Assignment names can come from Tahvel/Kriit.
     const message = domService.createAndInsertElement('p', {}, '', banner)
-    message.textContent = error
+    message.textContent = displayMessage
 
     // Add appropriate action buttons and help text based on error type
     this._addSyncErrorActions(banner, error, options)
@@ -851,6 +860,84 @@ export class JournalSyncBannerService {
     bannerService.currentBanner = scopedContainer
 
     Logger.debug('Sync error banner created and displayed')
+  }
+
+  /**
+   * Map raw API/network errors to user-facing Estonian title + body.
+   * Returns null when the error is not an HTTP-status or network failure;
+   * the caller then falls back to the legacy per-text title logic.
+   * @private
+   */
+  _getFriendlyErrorInfo(error) {
+    const raw = String(error || '')
+    if (!raw) return null
+    const lower = raw.toLowerCase()
+    const statusMatch = raw.match(/API Error:\s*(\d{3})/i)
+    const status = statusMatch ? Number(statusMatch[1]) : null
+
+    // 403 has its own dedicated title + action-paragraph flow downstream
+    // (auth vs. permission). Leave it to the legacy handler.
+    if (status === 403) return null
+
+    if (status === 401) {
+      return {
+        title: 'Autentimise viga',
+        message: 'Kriit API võti on vale või puudub. Kontrollige Kriit API võtit laienduse seadetes.'
+      }
+    }
+    if (status === 404) {
+      return {
+        title: 'Kriidi aadress ei vasta',
+        message: 'Kontrollige Kriidi aadressi laienduse seadetes ja proovige uuesti.'
+      }
+    }
+    if (status === 429) {
+      return {
+        title: 'Liiga palju päringuid',
+        message: 'Kriidile tehti liiga palju päringuid. Proovige paari minuti pärast uuesti.'
+      }
+    }
+    if (status === 408 || status === 504) {
+      return {
+        title: 'Päring aegus',
+        message: 'Kriit ei vastanud õigeaegselt. Proovige mõne hetke pärast uuesti.'
+      }
+    }
+    if (status && status >= 500 && status < 600) {
+      return {
+        title: 'Kriidi server ei vasta',
+        message: 'Kriit ei ole hetkel kättesaadav. Proovige paari minuti pärast uuesti.'
+      }
+    }
+    if (status === 400 || status === 422) {
+      return {
+        title: 'Vigane päring',
+        message: 'Päringut ei õnnestunud töödelda. Proovige uuesti.'
+      }
+    }
+    // Network/transport failures — fetch throws these without an HTTP status
+    if (
+      lower.includes('failed to fetch') ||
+      lower.includes('networkerror') ||
+      lower.includes('load failed') ||
+      lower.includes('network request failed') ||
+      lower.includes('err_network') ||
+      lower.includes('err_internet_disconnected')
+    ) {
+      return {
+        title: 'Võrgu viga',
+        message: 'Ühendus Kriidiga ebaõnnestus. Kontrollige internetiühendust ja Kriidi aadressi laienduse seadetes.'
+      }
+    }
+    // Safety net: any other API-shaped error must NOT expose internal details
+    // (status codes, "[REDACTED-PII]" markers, English boilerplate) to the user.
+    if (raw.includes('[REDACTED-PII]') || /API Error:/i.test(raw) || /Error calling Kriit API/i.test(raw)) {
+      return {
+        title: 'Kriidiga suhtlus ebaõnnestus',
+        message: 'Proovige mõne hetke pärast uuesti.'
+      }
+    }
+    return null
   }
 
   /**

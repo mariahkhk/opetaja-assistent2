@@ -1295,4 +1295,83 @@ describe("JournalSyncBanner - integration", () => {
       expect(onClearCache).toHaveBeenCalled()
     })
   })
+
+  describe('showSyncErrorBanner — friendly HTTP/network mapping', () => {
+    const bodyText = () => document.querySelector('.ta-sync-error > p').textContent
+    const titleText = () => document.querySelector('h1').textContent
+
+    it('maps 404 to "Kriidi aadress ei vasta" and hides the raw redacted error', () => {
+      service.showSyncErrorBanner('Error calling Kriit API: API Error: 404 ([REDACTED-PII])')
+      expect(titleText()).toBe('Kriidi aadress ei vasta')
+      expect(bodyText()).not.toContain('REDACTED-PII')
+      expect(bodyText()).not.toContain('API Error:')
+      expect(bodyText()).toContain('Kriidi')
+    })
+
+    it('maps 429 to "Liiga palju päringuid"', () => {
+      service.showSyncErrorBanner('API Error: 429 Too Many Requests')
+      expect(titleText()).toBe('Liiga palju päringuid')
+      expect(bodyText()).not.toContain('429')
+    })
+
+    it('maps 500 to "Kriidi server ei vasta"', () => {
+      service.showSyncErrorBanner('API Error: 500 Internal Server Error')
+      expect(titleText()).toBe('Kriidi server ei vasta')
+      expect(bodyText()).not.toContain('500')
+    })
+
+    it('maps 503 to "Kriidi server ei vasta"', () => {
+      service.showSyncErrorBanner('API Error: 503 Service Unavailable')
+      expect(titleText()).toBe('Kriidi server ei vasta')
+    })
+
+    it('maps 504 to "Päring aegus"', () => {
+      service.showSyncErrorBanner('API Error: 504 Gateway Timeout')
+      expect(titleText()).toBe('Päring aegus')
+    })
+
+    it('maps 422 to "Vigane päring"', () => {
+      service.showSyncErrorBanner('API Error: 422 Unprocessable Entity')
+      expect(titleText()).toBe('Vigane päring')
+    })
+
+    it('maps "Failed to fetch" to "Võrgu viga"', () => {
+      service.showSyncErrorBanner('TypeError: Failed to fetch')
+      expect(titleText()).toBe('Võrgu viga')
+      expect(bodyText()).not.toContain('Failed to fetch')
+    })
+
+    it('maps NetworkError to "Võrgu viga"', () => {
+      service.showSyncErrorBanner('NetworkError when attempting to fetch resource')
+      expect(titleText()).toBe('Võrgu viga')
+    })
+
+    it('does not override 403 mapping (auth still wins)', () => {
+      service.showSyncErrorBanner('API Error: 403 Unauthorized')
+      expect(titleText()).toBe('Autentimise viga')
+    })
+
+    it('falls through to generic title for unknown errors', () => {
+      service.showSyncErrorBanner('something else entirely')
+      expect(titleText()).toBe('Viga')
+      expect(bodyText()).toBe('something else entirely')
+    })
+
+    it('safety net: an unmapped "API Error:" string never shows raw to the user', () => {
+      service.showSyncErrorBanner('API Error: 418 I am a teapot')
+      expect(bodyText()).not.toContain('API Error:')
+      expect(bodyText()).not.toContain('418')
+      expect(bodyText()).not.toContain('teapot')
+    })
+
+    it('safety net: a "[REDACTED-PII]" marker never reaches the user', () => {
+      service.showSyncErrorBanner('Some other error containing [REDACTED-PII] somewhere')
+      expect(bodyText()).not.toContain('REDACTED-PII')
+    })
+
+    it('safety net: "Error calling Kriit API" boilerplate is replaced', () => {
+      service.showSyncErrorBanner('Error calling Kriit API: weird unmapped failure')
+      expect(bodyText()).not.toContain('Error calling Kriit API')
+    })
+  })
 })

@@ -1778,8 +1778,10 @@ class JournalListSyncFeature extends BaseFeature {
       } catch (error) {
         Logger.error('Error calling Kriit API:', error)
 
-        // Show error details
-        this.error = `Error calling Kriit API: ${error.message}`
+        // Pass error.message through unchanged — JournalSyncBanner maps
+        // HTTP status / network errors to friendly Estonian text and never
+        // exposes "[REDACTED-PII]" or English boilerplate to the user.
+        this.error = error.message || 'Kriidiga suhtlemisel tekkis viga.'
         this.isLoading = false
         this.updateUI()
         return

@@ -4413,8 +4413,12 @@ describe("JournalListSync - Sync flow and lifecycle", () => {
         kriit: { authToken: 'tkn', post: mock(async () => { throw new Error('Network down') }), enabled: true, baseUrl: 'https://kriit.example.com/api' }
       }
       await journalListSync.proceedWithKriitApiCall([{ subjectExternalId: 7, subjectName: 'X', assignments: [] }])
-      expect(journalListSync.error).toContain('Error calling Kriit API')
+      // The English "Error calling Kriit API:" prefix is intentionally dropped —
+      // raw error.message flows through so JournalSyncBanner can map it to a
+      // user-friendly Estonian string. The original message is preserved here
+      // so debug captures and the banner's safety net still see the cause.
       expect(journalListSync.error).toContain('Network down')
+      expect(journalListSync.error).not.toContain('Error calling Kriit API')
     })
 
     test('subjectsCache is populated from journalData', async () => {
