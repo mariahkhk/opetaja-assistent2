@@ -653,4 +653,55 @@ describe('LastLessonNotificationFeature', () => {
       // Should complete without errors
     })
   })
+
+  describe('independent work deadline detection', () => {
+    test('fetches entry details for homeworkDuedate but displays entryDate', async () => {
+      const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+      global.document = dom.window.document
+      global.window = { location: { href: 'https://tahvel.edu.ee/#/journal/12345/edit' }, __lastLessonNotification_independentWorkMessage: undefined }
+
+      const fetchedUrls = []
+      feature.comparisonDate = '2024-10-01'
+
+      feature.api = {
+        tahvel: {
+          get: mock(async (url) => {
+            fetchedUrls.push(url)
+            if (url.includes('journalEntriesByDate')) {
+              return [
+                { id: 501, entryDate: '2024-12-01', entryType: 'SISSEKANNE_I' },
+                { id: 2, entryDate: '2024-11-02', entryType: 'SISSEKANNE_T' }
+              ]
+            }
+            if (url.includes('journalEntry/501')) {
+              return { id: 501, entryDate: '2024-12-01', entryType: 'SISSEKANNE_I', homeworkDuedate: '2024-12-15' }
+            }
+            if (url.includes('timetableevents')) {
+              return {
+                timetableEvents: [{ date: '2024-11-10', nameEt: 'Lesson', journalId: 12345 }]
+              }
+            }
+            if (url.includes('journals/12345')) {
+              return {
+                id: 12345,
+                school: { id: 9 },
+                journalTeachers: [{ id: 123 }],
+                lessonHours: { capacityHours: [{ capacity: 'MAHT_a', plannedHours: 1 }] }
+              }
+            }
+            return {}
+          })
+        }
+      }
+
+      await feature.activate()
+
+      const entryDetailFetch = fetchedUrls.find(u => u.includes('journalEntry/501'))
+      expect(entryDetailFetch).toBeDefined()
+
+      const msg = global.window.__lastLessonNotification_independentWorkMessage
+      expect(msg).toBeDefined()
+      expect(msg[0]).toContain('01.12.2024')
+    })
+  })
 })

@@ -137,23 +137,28 @@ export default class LastLessonNotificationFeature extends BaseFeature {
     if (lastLessonDate && Array.isArray(journalEntries)) {
       const lastLesson = new Date(lastLessonDate)
       lastLesson.setHours(0, 0, 0, 0)
-      const futureIndependents = journalEntries
-        .filter(entry => entry.entryType === 'SISSEKANNE_I')
+      const independentEntries = journalEntries.filter(entry => entry.entryType === 'SISSEKANNE_I' && entry.id)
+      const detailedEntries = await Promise.all(
+        independentEntries.map(entry =>
+          this.api.tahvel.get(`/journals/${journalId}/journalEntry/${entry.id}`, {}, { cache: true, cacheExpiration: 6e4 }).catch(() => entry)
+        )
+      )
+      const futureIndependents = detailedEntries
         .map(entry => {
-          const dueDateStr = entry.homeworkDuedate || entry.entryDate
-          if (!dueDateStr) return null
-          const deadline = new Date(dueDateStr)
+          const homeworkDue = entry.homeworkDuedate
+          if (!homeworkDue) return null
+          const deadline = new Date(homeworkDue)
           deadline.setHours(0, 0, 0, 0)
-          return { deadline, entry }
+          if (deadline <= lastLesson) return null
+          return { deadline, entryDate: entry.entryDate, entry }
         })
         .filter(Boolean)
-        .filter(({ deadline }) => deadline > lastLesson)
         .sort((a, b) => a.deadline - b.deadline)
       if (futureIndependents.length > 0) {
-        independentWorkMessages = futureIndependents.map(({ deadline }) => {
+        independentWorkMessages = futureIndependents.map(({ deadline, entryDate }) => {
           const diffDays = Math.round((deadline - lastLesson) / (1000 * 60 * 60 * 24))
-          const deadlineStr = this.formatDisplayDate(deadline)
-          return `${deadlineStr} iseseiseva töö tähtaeg on ${diffDays} päeva hiljem kui viimane tund`
+          const entryDateStr = this.formatDisplayDate(new Date(entryDate))
+          return `${entryDateStr} iseseiseva töö tähtaeg on ${diffDays} päeva hiljem kui viimane tund`
         })
       }
     }
