@@ -22,7 +22,7 @@ export default class IndependentWorkCapacityFeature {
     }
     if (!notif) return null
     const notifText = notif.textContent || ''
-    const notifMatch = notifText.match(/Viimane tund toim(?:us|ub) \d{2}\.\d{2}\.\d{4}/)
+    const notifMatch = notifText.match(/Viimane tund toim(?:us|ub) (?:umbes )?\d{2}\.\d{2}\.\d{4}/)
     if (!notifMatch) return null
 
     try {
