@@ -3872,7 +3872,7 @@ class JournalListSyncFeature extends BaseFeature {
             } else if (finalEntryType === 'SISSEKANNE_H') {
               updateData.journalEntryCapacityTypes = ['MAHT_h']
             } else if (finalEntryType === 'SISSEKANNE_P') {
-              updateData.journalEntryCapacityTypes = []
+              updateData.journalEntryCapacityTypes = ['MAHT_p']
             }
 
             // Filter out students with OPPURSTAATUS_K using mapping similar to syncAssignmentNameDifferences
@@ -4765,15 +4765,13 @@ class JournalListSyncFeature extends BaseFeature {
       }
 
       // Make sure we have the correct capacity types (only if not already set)
-      // Note: Empty array is valid for SISSEKANNE_P, so don't treat it as missing
       if (!updateData.journalEntryCapacityTypes) {
-        // Set default capacity types based on entry type
         if (entryData.entryType === 'SISSEKANNE_I') {
           updateData.journalEntryCapacityTypes = ['MAHT_i']
         } else if (entryData.entryType === 'SISSEKANNE_H') {
           updateData.journalEntryCapacityTypes = ['MAHT_h']
         } else if (entryData.entryType === 'SISSEKANNE_P') {
-          updateData.journalEntryCapacityTypes = []
+          updateData.journalEntryCapacityTypes = ['MAHT_p']
         }
       }
 
