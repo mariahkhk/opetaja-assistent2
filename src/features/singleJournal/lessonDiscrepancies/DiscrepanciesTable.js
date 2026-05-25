@@ -228,7 +228,7 @@ export class DiscrepanciesTable {
       flexContainer.setAttribute('data-discrepancies-table', 'true')
       // Main table only for now
       const mainTableSection = this.#createUnifiedTableElement(discrepancies, capacityProblems, independentWorkMessages, null, true)
-      flexContainer.innerHTML = mainTableSection // eslint-disable-line no-unsanitized/property -- internal HTML from #createUnifiedTableElement, no user input
+      flexContainer.appendChild(mainTableSection)
       // If the chosen insertion point is a header/section element (accordion-header),
       // insert the table after that element (as a sibling) so it appears under the section,
       // otherwise insert as the first child (legacy behavior).
@@ -308,25 +308,19 @@ export class DiscrepanciesTable {
   // Include OA-specific incorrect final-grade highlights (oa-final-grade-red) in decision
   // eslint-disable-next-line max-len
   const shouldShowNotifications = !!missingGradesMessage || ovCells.length > 0 || ovYellowCells.length > 0 || finalGradeRedCells.length > 0 || finalGradeYellowCells.length > 0 || oaFinalGradeMismatchCells.length > 0
-        let notificationsSection = ''
+        let notificationsEl = null
         if (shouldShowNotifications) {
-          notificationsSection = `
-            <div class='notifications-section' style='background:#fff3cd;border:1px solid #ffeaa7;border-radius:4px;padding:15px;min-width:260px;max-width:340px;box-shadow:0 2px 4px rgba(0,0,0,.07);display:flex;flex-direction:column;flex:1 1 260px;'>
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #dee2e6;">
-                <div style="display:flex;align-items:center;">
-                  <span style="font-size:20px;margin-right:10px;">🎓</span>
-                  <h3 style="margin:0;color:#495057;">Õpetaja Assistent 2</h3>
-                </div>
-                <div style="background:#ffc107;color:#212529;font-weight:bold;padding:6px 16px;border-radius:16px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.07);">
-                  Hinded
-                </div>
-              </div>
-              ${missingGradesMessage ? `<div class='oa2-banner oa2-banner--red'>${missingGradesMessage}</div>` : ''}
-            </div>
-          `
+          notificationsEl = this.#el('div', {
+            className: 'notifications-section',
+            style: 'background:#fff3cd;border:1px solid #ffeaa7;border-radius:4px;padding:15px;min-width:260px;max-width:340px;box-shadow:0 2px 4px rgba(0,0,0,.07);display:flex;flex-direction:column;flex:1 1 260px;'
+          })
+          notificationsEl.appendChild(this.#createTitleBar('Hinded'))
+          if (missingGradesMessage) notificationsEl.appendChild(this.#createBanner(missingGradesMessage, 'oa2-banner--red'))
         }
         // Update flex container
-        flexContainer.innerHTML = mainTableSection + notificationsSection // eslint-disable-line no-unsanitized/property -- internal HTML from #createUnifiedTableElement, no user input
+        flexContainer.textContent = ''
+        flexContainer.appendChild(this.#createUnifiedTableElement(discrepancies, capacityProblems, independentWorkMessages, null))
+        if (notificationsEl) flexContainer.appendChild(notificationsEl)
         // Add button listeners after final content update
         this.addDiscrepancyButtonListeners()
         // Now inject banners if needed
@@ -446,6 +440,28 @@ export class DiscrepanciesTable {
    * @returns {HTMLElement} The table element
    * @private
    */
+  #el(tag, attrs = {}, ...children) {
+    const el = document.createElement(tag)
+    for (const [key, val] of Object.entries(attrs)) {
+      if (key === 'style') el.setAttribute('style', val)
+      else if (key === 'className') el.className = val
+      else el.setAttribute(key, val)
+    }
+    for (const child of children) {
+      if (typeof child === 'string') el.appendChild(document.createTextNode(child))
+      else if (child) el.appendChild(child)
+    }
+    return el
+  }
+
+  #createTitleBar(badgeText) {
+    const emoji = this.#el('span', { style: 'font-size:20px;margin-right:10px;' }, '🎓')
+    const title = this.#el('h3', { style: 'margin:0;color:#495057;' }, 'Õpetaja Assistent 2')
+    const left = this.#el('div', { style: 'display:flex;align-items:center;' }, emoji, title)
+    const badge = this.#el('div', { style: 'background:#ffc107;color:#212529;font-weight:bold;padding:6px 16px;border-radius:16px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.07);' }, badgeText)
+    return this.#el('div', { style: 'display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #dee2e6;' }, left, badge)
+  }
+
   #createUnifiedTableElement(discrepancies, capacityProblems, independentWorkMessages, missingGradesMessage) {
     const hasProblems =
       discrepancies.length > 0 || capacityProblems.length > 0 || (independentWorkMessages && independentWorkMessages.length > 0) || !!missingGradesMessage
@@ -454,124 +470,132 @@ export class DiscrepanciesTable {
     const boxStyle =
       `background:${backgroundColor};border:1px solid ${borderColor};border-radius:4px;padding:15px;` +
       'box-shadow:0 2px 4px rgba(0,0,0,.1);width:600px;min-width:430px;max-width:600px;flex:0 0 600px;'
-    const titleBar = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #dee2e6;">
-      <div style="display:flex;align-items:center;">
-        <span style="font-size:20px;margin-right:10px;">🎓</span>
-        <h3 style="margin:0;color:#495057;">Õpetaja Assistent 2</h3>
-      </div>
-      <div style="background:#ffc107;color:#212529;font-weight:bold;padding:6px 16px;border-radius:16px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.07);">
-        Probleemid sissekannetega
-      </div>
-    </div>`
 
-    // Show all independent work banners if present
-    let indepWorkBanners = ''
+    const box = this.#el('div', { style: boxStyle })
+    box.appendChild(this.#createTitleBar('Probleemid sissekannetega'))
+
     if (independentWorkMessages && independentWorkMessages.length > 0) {
-      indepWorkBanners = independentWorkMessages.map(msg => `<div class='oa2-banner oa2-banner--red'>${msg}</div>`).join('')
+      for (const msg of independentWorkMessages) {
+        box.appendChild(this.#createBanner(msg, 'oa2-banner--red'))
+      }
     }
 
-  // Only return the main table section; notifications are handled after highlights
-  const timetableSection = this.#createTimetableSection(discrepancies)
-  const capacitySection = this.#createCapacitySection(capacityProblems, null)
-    return `<div style='${boxStyle}'>${titleBar + indepWorkBanners + timetableSection + capacitySection}</div>`
+    box.appendChild(this.#createTimetableSectionEl(discrepancies))
+    box.appendChild(this.#createCapacitySectionEl(capacityProblems, null))
+    return box
   }
 
-  /**
-   * Creates the timetable section of the table
-   * @param {Array} discrepancies - List of discrepancies
-   * @returns {string} HTML string for timetable section
-   * @private
-   */
-  #createTimetableSection(discrepancies) {
+  #createTimetableSectionEl(discrepancies) {
+    const fragment = document.createDocumentFragment()
     if (!discrepancies.length) {
-      return '<p style="color:#28a745;margin:0 0 20px 0;">Erinevusi tunniplaaniga pole.</p>'
+      fragment.appendChild(this.#el('p', { style: 'color:#28a745;margin:0 0 20px 0;' }, 'Erinevusi tunniplaaniga pole.'))
+      return fragment
     }
 
-    const sectionHeader = `<div style="margin-bottom:15px;">
-      <h4 style="margin:0 0 10px 0;color:#495057;">Erinevused tunniplaaniga</h4>
-    </div>`
+    const header = this.#el('div', { style: 'margin-bottom:15px;' },
+      this.#el('h4', { style: 'margin:0 0 10px 0;color:#495057;' }, 'Erinevused tunniplaaniga'))
+    fragment.appendChild(header)
 
     const sortedDiscrepancies = [...discrepancies].sort((a, b) => {
       const dateComparison = new Date(a.date) - new Date(b.date)
       if (dateComparison !== 0) return dateComparison
-
       const aLessonNumber = a.lessonNumber ?? a.timetableStart ?? 0
       const bLessonNumber = b.lessonNumber ?? b.timetableStart ?? 0
       return aLessonNumber - bLessonNumber
     })
 
-    const rows = sortedDiscrepancies.map(discrepancy => this.#createDiscrepancyRow(discrepancy)).join('')
-    const tableHead = `<thead><tr style="background:#f8f9fa"><th class="lesson-discrepancy-table-cell lesson-discrepancy-table-cell-20">Kuupäev</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25">Algustund</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25">Tundide arv</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-30">Tegevus</th></tr></thead>`
-
     const missingEntries = discrepancies.filter(d => d.type === 'missingJournalEntry')
     this.lastMissingEntries = missingEntries
     const showAddAll = missingEntries.length >= DiscrepanciesTable.MIN_ENTRIES_FOR_BULK_ADD
-    const addAllButton = showAddAll
-      ? `<div style="display:flex;justify-content:flex-end;margin-bottom:20px"><div style="width:30%;text-align:center">${this.#createButton(null, 'Lisa kõik', 'green', { handler: 'addAllMissing' })}</div></div>`
-      : ''
 
-    return (
-      sectionHeader +
-      `<table style="width:100%;border-collapse:collapse;background:white;margin-bottom:${showAddAll ? '8px' : '20px'};border:1px solid #dee2e6;">${tableHead}<tbody>${rows}</tbody></table>` +
-      addAllButton
-    )
+    const table = this.#el('table', { style: `width:100%;border-collapse:collapse;background:white;margin-bottom:${showAddAll ? '8px' : '20px'};border:1px solid #dee2e6;` })
+    const thead = this.#el('thead')
+    const headRow = this.#el('tr', { style: 'background:#f8f9fa' })
+    const headCells = [
+      ['lesson-discrepancy-table-cell lesson-discrepancy-table-cell-20', 'Kuupäev'],
+      ['lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25', 'Algustund'],
+      ['lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-25', 'Tundide arv'],
+      ['lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-30', 'Tegevus']
+    ]
+    for (const [cls, text] of headCells) headRow.appendChild(this.#el('th', { className: cls }, text))
+    thead.appendChild(headRow)
+    table.appendChild(thead)
+
+    const tbody = this.#el('tbody')
+    for (const discrepancy of sortedDiscrepancies) tbody.appendChild(this.#createDiscrepancyRowEl(discrepancy))
+    table.appendChild(tbody)
+    fragment.appendChild(table)
+
+    if (showAddAll) {
+      const btnWrap = this.#el('div', { style: 'display:flex;justify-content:flex-end;margin-bottom:20px' },
+        this.#el('div', { style: 'width:30%;text-align:center' }, this.#createButtonEl(null, 'Lisa kõik', 'green', { handler: 'addAllMissing' })))
+      fragment.appendChild(btnWrap)
+    }
+
+    return fragment
   }
 
-  /**
-   * Creates the capacity section of the table
-   * @param {Array} capacityProblems - List of capacity problems
-   * @param {string} independentWorkMessage - Independent work message
-   * @returns {string} HTML string for capacity section
-   * @private
-   */
-  #createCapacitySection(capacityProblems, independentWorkMessage) {
+  #createCapacitySectionEl(capacityProblems, independentWorkMessage) {
+    const fragment = document.createDocumentFragment()
     const hasCapacityProblems = capacityProblems.length > 0
-    const hasindependentWorkMessage = !!independentWorkMessage
-    let section = ''
+    const hasIndependentWorkMessage = !!independentWorkMessage
 
-    // Capacity problems section (table + header) only if there are problems
     if (hasCapacityProblems) {
-      const sectionHeader = `<div style="margin-bottom:15px;">
-        <h4 style="margin:0 0 10px 0;color:#495057;">Ebaloogilised sissekande liigi ja tüübi kombinatsioonid</h4>
-      </div>`
+      fragment.appendChild(this.#el('div', { style: 'margin-bottom:15px;' },
+        this.#el('h4', { style: 'margin:0 0 10px 0;color:#495057;' }, 'Ebaloogilised sissekande liigi ja tüübi kombinatsioonid')))
+
       const sortedEntries = [...capacityProblems].sort((a, b) => new Date(a.entryDate) - new Date(b.entryDate))
-      const rows = sortedEntries.map(entry => this.#createCapacityProblemRow(entry)).join('')
-      const tableHead = `<thead><tr style="background:#f9f9f9"><th class="lesson-discrepancy-table-cell lesson-discrepancy-table-cell-20">Kuupäev</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-50">Märkus</th><th class="lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-30">Tegevus</th></tr></thead>`
-      section +=
-        sectionHeader +
-        `<table style="width:100%;border-collapse:collapse;background:white;border:1px solid #dee2e6;">${tableHead}<tbody>${rows}</tbody></table>`
+      const table = this.#el('table', { style: 'width:100%;border-collapse:collapse;background:white;border:1px solid #dee2e6;' })
+      const thead = this.#el('thead')
+      const headRow = this.#el('tr', { style: 'background:#f9f9f9' })
+      const headCells = [
+        ['lesson-discrepancy-table-cell lesson-discrepancy-table-cell-20', 'Kuupäev'],
+        ['lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-50', 'Märkus'],
+        ['lesson-discrepancy-table-cell-center lesson-discrepancy-table-cell-30', 'Tegevus']
+      ]
+      for (const [cls, text] of headCells) headRow.appendChild(this.#el('th', { className: cls }, text))
+      thead.appendChild(headRow)
+      table.appendChild(thead)
+
+      const tbody = this.#el('tbody')
+      for (const entry of sortedEntries) tbody.appendChild(this.#createCapacityProblemRowEl(entry))
+      table.appendChild(tbody)
+      fragment.appendChild(table)
     }
 
-    // Independent work message always in its own section if present
-    if (hasindependentWorkMessage) {
-      section += `<div style="margin-top:18px;margin-bottom:10px;padding:0 8px;">
-        <div style='padding:12px 8px;color:#721c24;font-weight:bold;font-size:15px;text-align:center;background:#f8d7da;border-radius:4px;border:1px solid #f5c6cb;'>${independentWorkMessage}</div>
-      </div>`
+    if (hasIndependentWorkMessage) {
+      const inner = this.#el('div', { style: 'padding:12px 8px;color:#721c24;font-weight:bold;font-size:15px;text-align:center;background:#f8d7da;border-radius:4px;border:1px solid #f5c6cb;' }, independentWorkMessage)
+      fragment.appendChild(this.#el('div', { style: 'margin-top:18px;margin-bottom:10px;padding:0 8px;' }, inner))
     }
 
-    // If neither, show green message only
-    if (!hasCapacityProblems && !hasindependentWorkMessage) {
-      section = '<p style="color:#28a745;margin:0;">Ebaloogilisi sissekande liigi ja tüüpi kombinatsioone ei leitud.</p>'
+    if (!hasCapacityProblems && !hasIndependentWorkMessage) {
+      fragment.appendChild(this.#el('p', { style: 'color:#28a745;margin:0;' }, 'Ebaloogilisi sissekande liigi ja tüüpi kombinatsioone ei leitud.'))
     }
 
-    return section
+    return fragment
   }
 
-  /**
-   * Creates a discrepancy row for the table
-   * @param {Object} discrepancy - Discrepancy data
-   * @returns {string} HTML string for the row
-   * @private
-   */
-  #createDiscrepancyRow(discrepancy) {
+  #createDiscrepancyRowEl(discrepancy) {
     const renderers = {
-      missingJournalEntry: this.#renderMissingEntry,
-      singleEntryFix: this.#renderSingleEntryFix,
-      multiEntryFix: this.#renderMultiEntryFix
+      missingJournalEntry: this.#renderMissingEntryEl,
+      singleEntryFix: this.#renderSingleEntryFixEl,
+      multiEntryFix: this.#renderMultiEntryFixEl
     }
-    const renderer = renderers[discrepancy.type] || this.#renderSingleEntryFix
+    const renderer = renderers[discrepancy.type] || this.#renderSingleEntryFixEl
     const { start, count, action } = renderer.call(this, discrepancy)
-    return `<tr style="background-color:white"><td class="lesson-discrepancy-table-cell">${this.#formatDisplayDate(discrepancy.date)}</td><td class="lesson-discrepancy-table-cell-center">${start}</td><td class="lesson-discrepancy-table-cell-center">${count}</td><td class="lesson-discrepancy-table-cell-center">${action}</td></tr>`
+    const tr = this.#el('tr', { style: 'background-color:white' })
+    const dateTd = this.#el('td', { className: 'lesson-discrepancy-table-cell' }, this.#formatDisplayDate(discrepancy.date))
+    const startTd = this.#el('td', { className: 'lesson-discrepancy-table-cell-center' })
+    const countTd = this.#el('td', { className: 'lesson-discrepancy-table-cell-center' })
+    const actionTd = this.#el('td', { className: 'lesson-discrepancy-table-cell-center' })
+    startTd.appendChild(start)
+    countTd.appendChild(count)
+    actionTd.appendChild(action)
+    tr.appendChild(dateTd)
+    tr.appendChild(startTd)
+    tr.appendChild(countTd)
+    tr.appendChild(actionTd)
+    return tr
   }
 
   /**
@@ -580,9 +604,8 @@ export class DiscrepanciesTable {
    * @returns {string} HTML string for the row
    * @private
    */
-  #createCapacityProblemRow(entry) {
-    // Format date without year (DD.MM) - handle null dates properly
-    let shortDate = 'Kuupäevata' // Default for null dates
+  #createCapacityProblemRowEl(entry) {
+    let shortDate = 'Kuupäevata'
     if (entry.entryDate) {
       try {
         const dateObj = new Date(entry.entryDate)
@@ -597,45 +620,27 @@ export class DiscrepanciesTable {
     const startLesson = entry.startLessonNr || entry.lessons?.[0]?.lessonNr || ''
     const dateWithLesson = startLesson ? `${shortDate} (${startLesson}.)` : shortDate
 
-    // Determine badge color based on entry type
-    let badgeColor = '#e0e0e0' // light gray default for SISSEKANNE_T
-    if (entry.entryType === 'SISSEKANNE_I') {
-      badgeColor = '#f0f4c3' // light yellow-green for independent work
-    } else if (entry.entryType === 'SISSEKANNE_P') {
-      badgeColor = '#b2dfdb' // light teal for practical work
+    let badgeColor = '#e0e0e0'
+    if (entry.entryType === 'SISSEKANNE_I') badgeColor = '#f0f4c3'
+    else if (entry.entryType === 'SISSEKANNE_P') badgeColor = '#b2dfdb'
+
+    const dateBadge = this.#el('span', { style: `background-color:${badgeColor};padding:2px 6px;border-radius:4px;font-size:12px;border:1px solid #ccc;` }, dateWithLesson)
+
+    const errorMessages = {
+      no_teacher_selected: 'Õpetaja pole valitud',
+      both_checkboxes_selected: 'Auditoorne õpe ja iseseiseva õppe linnukesed on samaaegselt sees',
+      lesson_with_independent_work: 'Sissekande liik on tund, aga ainult iseseiseva õppe linnuke on sees',
+      lesson_without_auditoorne: 'Sissekande liik on tund, aga auditoorne õpe linnuke pole sees',
+      independent_work_with_auditory: 'Iseseisev tööl ei saa olla auditoorne õpe linnuke sees',
+      praktiline_too_without_praktiline_checkbox: 'Sissekande liik on praktiline töö, aga praktilise töö linnukest ei ole sees',
+      missing_auditoorne_checkbox: 'Auditoorne õpe puudub',
+      missing_iseseisev_checkbox: 'Sissekande liik on iseseisev õpe, aga iseseiseva õppe linnukest ei ole sees',
+      journal_missing_independent_work: 'Vigane sissekanne: päevikule pole määratud iseisevaid töid',
+      missing_praktiline_checkbox: 'Praktiline töö puudub'
     }
+    const message = errorMessages[entry.validationResult?.errorType] || 'Auditoorne õpe puudub'
 
-    const dateWithBadge = `<span style="background-color:${badgeColor};padding:2px 6px;border-radius:4px;font-size:12px;border:1px solid #ccc;">${dateWithLesson}</span>`
-
-    // Determine the correct message based on the validation result
-    let message = 'Auditoorne õpe puudub'
-    if (entry.validationResult) {
-      if (entry.validationResult.errorType === 'no_teacher_selected') {
-        message = 'Õpetaja pole valitud'
-      } else if (entry.validationResult.errorType === 'both_checkboxes_selected') {
-        message = 'Auditoorne õpe ja iseseiseva õppe linnukesed on samaaegselt sees'
-      } else if (entry.validationResult.errorType === 'lesson_with_independent_work') {
-        message = 'Sissekande liik on tund, aga ainult iseseiseva õppe linnuke on sees'
-      } else if (entry.validationResult.errorType === 'lesson_without_auditoorne') {
-        message = 'Sissekande liik on tund, aga auditoorne õpe linnuke pole sees'
-      } else if (entry.validationResult.errorType === 'independent_work_with_auditory') {
-        message = 'Iseseisev tööl ei saa olla auditoorne õpe linnuke sees'
-      } else if (entry.validationResult.errorType === 'praktiline_too_without_praktiline_checkbox') {
-        message = 'Sissekande liik on praktiline töö, aga praktilise töö linnukest ei ole sees'
-      } else if (entry.validationResult.errorType === 'missing_auditoorne_checkbox') {
-        message = 'Auditoorne õpe puudub'
-      } else if (entry.validationResult.errorType === 'missing_iseseisev_checkbox') {
-        message = 'Sissekande liik on iseseisev õpe, aga iseseiseva õppe linnukest ei ole sees'
-      } else if (entry.validationResult.errorType === 'journal_missing_independent_work') {
-        message = 'Vigane sissekanne: päevikule pole määratud iseisevaid töid'
-      } else if (entry.validationResult.errorType === 'missing_praktiline_checkbox') {
-        message = 'Praktiline töö puudub'
-      }
-    }
-
-    // Get formatted date for button data
-    // Handle null/undefined dates specially since they show as "-" in the main table
-    let safeFormattedDate // Special identifier for null dates
+    let safeFormattedDate = 'NO_DATE'
     if (entry.entryDate) {
       try {
         const dateObj = new Date(entry.entryDate)
@@ -644,52 +649,32 @@ export class DiscrepanciesTable {
           const month = (dateObj.getMonth() + 1).toString().padStart(2, '0')
           const year = dateObj.getFullYear()
           safeFormattedDate = `${day}.${month}.${year}`
-        } else {
-          safeFormattedDate = 'NO_DATE'
         }
       } catch (error) {
-        console.error('[DiscrepanciesTable] Date formatting error:', error)
+        Logger.debug('[DiscrepanciesTable] Date formatting error:', error)
         safeFormattedDate = 'NO_DATE'
       }
+    }
+
+    const duplicateIndex = this.calculateDuplicateIndex({ entryId: entry.id, date: safeFormattedDate, entryType: entry.entryType })
+    const btnData = { entryid: entry.id, date: safeFormattedDate, duplicateindex: duplicateIndex }
+
+    let action
+    if (entry.validationResult?.errorType === 'journal_missing_independent_work') {
+      action = this.#createButtonEl(`open-entry-${entry.id}`, 'Ava', 'blue', { handler: 'openEntry', ...btnData })
     } else {
-      safeFormattedDate = 'NO_DATE'
+      action = this.#createButtonEl(`fix-capacity-${entry.id}`, 'Paranda', 'amber', { handler: 'fixCapacity', ...btnData })
     }
 
-    // Calculate duplicate index for entries with same date
-    const duplicateIndexInput = {
-      entryId: entry.id,
-      date: safeFormattedDate,
-      entryType: entry.entryType
-    }
-    const duplicateIndex = this.calculateDuplicateIndex(duplicateIndexInput)
-
-    const action =
-      entry.validationResult?.errorType === 'no_teacher_selected'
-        ? this.#createButton(`fix-capacity-${entry.id}`, 'Paranda', 'amber', {
-            handler: 'fixCapacity',
-            entryid: entry.id,
-            date: safeFormattedDate,
-            duplicateindex: duplicateIndex
-          })
-        : entry.validationResult?.errorType === 'journal_missing_independent_work'
-          ? this.#createButton(`open-entry-${entry.id}`, 'Ava', 'blue', {
-              handler: 'openEntry',
-              entryid: entry.id,
-              date: safeFormattedDate,
-              duplicateindex: duplicateIndex
-            })
-          : this.#createButton(`fix-capacity-${entry.id}`, 'Paranda', 'amber', {
-              handler: 'fixCapacity',
-              entryid: entry.id,
-              date: safeFormattedDate,
-              duplicateindex: duplicateIndex
-            })
-
-    return `<tr style="background-color:white">
-      <td class="lesson-discrepancy-table-cell-center">${dateWithBadge}</td>
-      <td class="lesson-discrepancy-table-cell-center">${message}</td>
-      <td class="lesson-discrepancy-table-cell-center">${action}</td>
-    </tr>`
+    const tr = this.#el('tr', { style: 'background-color:white' })
+    const dateTd = this.#el('td', { className: 'lesson-discrepancy-table-cell-center' })
+    dateTd.appendChild(dateBadge)
+    tr.appendChild(dateTd)
+    tr.appendChild(this.#el('td', { className: 'lesson-discrepancy-table-cell-center' }, message))
+    const actionTd = this.#el('td', { className: 'lesson-discrepancy-table-cell-center' })
+    actionTd.appendChild(action)
+    tr.appendChild(actionTd)
+    return tr
   }
 
   /**
@@ -698,11 +683,11 @@ export class DiscrepanciesTable {
    * @returns {Object} Render data with start, count, and action
    * @private
    */
-  #renderMissingEntry(discrepancy) {
+  #renderMissingEntryEl(discrepancy) {
     return {
-      start: `<span style="font-weight:bold;">${discrepancy.lessonNumber}</span>`,
-      count: `<span style="font-weight:bold;">${discrepancy.lessonCount}</span>`,
-      action: this.#createButton(`add-missing-${discrepancy.date}-${discrepancy.lessonNumber}`, 'Lisa', 'green', {
+      start: this.#el('span', { style: 'font-weight:bold;' }, String(discrepancy.lessonNumber)),
+      count: this.#el('span', { style: 'font-weight:bold;' }, String(discrepancy.lessonCount)),
+      action: this.#createButtonEl(`add-missing-${discrepancy.date}-${discrepancy.lessonNumber}`, 'Lisa', 'green', {
         handler: 'addMissing',
         date: discrepancy.date,
         startLesson: discrepancy.lessonNumber,
@@ -722,7 +707,7 @@ export class DiscrepanciesTable {
    * @returns {Object} Render data with start, count, and action
    * @private
    */
-  #renderSingleEntryFix(discrepancy) {
+  #renderSingleEntryFixEl(discrepancy) {
     const duplicateIndex = this.calculateDuplicateIndex(discrepancy)
     const duplicateInfo = this.findDuplicateMatches(discrepancy.entryId, discrepancy.date)
     const hasDuplicates = duplicateInfo.exactMatches.length > 1
@@ -731,9 +716,9 @@ export class DiscrepanciesTable {
     const buttonText = hasDuplicates ? `Muuda #${humanIndex}` : 'Muuda'
     const tooltip = `Entry ID: ${discrepancy.entryId}, Duplicate Index: ${duplicateIndex}`
     return {
-      start: this.#createSmartDisplay(discrepancy.journalStart, discrepancy.timetableStart),
-      count: this.#createSmartDisplay(discrepancy.journalCount, discrepancy.timetableCount),
-      action: this.#createButton(
+      start: this.#createSmartDisplayEl(discrepancy.journalStart, discrepancy.timetableStart),
+      count: this.#createSmartDisplayEl(discrepancy.journalCount, discrepancy.timetableCount),
+      action: this.#createButtonEl(
         `edit-single-${discrepancy.date}-${discrepancy.entryId}`,
         buttonText,
         'amber',
@@ -759,8 +744,7 @@ export class DiscrepanciesTable {
    * @returns {Object} Render data with start, count, and action
    * @private
    */
-  #renderMultiEntryFix(discrepancy) {
-    // Check if there are duplicates by looking at the first entry
+  #renderMultiEntryFixEl(discrepancy) {
     const firstEntry = discrepancy.entries?.[0]
     const firstEntryDiscrepancy = firstEntry
       ? {
@@ -775,40 +759,39 @@ export class DiscrepanciesTable {
       : { exactMatches: [] }
     const hasDuplicates = duplicateInfo.exactMatches.length > 1
 
-    const buttons = (discrepancy.entries ?? [])
-      .map(entry => {
-        const entryDiscrepancy = {
-          ...discrepancy,
-          entryId: entry.id,
-          journalStart: entry.startLessonNr,
-          journalCount: entry.lessons
-        }
-        const duplicateIndex = this.calculateDuplicateIndex(entryDiscrepancy)
-        const humanIndex = duplicateIndex + 1
-        const buttonText = hasDuplicates
-          ? `Muuda ${entry.startLessonNr}. (${entry.lessons}t) #${humanIndex}`
-          : `Muuda ${entry.startLessonNr}. (${entry.lessons}t)`
-        const tooltip = `Entry ID: ${entry.id}, Duplicate Index: ${duplicateIndex}`
-        return this.#createButton(
-          `edit-entry-${discrepancy.date}-${entry.id}`,
-          buttonText,
-          'amber',
-          {
-            handler: 'editEntry',
-            type: 'multiEntryFix',
-            date: discrepancy.date,
-            entryid: entry.id,
-            duplicateindex: duplicateIndex
-          },
-          tooltip
-        )
-      })
-      .join('')
+    const btnContainer = this.#el('div', { style: 'display:flex;justify-content:center;flex-wrap:wrap;gap:4px;' })
+    for (const entry of (discrepancy.entries ?? [])) {
+      const entryDiscrepancy = {
+        ...discrepancy,
+        entryId: entry.id,
+        journalStart: entry.startLessonNr,
+        journalCount: entry.lessons
+      }
+      const duplicateIndex = this.calculateDuplicateIndex(entryDiscrepancy)
+      const humanIndex = duplicateIndex + 1
+      const buttonText = hasDuplicates
+        ? `Muuda ${entry.startLessonNr}. (${entry.lessons}t) #${humanIndex}`
+        : `Muuda ${entry.startLessonNr}. (${entry.lessons}t)`
+      const tooltip = `Entry ID: ${entry.id}, Duplicate Index: ${duplicateIndex}`
+      btnContainer.appendChild(this.#createButtonEl(
+        `edit-entry-${discrepancy.date}-${entry.id}`,
+        buttonText,
+        'amber',
+        {
+          handler: 'editEntry',
+          type: 'multiEntryFix',
+          date: discrepancy.date,
+          entryid: entry.id,
+          duplicateindex: duplicateIndex
+        },
+        tooltip
+      ))
+    }
 
     return {
-      start: this.#createSmartDisplay(discrepancy.journalStart, discrepancy.timetableStart),
-      count: this.#createSmartDisplay(discrepancy.journalCount, discrepancy.timetableCount),
-      action: `<div style="display:flex;justify-content:center;flex-wrap:wrap;gap:4px;">${buttons}</div>`
+      start: this.#createSmartDisplayEl(discrepancy.journalStart, discrepancy.timetableStart),
+      count: this.#createSmartDisplayEl(discrepancy.journalCount, discrepancy.timetableCount),
+      action: btnContainer
     }
   }
 
@@ -862,16 +845,18 @@ export class DiscrepanciesTable {
    * @returns {string} HTML string for the button
    * @private
    */
-  #createButton(id, text, colorKey, data = {}, tooltip = '') {
-    const dataAttributes = Object.entries(data)
-      .map(([key, value]) => {
-        const serialized = value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value)
-        return `data-${key.toLowerCase()}="${serialized.replace(/"/g, '&quot;')}"`
-      })
-      .join(' ')
-    const idAttribute = id ? `id="${id}"` : ''
-    const titleAttribute = tooltip ? `title="${tooltip}"` : ''
-    return `<button ${idAttribute} class="oa2-btn oa2-btn--${colorKey}" style="${DiscrepanciesTable.createButtonStyle(DiscrepanciesTable.HEX[colorKey])}" ${dataAttributes} ${titleAttribute}>${text}</button>`
+  #createButtonEl(id, text, colorKey, data = {}, tooltip = '') {
+    const attrs = {
+      className: `oa2-btn oa2-btn--${colorKey}`,
+      style: DiscrepanciesTable.createButtonStyle(DiscrepanciesTable.HEX[colorKey])
+    }
+    if (id) attrs.id = id
+    if (tooltip) attrs.title = tooltip
+    const btn = this.#el('button', attrs, text)
+    for (const [key, value] of Object.entries(data)) {
+      btn.dataset[key.toLowerCase()] = value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value)
+    }
+    return btn
   }
 
   /**
@@ -895,37 +880,20 @@ export class DiscrepanciesTable {
    * @returns {string} HTML string for the display
    * @private
    */
-  #createSmartDisplay = (currentValue, correctValue) => {
+  #createSmartDisplayEl = (currentValue, correctValue) => {
     const current = Number(currentValue)
     const correct = Number(correctValue)
-    return current === correct ? `<span style="font-size:14px;font-weight:bold;">${current}</span>` : this.#createDiffPill(current, correct)
+    if (current === correct) return this.#el('span', { style: 'font-size:14px;font-weight:bold;' }, String(current))
+    return this.#createDiffPillEl(current, correct)
   }
 
-  /**
-   * Creates a pill-shaped span with styling
-   * @param {string} text - Text content
-   * @param {string} color - Text color
-   * @param {string} backgroundColor - Background color
-   * @param {string} textDecoration - Text decoration
-   * @returns {string} HTML string for the pill
-   * @private
-   */
-  #createPill = (text, color, backgroundColor, textDecoration = 'none') =>
-    `<span style="background-color:${backgroundColor};color:${color};font-weight:bold;font-size:14px;padding:4px 8px;text-decoration:${textDecoration};">${text}</span>`
+  #createPillEl = (text, color, backgroundColor, textDecoration = 'none') =>
+    this.#el('span', { style: `background-color:${backgroundColor};color:${color};font-weight:bold;font-size:14px;padding:4px 8px;text-decoration:${textDecoration};` }, String(text))
 
-  /**
-   * Creates a diff pill showing current vs correct values
-   * @param {number} current - Current value
-   * @param {number} correct - Correct value
-   * @returns {string} HTML string for the diff pill
-   * @private
-   */
-  #createDiffPill = (current, correct) => {
-    // Add strikethrough to the red (current) value
-    const currentPill = this.#createPill(current, '#721c24', '#f8d7da', 'line-through')
-    const correctPill = this.#createPill(correct, '#155724', '#d1edcc')
-    const style = 'display:inline-flex;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);'
-    return `<div style="${style}">${currentPill}${correctPill}</div>`
+  #createDiffPillEl = (current, correct) => {
+    const currentPill = this.#createPillEl(current, '#721c24', '#f8d7da', 'line-through')
+    const correctPill = this.#createPillEl(correct, '#155724', '#d1edcc')
+    return this.#el('div', { style: 'display:inline-flex;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);' }, currentPill, correctPill)
   }
   #createBanner(text, colorClass, extraClass = '') {
     const div = document.createElement('div')
