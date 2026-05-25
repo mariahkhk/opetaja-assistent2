@@ -28,7 +28,7 @@
   "web_accessible_resources": [
     {
       "resources": ["popup.js", "styles/JournalSyncBannerService.css"],
-      "matches": ["<all_urls>"]
+      "matches": ["*://tahvel.edu.ee/*", "*://test.tahvel.eenet.ee/*"]
     }
   ]
 }
