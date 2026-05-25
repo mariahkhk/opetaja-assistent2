@@ -92,7 +92,14 @@ describe('DomService', () => {
       expect(element.tagName).toBe('SPAN')
       expect(element.id).toBe('test-span')
       expect(element.getAttribute('class')).toBe('test-class')
-      expect(element.innerHTML).toBe('Hello World')
+      expect(element.textContent).toBe('Hello World')
+    })
+
+    test('should escape HTML when string content is passed', () => {
+      const parent = { insertAdjacentElement: mock(() => {}) }
+      const element = domService.createAndInsertElement('div', {}, '<img src=x onerror=alert(1)>', parent)
+      expect(element.textContent).toBe('<img src=x onerror=alert(1)>')
+      expect(element.children.length).toBe(0)
     })
 
     test('should handle style object', () => {
@@ -151,7 +158,7 @@ describe('DomService', () => {
       const element = domService.createAndInsertElement('div', { id: 'no-parent' }, 'orphan element')
 
       expect(element.id).toBe('no-parent')
-      expect(element.innerHTML).toBe('orphan element')
+      expect(element.textContent).toBe('orphan element')
     })
   })
 

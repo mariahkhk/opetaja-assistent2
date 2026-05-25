@@ -762,7 +762,7 @@ describe('HighlightFinalGradesFeature', () => {
       expect(cell.classList.contains('highlight-final-grade-yellow')).toBe(true)
     })
 
-    test('skips ng-star-inserted cell that lacks Angular form-state classes', async () => {
+    test('skips ng-star-inserted cell that lacks both grade-cell child and Angular form-state classes', async () => {
       buildJournalTable({
         headers: ['Õppija', 'Lõpptulemus'],
         rows: [['Mari', '']]
@@ -784,7 +784,7 @@ describe('HighlightFinalGradesFeature', () => {
       expect(cell.classList.contains('highlight-final-grade-red')).toBe(false)
     })
 
-    test('skips ng-star-inserted ÕV cell that lacks Angular form-state classes', async () => {
+    test('skips ng-star-inserted ÕV cell that lacks both grade-cell child and Angular form-state classes', async () => {
       buildJournalTable({
         headers: ['Õppija', 'ÕV1'],
         rows: [['Mari', '']]
@@ -804,6 +804,56 @@ describe('HighlightFinalGradesFeature', () => {
       await feature.run()
 
       expect(cell.classList.contains('highlight-ov-red')).toBe(false)
+    })
+
+    test('highlights ng-star-inserted cell with grade-cell child even without form-state classes', async () => {
+      buildJournalTable({
+        headers: ['Õppija', 'Lõpptulemus'],
+        rows: [['Mari', '']]
+      })
+      const cell = document.querySelectorAll('tbody tr td')[1]
+      cell.classList.add('ng-star-inserted')
+      const gradeDiv = document.createElement('div')
+      gradeDiv.classList.add('grade-cell', 'ng-star-inserted')
+      cell.appendChild(gradeDiv)
+
+      feature.api = {
+        tahvel: {
+          get: mock(async url => {
+            if (url === '/journals/12345') return { school: { id: 9 }, journalTeachers: [{ id: 5 }] }
+            if (url.includes('timetableevents')) return { timetableEvents: [{ journalId: 12345, date: '2020-01-15' }] }
+            return null
+          })
+        }
+      }
+      await feature.run()
+
+      expect(cell.classList.contains('highlight-final-grade-red')).toBe(true)
+    })
+
+    test('highlights ng-star-inserted ÕV cell with grade-cell child even without form-state classes', async () => {
+      buildJournalTable({
+        headers: ['Õppija', 'ÕV1'],
+        rows: [['Mari', '']]
+      })
+      const cell = document.querySelectorAll('tbody tr td')[1]
+      cell.classList.add('ng-star-inserted')
+      const gradeDiv = document.createElement('div')
+      gradeDiv.classList.add('grade-cell', 'ng-star-inserted')
+      cell.appendChild(gradeDiv)
+
+      feature.api = {
+        tahvel: {
+          get: mock(async url => {
+            if (url === '/journals/12345') return { school: { id: 9 }, journalTeachers: [{ id: 5 }] }
+            if (url.includes('timetableevents')) return { timetableEvents: [{ journalId: 12345, date: '2020-01-15' }] }
+            return null
+          })
+        }
+      }
+      await feature.run()
+
+      expect(cell.classList.contains('highlight-ov-red')).toBe(true)
     })
 
     test('honors ng-star-inserted cell that has Angular form-state classes (proceeds to highlight)', async () => {

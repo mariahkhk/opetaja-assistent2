@@ -1,3 +1,4 @@
+/* eslint-disable security/detect-unsafe-regex -- all regexes in this file operate on short, anchored grade strings from Tahvel API */
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { domService } from '../../../services/DomService.js'
@@ -106,8 +107,13 @@ class FinalGradesByOvFeature extends BaseFeature {
       for (const ovNum of results.allOvNums) {
         if (!ovNumToOutcomeId || !ovNumToOutcomeId[ovNum]) {
           Logger.error('FinalGradesByOvFeature: No outcomeId mapping for ÕV', { ovNum, ovNumToOutcomeId })
-          if (container)
-            container.innerHTML = `<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Viga: ei leitud ÕV ${ovNum} outcomeId vastendust selles päevikus!</div>`
+          if (container) {
+            container.textContent = ''
+            const errDiv = document.createElement('div')
+            errDiv.style.cssText = 'margin:16px 0;color:#d32f2f;font-weight:bold;'
+            errDiv.textContent = `Viga: ei leitud ÕV ${ovNum} outcomeId vastendust selles päevikus!`
+            container.appendChild(errDiv)
+          }
           allSuccess = false
           continue
         }
@@ -117,8 +123,13 @@ class FinalGradesByOvFeature extends BaseFeature {
           latestOutcomeEntry = await this.api.tahvel.get(`/journals/${journalId}/journalOutcome/${journalOutcomeId}`)
         } catch (err) {
           Logger.error('FinalGradesByOvFeature: Error fetching journalOutcome', { journalId, journalOutcomeId, err })
-          if (container)
-            container.innerHTML = `<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Viga: ei saanud kätte ÕV ${ovNum} outcome andmeid!</div>`
+          if (container) {
+            container.textContent = ''
+            const errDiv = document.createElement('div')
+            errDiv.style.cssText = 'margin:16px 0;color:#d32f2f;font-weight:bold;'
+            errDiv.textContent = `Viga: ei saanud kätte ÕV ${ovNum} outcome andmeid!`
+            container.appendChild(errDiv)
+          }
           allSuccess = false
           continue
         }
@@ -149,7 +160,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           .map(r => {
             let grade = r.ovGrades[ovNum]
             if (!grade) return null
-            if (/^\d+(\.\d+)?$/.test(grade)) {
+            if (/^\d+(?:\.\d+)?$/.test(grade)) {
               const rounded = Math.round(Number(grade))
               if (rounded >= 1 && rounded <= 5) grade = String(rounded)
             }
@@ -544,7 +555,7 @@ class FinalGradesByOvFeature extends BaseFeature {
               }
               let normalizedCalculated = String(calculatedGrade || '').trim()
               const normalizedExisting = String(existingGrade || '').trim()
-              if (/^\d+(\.\d+)?$/.test(normalizedCalculated) && /^\d+$/.test(normalizedExisting)) {
+              if (/^\d+(?:\.\d+)?$/.test(normalizedCalculated) && /^\d+$/.test(normalizedExisting)) {
                 normalizedCalculated = String(Math.round(Number(normalizedCalculated)))
               }
               return normalizedCalculated !== normalizedExisting
@@ -1299,7 +1310,7 @@ class FinalGradesByOvFeature extends BaseFeature {
           }
           let normalizedCalculated = String(calculatedGrade || '').trim()
           const normalizedExisting = String(existingGrade || '').trim()
-          if (/^\d+(\.\d+)?$/.test(normalizedCalculated) && /^\d+$/.test(normalizedExisting)) {
+          if (/^\d+(?:\.\d+)?$/.test(normalizedCalculated) && /^\d+$/.test(normalizedExisting)) {
             normalizedCalculated = String(Math.round(Number(normalizedCalculated)))
           }
           return normalizedCalculated !== normalizedExisting
@@ -2929,7 +2940,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         let ovMatch = false
         let finalMatch = false
         // ÕV: match 'õv', 'õv1', 'õv2', 'õv 2', 'õv_2', 'õv-2', 'õv2 forward', or contains 'õpiväljund'
-        if (/^õv(\d+)?([ _-]?.*)?$/i.test(normalized) || normalized.includes('õpiväljund')) {
+        if (/^õv\d*[ _-]?.*$/i.test(normalized) || normalized.includes('õpiväljund')) {
           ovMatch = true
           for (let i = 0; i < colspan; i++) ovCols.push(colIdx + i)
         }

@@ -318,7 +318,7 @@ function saveKriitSettings({ apiUrl, apiKey, statusElement, apiKeyInput, toggleB
   // http://localhost and http://127.0.0.1 are allowed for local development.
   if (apiUrl) {
     const isHttps = apiUrl.startsWith('https://')
-    const isLocalDev = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(apiUrl)
+    const isLocalDev = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(apiUrl) // eslint-disable-line security/detect-unsafe-regex -- bounded URL validation
     if (!isHttps && !isLocalDev) {
       alert(
         'API URL peab algama https:// (http:// on lubatud ainult localhost-i jaoks). ' +
@@ -482,19 +482,27 @@ function updateCacheDetailsContent(stats) {
 
   if (!cacheDetailsContainer) return
 
-  // Generate HTML for the details
-  let html = '<h3>Vahemälu sisu:</h3>'
+  cacheDetailsContainer.textContent = ''
+  const heading = document.createElement('h3')
+  heading.textContent = 'Vahemälu sisu:'
+  cacheDetailsContainer.appendChild(heading)
 
   // Disk-cache aggregate only — disk URLs are HMAC-hashed for privacy, so
   // per-item names aren't recoverable without the salt. Show count + size.
   if (stats.storage.count > 0) {
-    html += `<div style="margin: 4px 0;">Kettal: ${stats.storage.count} kirjet, ${formatSize(stats.storage.size)} kokku</div>`
-    html += `<div style="font-size: 11px; color: #888; margin-bottom: 8px;">(privaatsuse huvides on kettakirjete nimed räsitud — kirjete nimekirja ei kuvata)</div>`
+    const summary = document.createElement('div')
+    summary.style.margin = '4px 0'
+    summary.textContent = `Kettal: ${stats.storage.count} kirjet, ${formatSize(stats.storage.size)} kokku`
+    cacheDetailsContainer.appendChild(summary)
+    const note = document.createElement('div')
+    note.style.cssText = 'font-size: 11px; color: #888; margin-bottom: 8px;'
+    note.textContent = '(privaatsuse huvides on kettakirjete nimed räsitud — kirjete nimekirja ei kuvata)'
+    cacheDetailsContainer.appendChild(note)
   } else {
-    html += '<div>Vahemälu on tühi</div>'
+    const empty = document.createElement('div')
+    empty.textContent = 'Vahemälu on tühi'
+    cacheDetailsContainer.appendChild(empty)
   }
-
-  cacheDetailsContainer.innerHTML = html
 }
 
 /**

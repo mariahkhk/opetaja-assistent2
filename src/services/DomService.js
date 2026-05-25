@@ -138,7 +138,7 @@ const domService = {
     // Set content
     if (content) {
       if (typeof content === 'string') {
-        element.innerHTML = content
+        element.textContent = content
       } else if (content instanceof Node) {
         element.appendChild(content)
       }

@@ -14,7 +14,7 @@ const MUTATION_DEBOUNCE_MS = 80
 // normalisations don't accumulate spaces between user-typed characters; trailing
 // whitespace is intentionally NOT consumed so `"abc (ÕV3) def"` survives as
 // `"abc def (ÕV3)"`.
-const OV_GROUP_RE = /\s*\(\s*ÕV\s*\d+(?:\s*,\s*ÕV\s*\d+)*\s*\)/gi
+const OV_GROUP_RE = /\s*\(\s*ÕV\s*\d+(?:,\s*ÕV\s*\d+)*\s*\)/gi // eslint-disable-line security/detect-unsafe-regex -- bounded input from Tahvel entry names
 const OV_NUM_RE = /ÕV\s*(\d+)/gi
 
 const STYLES = `

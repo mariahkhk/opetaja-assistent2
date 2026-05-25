@@ -65,7 +65,7 @@ function parseStackTrace(stack) {
   const lines = stack.split('\n')
 
   for (const line of lines) {
-    const match = line.match(/at\s+(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?/)
+    const match = line.match(/at\s+(?:(.+?)\s+\()?(.+?):(\d+):(\d+)\)?/) // eslint-disable-line security/detect-unsafe-regex -- parsing Error.stack, not user input
     if (match) {
       frames.push({
         function: match[1] || '?',

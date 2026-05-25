@@ -743,7 +743,7 @@ const cacheService = {
       // Escape regex metacharacters in journalId so a future caller passing
       // a non-numeric value (e.g. `'1|2'`) can't widen the match.
       const safeId = String(journalId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      return new RegExp(`/journals/${safeId}(?:/|\\?|$)`).test(cleanKey)
+      return new RegExp(`/journals/${safeId}(?:/|\\?|$)`).test(cleanKey) // eslint-disable-line security/detect-non-literal-regexp -- safeId is regex-escaped above
     }
 
     return isJournalRelated

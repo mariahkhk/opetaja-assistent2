@@ -228,7 +228,7 @@ export class DiscrepanciesTable {
       flexContainer.setAttribute('data-discrepancies-table', 'true')
       // Main table only for now
       const mainTableSection = this.#createUnifiedTableElement(discrepancies, capacityProblems, independentWorkMessages, null, true)
-      flexContainer.innerHTML = mainTableSection
+      flexContainer.innerHTML = mainTableSection // eslint-disable-line no-unsanitized/property -- internal HTML from #createUnifiedTableElement, no user input
       // If the chosen insertion point is a header/section element (accordion-header),
       // insert the table after that element (as a sibling) so it appears under the section,
       // otherwise insert as the first child (legacy behavior).
@@ -261,7 +261,7 @@ export class DiscrepanciesTable {
           const headerCells = document.querySelectorAll('table.journalTable thead th')
           hasOvColumns = Array.from(headerCells).some(th => {
             const txt = (th.textContent || th.innerText || '').replace(/\s+/g, ' ').trim().toLowerCase()
-            return /^õv(\d+)?([ _-]?.*)?$/.test(txt) || txt.includes('õpiväljund')
+            return /^õv\d*[ _-]?.*$/.test(txt) || txt.includes('õpiväljund')
           })
         } catch (e) {
           hasOvColumns = false
@@ -326,7 +326,7 @@ export class DiscrepanciesTable {
           `
         }
         // Update flex container
-        flexContainer.innerHTML = mainTableSection + notificationsSection
+        flexContainer.innerHTML = mainTableSection + notificationsSection // eslint-disable-line no-unsanitized/property -- internal HTML from #createUnifiedTableElement, no user input
         // Add button listeners after final content update
         this.addDiscrepancyButtonListeners()
         // Now inject banners if needed
@@ -927,6 +927,34 @@ export class DiscrepanciesTable {
     const style = 'display:inline-flex;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1);'
     return `<div style="${style}">${currentPill}${correctPill}</div>`
   }
+  #createBanner(text, colorClass, extraClass = '') {
+    const div = document.createElement('div')
+    div.className = `oa2-banner ${colorClass}${extraClass ? ' ' + extraClass : ''}`
+    div.textContent = text
+    return div
+  }
+
+  #createNotificationsHeader() {
+    const header = document.createElement('div')
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #dee2e6;'
+    const left = document.createElement('div')
+    left.style.cssText = 'display:flex;align-items:center;'
+    const emoji = document.createElement('span')
+    emoji.style.cssText = 'font-size:20px;margin-right:10px;'
+    emoji.textContent = '🎓'
+    const title = document.createElement('h3')
+    title.style.cssText = 'margin:0;color:#495057;'
+    title.textContent = 'Õpetaja Assistent 2'
+    left.appendChild(emoji)
+    left.appendChild(title)
+    const badge = document.createElement('div')
+    badge.style.cssText = 'background:#ffc107;color:#212529;font-weight:bold;padding:6px 16px;border-radius:16px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.07);'
+    badge.textContent = 'Hinded'
+    header.appendChild(left)
+    header.appendChild(badge)
+    return header
+  }
+
   // Helper to check whether a banner with the exact text already exists in the notifications node
   #bannerExists(notifications, text) {
     if (!notifications || !text) return false
@@ -942,18 +970,11 @@ export class DiscrepanciesTable {
   updateMissingGradesBanner(missingGradesMessage) {
     const notifications = document.querySelector('[data-discrepancies-table] .notifications-section')
     if (!notifications) return
-      notifications.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid #dee2e6;">
-      <div style="display:flex;align-items:center;">
-        <span style="font-size:20px;margin-right:10px;">🎓</span>
-        <h3 style="margin:0;color:#495057;">Õpetaja Assistent 2</h3>
-      </div>
-      <div style="background:#ffc107;color:#212529;font-weight:bold;padding:6px 16px;border-radius:16px;font-size:15px;box-shadow:0 1px 3px rgba(0,0,0,.07);">
-        Hinded
-      </div>
-    </div>`
+      notifications.textContent = ''
+    notifications.appendChild(this.#createNotificationsHeader())
     // If missing grades message provided, show it.
     if (missingGradesMessage && !this.#bannerExists(notifications, missingGradesMessage)) {
-      notifications.innerHTML += `<div class='oa2-banner oa2-banner--red'>${missingGradesMessage}</div>`
+      notifications.appendChild(this.#createBanner(missingGradesMessage, 'oa2-banner--red'))
     }
 
     // Check for OA final-grade mismatches (visual markers added by FinalGrades feature)
@@ -962,7 +983,7 @@ export class DiscrepanciesTable {
       if (oaMismatches && oaMismatches.length > 0) {
         const text = 'Mõnedel õpilastel on vale lõpptulemus!'
         if (!this.#bannerExists(notifications, text)) {
-          notifications.innerHTML += `<div class='oa2-banner oa2-banner--red oa2-banner-final-grade'>${text}</div>`
+          notifications.appendChild(this.#createBanner(text, 'oa2-banner--red', 'oa2-banner-final-grade'))
         }
       }
     } catch (e) { /* ignore DOM errors */ }
@@ -974,12 +995,12 @@ export class DiscrepanciesTable {
       if (finalRed && finalRed.length > 0) {
         const text = 'Mõnedel õpilastel puudub lõpptulemus'
         if (!this.#bannerExists(notifications, text)) {
-          notifications.innerHTML += `<div class='oa2-banner oa2-banner--red oa2-banner-final-grade'>${text}</div>`
+          notifications.appendChild(this.#createBanner(text, 'oa2-banner--red', 'oa2-banner-final-grade'))
         }
       } else if (finalYellow && finalYellow.length > 0) {
         const text = 'Mõnedel õpilastel puudub Lõpptulemus (tähtaeg läheneb)!'
         if (!this.#bannerExists(notifications, text)) {
-          notifications.innerHTML += `<div class='oa2-banner oa2-banner--yellow oa2-banner-final-grade'>${text}</div>`
+          notifications.appendChild(this.#createBanner(text, 'oa2-banner--yellow', 'oa2-banner-final-grade'))
         }
       }
     } catch (e) { /* ignore DOM errors */ }
@@ -1017,7 +1038,7 @@ export class DiscrepanciesTable {
         if (hasMissingFinals) {
           const text = 'Mõnedel õpilastel puudub lõpptulemus'
           if (!this.#bannerExists(notifications, text)) {
-            notifications.innerHTML += `<div class='oa2-banner oa2-banner--red oa2-banner-final-grade'>${text}</div>`
+            notifications.appendChild(this.#createBanner(text, 'oa2-banner--red', 'oa2-banner-final-grade'))
           }
         }
       }

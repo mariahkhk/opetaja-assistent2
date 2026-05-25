@@ -161,7 +161,7 @@ class HighlightFinalGradesFeature extends BaseFeature {
         let ovMatch = false
         let finalMatch = false
         // ÕV: match 'õv', 'õv1', 'õv2', 'õv 2', 'õv_2', 'õv-2', 'õv2 forward', or contains 'õpiväljund'
-        if (/^õv(\d+)?([ _-]?.*)?$/i.test(normalized) || normalized.includes('õpiväljund')) {
+        if (/^õv\d*[ _-]?.*$/i.test(normalized) || normalized.includes('õpiväljund')) {
           ovMatch = true
           for (let i = 0; i < colspan; i++) ovCols.add(colIdx + i)
         }
@@ -393,12 +393,11 @@ class HighlightFinalGradesFeature extends BaseFeature {
           ) {
             return
           }
-          // If the cell is Angular-rendered (ng-star-inserted) but DOES NOT contain the
-          // expected Angular form state classes, skip adding/removing highlights. This prevents
-          // highlighting nodes like icons/links that only have `ng-star-inserted`.
+          // Skip non-grade Angular elements (icons, links) that lack a grade-cell child or form classes
           if (
             cell.classList &&
             cell.classList.contains('ng-star-inserted') &&
+            !cell.querySelector('.grade-cell') &&
             !(cell.classList.contains('ng-untouched') && cell.classList.contains('ng-pristine') && cell.classList.contains('ng-valid'))
           ) {
             return
@@ -441,12 +440,11 @@ class HighlightFinalGradesFeature extends BaseFeature {
           ) {
             return
           }
-          // If the cell is Angular-rendered (ng-star-inserted) but DOES NOT contain the
-          // expected Angular form state classes, skip adding/removing highlights. This prevents
-          // highlighting nodes like icons/links that only have `ng-star-inserted`.
+          // Skip non-grade Angular elements (icons, links) that lack a grade-cell child or form classes
           if (
             cell.classList &&
             cell.classList.contains('ng-star-inserted') &&
+            !cell.querySelector('.grade-cell') &&
             !(cell.classList.contains('ng-untouched') && cell.classList.contains('ng-pristine') && cell.classList.contains('ng-valid'))
           ) {
             return

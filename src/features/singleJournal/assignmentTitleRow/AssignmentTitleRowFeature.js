@@ -598,7 +598,7 @@ class AssignmentTitleRowFeature extends BaseFeature {
 
   _extractVisibleHeaderTitle(headerCell) {
     const rawText = (headerCell.textContent || '').replace(/\s+/g, ' ').trim()
-    const dateMatch = rawText.match(/\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\b/)
+    const dateMatch = rawText.match(/\b\d{1,2}[./]\d{1,2}(?:[./]\d{2,4})?\b/) // eslint-disable-line security/detect-unsafe-regex -- bounded date pattern from header text
     if (!dateMatch) return ''
 
     const withoutDate = this._stripOutcomeSuffixFromTitle(rawText.replace(dateMatch[0], '').replace(/^[\s|:-]+|[\s|:-]+$/g, '').trim())
