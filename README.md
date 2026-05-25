@@ -32,7 +32,7 @@ effort and ensures data consistency across systems.
 - **Timetable discrepancy detection**: Background check that surfaces issues without requiring the teacher to open each journal.
 
 **Cross-cutting:**
-- **Encrypted cache**: All persisted API responses are AES-256-GCM encrypted at rest with a per-install key stored in `chrome.storage.local`. Cache keys are HMAC-hashed so other extensions enumerating the Cache API see only opaque hex. Eviction runs every 6 h via `chrome.alarms`.
+- **Encrypted cache**: All persisted API responses are AES-256-GCM encrypted at rest with a pre-install key stored in `chrome.storage.local`. Cache keys are HMAC-hashed so other extensions enumerating the Cache API see only opaque hex. Eviction runs every 6 h via `chrome.alarms`.
 - **Update notification**: Shows a modal overlay on the Tahvel page when Chrome detects a new extension version is available; dismissal is remembered per version so it only appears once.
 - **Sentry error reporting**: Captures crash reports filtered for known PII; expected 401/403/404/412 responses are excluded.
 - **Privacy-aware popup**: Settings stay in `chrome.storage.local` (never synced to Google's servers); the saved Kriit API key is never loaded into the popup field — a separate indicator shows whether one is stored — and the URL is HTTPS-only (with a `localhost` exception for development).
@@ -114,9 +114,20 @@ src/
 
 ### Prerequisites
 
+- [Git](https://git-scm.com/downloads)
 - [Bun](https://bun.sh) v1.0.0 or higher
 - [Extensions Reloader](https://chrome.google.com/webstore/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid)
   Chrome extension (for extension reloading)
+- A Tahvel teacher account (the extension enhances pages that are only accessible to authenticated teachers)
+
+### Getting Started
+
+Clone the repository:
+
+```bash
+git clone https://github.com/kriit-eu/opetaja-assistent2.git
+cd opetaja-assistent2
+```
 
 ### Development Workflow
 
@@ -148,7 +159,12 @@ src/
     - Click the Extensions Reloader's icon or use its keyboard shortcut (Alt+R or Opt+Shift+R) to reload the extension
       and refresh the page
 
-5. View debug output:
+5. (Optional) Set up Kriit integration:
+    - Click the extension icon in Chrome to open the popup
+    - Enter the Kriit API URL and API key under "Kriit integratsioon"
+    - Click "Salvesta" to save
+
+6. View debug output:
     - Open browser's Developer Tools (F12 or Cmd+Option+I)
     - Look for extension logs in the Console tab
     - Filter console by "✨" to see only extension logs
@@ -199,6 +215,20 @@ bun run build
 4. Copies `manifest.json` (with the version synced from `package.json`), `popup.html`, `icon.svg`, `JournalSyncBannerService.css`, and `LessonTimes.json` into `dist/`
 
 The build script does **not** install the extension in your browser — to load the freshly built `dist/`, follow the same "Load the extension" steps as in the [Development Workflow](#development-workflow) above.
+
+## Useful Commands
+
+| Command | Purpose |
+|---------|---------|
+| `bun start` | Install dependencies, lint, build, and start file watcher |
+| `bun run dev` | Build and start file watcher |
+| `bun run build` | Production build (lint + minify) |
+| `bun run build:dev` | Single development build |
+| `bun test` | Run unit tests |
+| `bun run test:e2e` | Run Playwright E2E tests |
+| `bun run lint` | Check for linting issues |
+| `bun run lint:fix` | Fix linting issues automatically |
+| `bun run format` | Format code with ESLint |
 
 ## Privacy & Security
 
