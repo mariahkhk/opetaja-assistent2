@@ -302,6 +302,15 @@ class FinalGradesByOvFeature extends BaseFeature {
     return result
   }
 
+  onJournalDataChanged(journalId) {
+    const activeJournalId = this.extractJournalId()
+    if (activeJournalId && Number(journalId) === Number(activeJournalId)) {
+      this._lastEntries = null
+      this._lastStudents = null
+      this._lastJournalId = null
+    }
+  }
+
   async onActivate() {
     Logger.debug('✨ FinalGradesByOvFeature: onActivate called')
     Logger.debug('✨ FinalGradesByOvFeature: Current URL:', window.location.href)
@@ -1207,7 +1216,7 @@ class FinalGradesByOvFeature extends BaseFeature {
   async showResults(results, button, opts = { autoSync: true }) {
     Logger.debug('✨ FinalGradesByOvFeature: #showResults called', { results, button, opts })
     // Only perform sync logic, do not render a table
-    // eslint-disable-next-line no-unused-vars
+
     const { allOvNums, ovNumToOutcomeId, hasOvTaggedEntries, output } = results
     // Build a map of (studentId|ovNum) => existing grade object for updating
     const existingGradesMap = {}
@@ -1243,18 +1252,15 @@ class FinalGradesByOvFeature extends BaseFeature {
       if (preExistingSelect && preExistingSelect.value) {
         modeToApply = preExistingSelect.value
       } else {
-        let journalAssessment = this._journalAssessment || ''
-        if (!journalAssessment) {
-          try {
-            const journalId = this.extractJournalId()
-            if (journalId) {
-              const j = await this.api.tahvel.get(`/journals/${journalId}`)
-              if (j && j.assessment) journalAssessment = String(j.assessment || '')
-              this._journalAssessment = journalAssessment
-            }
-          } catch (e) {
-            Logger.debug('FinalGradesByOvFeature: Could not prefetch journal assessment, will infer', e)
+        let journalAssessment = ''
+        try {
+          const journalId = this.extractJournalId()
+          if (journalId) {
+            const j = await this.api.tahvel.get(`/journals/${journalId}`)
+            if (j?.assessment) journalAssessment = String(j.assessment)
           }
+        } catch (e) {
+          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, will infer', e)
         }
         if (journalAssessment === 'KUTSEHINDAMISVIIS_M') modeToApply = 'mitte'
         else if (journalAssessment === 'KUTSEHINDAMISVIIS_E') modeToApply = 'eristav'
@@ -1336,19 +1342,15 @@ class FinalGradesByOvFeature extends BaseFeature {
         // Do not change user's selection or when button intentionally disabled
         const existingSelect = document.getElementById('oa-grading-mode-select')
         // Determine default mode, preferring journal-level assessment when available.
-        let journalAssessment = this._journalAssessment || ''
-        if (!journalAssessment) {
-          try {
-            const journalId = this.extractJournalId()
-            if (journalId) {
-              const j = await this.api.tahvel.get(`/journals/${journalId}`)
-              if (j && j.assessment) journalAssessment = String(j.assessment || '')
-              this._journalAssessment = journalAssessment
-            }
-          } catch (e) {
-            // ignore and fall back to computed grades
-            Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, falling back to grade-based default', e)
+        let journalAssessment = ''
+        try {
+          const journalId = this.extractJournalId()
+          if (journalId) {
+            const j = await this.api.tahvel.get(`/journals/${journalId}`)
+            if (j?.assessment) journalAssessment = String(j.assessment)
           }
+        } catch (e) {
+          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, falling back to grade-based default', e)
         }
         // If journal assessment explicitly indicates a known mode, prefer that
         let defaultMode = ''
@@ -2250,20 +2252,16 @@ class FinalGradesByOvFeature extends BaseFeature {
     // Apply grading-mode selection defaults and ensure the mode is applied to computed results
     try {
       const sel = document.getElementById('oa-grading-mode-select')
-      let journalAssessment = this._journalAssessment || ''
+      let journalAssessment = ''
       if (sel) {
-        // Determine default mode similar to #showResults logic
-        if (!journalAssessment) {
-          try {
-            const journalId = this.extractJournalId()
-            if (journalId) {
-              const j = await this.api.tahvel.get(`/journals/${journalId}`)
-              if (j && j.assessment) journalAssessment = String(j.assessment || '')
-              this._journalAssessment = journalAssessment
-            }
-          } catch (e) {
-            Logger.debug('FinalGradesByOvFeature: Could not prefetch journal assessment for L flow, will infer', e)
+        try {
+          const journalId = this.extractJournalId()
+          if (journalId) {
+            const j = await this.api.tahvel.get(`/journals/${journalId}`)
+            if (j?.assessment) journalAssessment = String(j.assessment)
           }
+        } catch (e) {
+          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment for L flow, will infer', e)
         }
 
         let defaultMode = ''
