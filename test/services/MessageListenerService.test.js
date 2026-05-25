@@ -5,13 +5,20 @@ import {
   setupCustomMessageListener
 } from '../../src/services/MessageListenerService.js'
 
+const OWN_EXTENSION_ID = 'test-extension-id'
+
 function captureListener() {
   let captured = null
   const addListener = mock(handler => { captured = handler })
   global.chrome = {
-    runtime: { onMessage: { addListener } }
+    runtime: { id: OWN_EXTENSION_ID, onMessage: { addListener } }
   }
-  return { addListener, getHandler: () => captured }
+  const ownSender = { id: OWN_EXTENSION_ID }
+  return {
+    addListener,
+    getHandler: () => (msg) => captured(msg, ownSender),
+    getRawHandler: () => captured
+  }
 }
 
 function makeContext(overrides = {}) {
@@ -225,12 +232,51 @@ describe('MessageListenerService', () => {
     })
   })
 
+  describe('sender validation', () => {
+    it('ignores messages from other extensions', () => {
+      const { getRawHandler } = captureListener()
+      const ctx = makeContext({ kriit: { authToken: 'abc', enabled: true } })
+      setupKriitMessageListener(ctx)
+
+      getRawHandler()({ action: 'kriitEnabledChanged', enabled: true }, { id: 'malicious-extension' })
+
+      expect(ctx.fetchJournalData).not.toHaveBeenCalled()
+      expect(ctx.removeSyncBanner).not.toHaveBeenCalled()
+    })
+
+    it('processes messages from own extension', () => {
+      const { getRawHandler } = captureListener()
+      const ctx = makeContext({ kriit: { authToken: 'abc' } })
+      setupKriitMessageListener(ctx)
+
+      getRawHandler()({ action: 'kriitEnabledChanged', enabled: true }, { id: OWN_EXTENSION_ID })
+
+      expect(ctx.fetchJournalData).toHaveBeenCalledTimes(1)
+    })
+
+    it('blocks custom listener messages from other extensions', () => {
+      let captured = null
+      global.chrome = {
+        runtime: {
+          id: OWN_EXTENSION_ID,
+          onMessage: { addListener: mock(h => { captured = h }) }
+        }
+      }
+      const handler = mock()
+      setupCustomMessageListener(handler)
+
+      captured({ action: 'test' }, { id: 'malicious-extension' })
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+  })
+
   describe('setupCustomMessageListener', () => {
-    it('registers the supplied handler with chrome.runtime.onMessage', () => {
+    it('registers a wrapper handler with chrome.runtime.onMessage', () => {
       const { addListener } = captureListener()
       const handler = mock()
       setupCustomMessageListener(handler)
-      expect(addListener).toHaveBeenCalledWith(handler)
+      expect(addListener).toHaveBeenCalledTimes(1)
     })
   })
 })

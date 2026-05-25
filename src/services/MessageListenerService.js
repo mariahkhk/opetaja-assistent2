@@ -23,7 +23,8 @@ export function setupKriitMessageListener(context) {
     return
   }
 
-  chrome.runtime.onMessage.addListener(message => {
+  chrome.runtime.onMessage.addListener((message, sender) => {
+    if (sender.id !== chrome.runtime.id) return
     if (message.action === 'kriitEnabledChanged') {
       Logger.debug('Received kriitEnabledChanged message:', message.enabled)
 
@@ -89,5 +90,8 @@ export function setupKriitMessageListener(context) {
  * @param {Function} messageHandler - Custom message handler function
  */
 export function setupCustomMessageListener(messageHandler) {
-  chrome.runtime.onMessage.addListener(messageHandler)
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (sender.id !== chrome.runtime.id) return
+    messageHandler(message, sender, sendResponse)
+  })
 }
