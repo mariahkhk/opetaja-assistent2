@@ -60,6 +60,13 @@ class AssignmentTitleRowFeature extends BaseFeature {
     }, 1000)
   }
 
+  onJournalDataChanged(journalId) {
+    if (this._entriesJournalId && Number(journalId) === Number(this._entriesJournalId)) {
+      this._invalidateEntriesCache()
+      this._entryDetailCache.clear()
+    }
+  }
+
   onDeactivate() {
     if (this._activateTimeout) {
       clearTimeout(this._activateTimeout)

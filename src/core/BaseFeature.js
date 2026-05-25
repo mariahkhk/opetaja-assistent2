@@ -42,6 +42,19 @@ export const api = {
   _kriitInitPromise: null
 }
 
+const _journalChangeFeatures = new Set()
+
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('oa2:journalDataChanged', event => {
+    const journalId = event.detail?.journalId ?? null
+    for (const feature of _journalChangeFeatures) {
+      if (feature.isActive) {
+        feature.onJournalDataChanged(journalId)
+      }
+    }
+  })
+}
+
 export class BaseFeature {
   constructor(name, urlPattern, requiredSelectors = null) {
     this.name = name
@@ -52,6 +65,8 @@ export class BaseFeature {
 
     // Make API instances available to all features
     this.api = api
+
+    _journalChangeFeatures.add(this)
 
     // Initialize Kriit API base URL from storage
     this.initializeKriitApi()
@@ -148,6 +163,15 @@ export class BaseFeature {
       this.elementsObserver.disconnect()
       this.elementsObserver = null
     }
+  }
+
+  /**
+   * Called when journal data changes due to a Tahvel UI mutation.
+   * Override in subclasses that need to refresh after external edits.
+   * @param {number|null} journalId - The affected journal ID
+   */
+  onJournalDataChanged(_journalId) {
+    // Default: no-op. Features opt in by overriding.
   }
 
   /**

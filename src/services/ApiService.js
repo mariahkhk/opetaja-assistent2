@@ -582,6 +582,18 @@ class ApiService {
 
       ApiService._recordCapture({ method, url: urlString, requestHeaders: requestOptions.headers, requestBody: data, responseStatus: response.status, responseData: result, source: 'network' })
       captured = true
+
+      // Auto-invalidate journal cache after successful mutations so
+      // subsequent cached GETs return fresh data (issue #95).
+      if (this.name === 'tahvel' && method !== 'GET') {
+        const journalIdMatch = urlString.match(/\/journals\/(\d+)/)
+        if (journalIdMatch) {
+          await cacheService.clearJournalCache(journalIdMatch[1]).catch(e =>
+            Logger.debug('[ApiService] Auto-invalidation failed:', e.message)
+          )
+        }
+      }
+
       return result
     } catch (error) {
       if (!captured) {

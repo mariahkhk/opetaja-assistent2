@@ -81,6 +81,13 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     this.setupDialogObserver()
   }
 
+  onJournalDataChanged(journalId) {
+    const activeJournalId = this.extractJournalId()
+    if (activeJournalId && Number(journalId) === Number(activeJournalId)) {
+      this.createLessonDiscrepanciesTable(true, 'cacheInvalidation')
+    }
+  }
+
   onDeactivate() {
     this.isActive = false
     this.cleanupMonitoring()

@@ -13,6 +13,40 @@ const VERSION = '6'
 // Initialize Sentry error tracking before anything else
 sentryService.init()
 
+// The XHR/fetch interceptor (xhrInterceptor.js) is injected into the page's
+// main world via manifest.json content_scripts with "world": "MAIN". It
+// patches XMLHttpRequest and fetch to detect Tahvel's non-GET requests and
+// posts oa2:journalMutation messages back to this isolated-world script.
+
+// Listen for journal-mutation signals from the main-world interceptor.
+// Debounce per journal ID (300 ms) so rapid successive saves (e.g. Tahvel
+// firing PUT + GET in quick succession) coalesce into a single invalidation.
+const _invalidationTimers = {}
+function _extractJournalIdFromPageUrl() {
+  const match = window.location.href.match(/\/journal\/(\d+)/)
+  return match ? Number(match[1]) : null
+}
+
+window.addEventListener('message', event => {
+  if (event.source !== window) return
+  if (event.origin !== window.location.origin) return
+  if (event.data?.type !== 'oa2:journalMutation') return
+
+  // Prefer journal ID from the API URL; fall back to the current page URL
+  // (covers endpoints like /journalEntry/{id} that don't embed a journal ID).
+  const journalId = event.data.journalId ?? _extractJournalIdFromPageUrl()
+  if (!journalId) return
+
+  clearTimeout(_invalidationTimers[journalId])
+  _invalidationTimers[journalId] = setTimeout(() => {
+    delete _invalidationTimers[journalId]
+    if (Logger.isDebugMode()) Logger.debug(`[CacheInvalidation] Tahvel UI mutation detected for journal #${journalId}`)
+    cacheService.clearJournalCache(journalId).then(() => {
+      document.dispatchEvent(new CustomEvent('oa2:journalDataChanged', { detail: { journalId } }))
+    }).catch(e => Logger.debug('[CacheInvalidation] clearJournalCache failed:', e.message))
+  }, 300)
+})
+
 // Print version and build time info using our new Logger
 Logger.info(`Content script loaded - version ${VERSION}`)
 

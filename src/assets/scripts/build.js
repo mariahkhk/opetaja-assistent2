@@ -163,6 +163,11 @@ async function copyStaticAssets() {
   fs.copyFileSync(cssSourcePath, cssDestPath)
   console.log('  Copied JournalSyncBannerService.css')
 
+  // Copy xhrInterceptor.js (main-world script, NOT bundled — must stay a plain IIFE)
+  const xhrInterceptorSource = path.join(CONFIG.srcDir, 'xhrInterceptor.js')
+  fs.copyFileSync(xhrInterceptorSource, path.join(CONFIG.distDir, 'xhrInterceptor.js'))
+  console.log('  Copied xhrInterceptor.js')
+
   // Copy LessonTimes.json
   const lessonTimesSourceDir = path.join(CONFIG.srcDir, 'features', 'singleJournal', 'lessonDiscrepancies')
   const lessonTimesDestDir = path.join(CONFIG.distDir, 'src', 'features', 'singleJournal', 'lessonDiscrepancies')

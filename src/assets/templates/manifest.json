@@ -15,6 +15,12 @@
   "content_scripts": [
     {
       "matches": ["*://tahvel.edu.ee/*", "*://test.tahvel.eenet.ee/*"],
+      "js": ["xhrInterceptor.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://tahvel.edu.ee/*", "*://test.tahvel.eenet.ee/*"],
       "js": ["content.js"]
     }
   ],
