@@ -15,9 +15,12 @@
     "@types/bun": "latest",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-no-unsanitized": "^4.1.5",
     "eslint-plugin-prettier": "^5.5.1",
+    "eslint-plugin-security": "^4.0.0",
     "husky": "^9.1.7",
-    "jsdom": "^27.0.0"
+    "jsdom": "^27.0.0",
+    "retire": "^5.4.2"
   },
   "scripts": {
     "start": "bun install && find src -name '*.js' -print0 | xargs -0 ./node_modules/.bin/eslint --fix && bun run dev",

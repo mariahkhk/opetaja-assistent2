@@ -4,7 +4,7 @@
     "es2021": true,
     "webextensions": true
   },
-  "extends": "eslint:recommended",
+  "extends": ["eslint:recommended", "plugin:no-unsanitized/recommended-legacy", "plugin:security/recommended-legacy"],
   "parserOptions": {
     "ecmaVersion": "latest",
     "sourceType": "module"
@@ -22,7 +22,8 @@
         "node": true
       },
       "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "security/detect-non-literal-fs-filename": "off"
       }
     },
     {
@@ -143,6 +144,7 @@
     "curly": "off",
     "no-else-return": "off",
     "no-empty": "warn",
-    "no-undef": "error"
+    "no-undef": "error",
+    "security/detect-object-injection": "off"
   }
 }

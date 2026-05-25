@@ -6,6 +6,18 @@ if ! bun run lint > /dev/null 2>&1; then
   exit 1
 fi
 
+# Security scans (OWASP A06 — Vulnerable Components)
+echo "Security scan..."
+if ! bun --bun x retire --path src/ > /dev/null 2>&1; then
+  echo "❌ retire.js found vulnerable libraries"
+  bun --bun x retire --path src/
+  exit 1
+fi
+if ! bun audit > /dev/null 2>&1; then
+  echo "⚠️  bun audit found dependency vulnerabilities (review output below)"
+  bun audit
+fi
+
 # Run tests
 echo "Testing..."
 if ! bun test > /dev/null 2>&1; then
