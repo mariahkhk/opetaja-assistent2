@@ -51,7 +51,7 @@ describe('DiscrepanciesTable - Lisa koik (Add all) button', () => {
   }
 
   function findAddAllButton(container) {
-    return container.querySelector('[data-handler="addallmissing"]')
+    return container.querySelector('[data-handler="addAllMissing"]')
   }
 
   test('shows "Lisa koik" button when there are 2+ missing entries', () => {

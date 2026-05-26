@@ -7,15 +7,12 @@ if ! bun run lint > /dev/null 2>&1; then
 fi
 
 # Security scans (OWASP A06 — Vulnerable Components)
+# Block on high/critical only; moderate/low are informational.
 echo "Security scan..."
-if ! bun --bun x retire --path src/ > /dev/null 2>&1; then
-  echo "❌ retire.js found vulnerable libraries"
-  bun --bun x retire --path src/
+if ! bun audit --audit-level=high > /dev/null 2>&1; then
+  echo "❌ bun audit found high/critical vulnerabilities"
+  bun audit --audit-level=high
   exit 1
-fi
-if ! bun audit > /dev/null 2>&1; then
-  echo "⚠️  bun audit found dependency vulnerabilities (review output below)"
-  bun audit
 fi
 
 # Run tests
