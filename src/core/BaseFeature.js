@@ -111,7 +111,7 @@ export class BaseFeature {
         this.elementsObserver = null
 
         if (error) {
-          Logger.warning(`Feature ${this.name} could not find required elements: ${error.message}`)
+          Logger.error(`Feature ${this.name} could not find required elements`, error)
           this.onRequiredElementsNotFound(error)
           return
         }
@@ -188,11 +188,10 @@ export class BaseFeature {
   /**
    * Called when required elements are not found within timeout
    * Can be overridden by child classes
-   * @param {Error} error - The error that occurred
+   * @param {Error} _error - The error that occurred
    */
-  onRequiredElementsNotFound(error) {
-    // Default implementation - override in subclasses if needed
-    Logger.warning(`Feature "${this.name}" could not find required elements: ${error.message}`)
+  onRequiredElementsNotFound(_error) {
+    // Override in subclasses to handle UI cleanup (Sentry reporting is handled by activate())
   }
 
   /**

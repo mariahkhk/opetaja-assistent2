@@ -1,6 +1,7 @@
-import { describe, test, expect, beforeEach, mock } from 'bun:test'
+import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test'
 import { BaseFeature, api, getTahvelBaseUrl } from '../../src/core/BaseFeature.js'
 import Logger from '../../src/services/Logger.js'
+import { domService } from '../../src/services/DomService.js'
 import { JSDOM } from 'jsdom'
 import { restoreChromeMock } from '../setup.js'
 
@@ -184,20 +185,62 @@ describe('BaseFeature', () => {
   })
 
   describe('onRequiredElementsNotFound (default implementation)', () => {
-    test('logs a warning with the feature name and error message, does not throw', () => {
+    test('does not throw and is a no-op hook for subclass overrides', () => {
       const feature = new BaseFeature('test', '/test')
-      const originalWarning = Logger.warning
-      const calls = []
-      Logger.warning = (...args) => calls.push(args)
+      expect(() => feature.onRequiredElementsNotFound(new Error('Timeout boom'))).not.toThrow()
+    })
+  })
 
-      try {
-        expect(() => feature.onRequiredElementsNotFound(new Error('Timeout boom'))).not.toThrow()
-        expect(calls.length).toBe(1)
-        expect(calls[0][0]).toContain('test')
-        expect(calls[0][0]).toContain('Timeout boom')
-      } finally {
-        Logger.warning = originalWarning
+  describe('activate reports to Sentry when required elements not found', () => {
+    let originalObserve
+    let originalError
+
+    beforeEach(() => {
+      originalObserve = domService.observeForElements
+      originalError = Logger.error
+    })
+
+    afterEach(() => {
+      domService.observeForElements = originalObserve
+      Logger.error = originalError
+    })
+
+    test('calls Logger.error with feature name and error when observer times out', () => {
+      const timeoutError = new Error('Timeout waiting for elements')
+      domService.observeForElements = (_selectors, callback) => {
+        callback(null, null, timeoutError)
+        return { disconnect: () => {} }
       }
+
+      const errorCalls = []
+      Logger.error = (...args) => errorCalls.push(args)
+
+      const feature = new BaseFeature('myTestFeature', '/test', '.required')
+      feature.activate()
+
+      expect(errorCalls.length).toBe(1)
+      expect(errorCalls[0][0]).toContain('myTestFeature')
+      expect(errorCalls[0][0]).toContain('could not find required elements')
+      expect(errorCalls[0][1]).toBe(timeoutError)
+    })
+
+    test('still calls onRequiredElementsNotFound for subclass UI handling', () => {
+      const timeoutError = new Error('Timeout waiting for elements')
+      domService.observeForElements = (_selectors, callback) => {
+        callback(null, null, timeoutError)
+        return { disconnect: () => {} }
+      }
+      Logger.error = () => {}
+
+      let hookCalled = false
+      class TestFeature extends BaseFeature {
+        onRequiredElementsNotFound() { hookCalled = true }
+      }
+
+      const feature = new TestFeature('test', '/test', '.required')
+      feature.activate()
+
+      expect(hookCalled).toBe(true)
     })
   })
 
