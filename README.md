@@ -118,7 +118,9 @@ src/
 - [Bun](https://bun.sh) v1.0.0 or higher
 - [Extensions Reloader](https://chrome.google.com/webstore/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid)
   Chrome extension (for extension reloading)
-- A Tahvel teacher account (the extension enhances pages that are only accessible to authenticated teachers)
+- A Tahvel teacher account — the extension enhances pages only accessible to authenticated teachers.
+  Use the [test environment](https://test.tahvel.eenet.ee) for development and the [live environment](https://tahvel.edu.ee) for production.
+  The test environment home page has instructions for creating a test account.
 
 ### Getting Started
 
