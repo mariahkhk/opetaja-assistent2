@@ -755,7 +755,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
         className: button.className,
         textContent: button.textContent,
         id: button.id,
-        innerHTML: button.innerHTML.substring(0, 200) + (button.innerHTML.length > 200 ? '...' : '')
+        text: button.textContent.substring(0, 200) + (button.textContent.length > 200 ? '...' : '')
       })
 
     const originalState = this.captureButtonState(button)
@@ -1792,7 +1792,7 @@ export default class LessonDiscrepanciesFeature extends BaseFeature {
     const th = headers[entryIndex]
     const link = th.querySelector('a')
     if (!link) {
-      Logger.debug(`[${this.name}] New Tahvel: header at index ${entryIndex} has no <a> child: "${th.innerHTML.slice(0, 100)}"`)
+      Logger.debug(`[${this.name}] New Tahvel: header at index ${entryIndex} has no <a> child: "${th.textContent.slice(0, 100)}"`)
       return null
     }
 

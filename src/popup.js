@@ -434,7 +434,10 @@ function loadCacheStatistics() {
     return
   }
 
-  cacheStatsContainer.innerHTML = '<div>Laadimine...</div>'
+  cacheStatsContainer.textContent = ''
+  const loadingDiv = document.createElement('div')
+  loadingDiv.textContent = 'Laadimine...'
+  cacheStatsContainer.appendChild(loadingDiv)
 
   // Send message to content script (Cache API lives in page origin, not extension origin)
   chrome.tabs.query({ active: true, currentWindow: true }, tabs => {

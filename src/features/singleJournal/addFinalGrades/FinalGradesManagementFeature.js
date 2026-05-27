@@ -1331,12 +1331,16 @@ class FinalGradesByOvFeature extends BaseFeature {
       container = domService.createAndInsertElement('div', { id: 'oa-final-grades-results' }, '', button, 'afterend')
     }
     if (allOvNums.length > 0 && !hasOvTaggedEntries) {
-      container.innerHTML = '<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Ühtegi õpiväljundit pole märgitud sissekannete nimetustesse!</div>'
+      container.textContent = ''
+      const noOvDiv = document.createElement('div')
+      noOvDiv.style.cssText = 'margin:16px 0;color:#d32f2f;font-weight:bold;'
+      noOvDiv.textContent = 'Ühtegi õpiväljundit pole märgitud sissekannete nimetustesse!'
+      container.appendChild(noOvDiv)
       return
     }
     // If ÕV columns exist, automatically sync grades silently (no status message unless error)
     if (allOvNums.length > 0) {
-      container.innerHTML = ''
+      container.textContent = ''
       // Create or update grading-mode dropdown next to the button.
       try {
         // Do not change user's selection or when button intentionally disabled
@@ -1883,7 +1887,11 @@ class FinalGradesByOvFeature extends BaseFeature {
           })
           .catch(err => {
             Logger.error('FinalGradesByOvFeature: Fatal error in sync loop', { err })
-            container.innerHTML = '<div style="margin:16px 0;color:#d32f2f;font-weight:bold;">Viga õpiväljundite hinnete saatmisel!</div>'
+            container.textContent = ''
+            const errDiv = document.createElement('div')
+            errDiv.style.cssText = 'margin:16px 0;color:#d32f2f;font-weight:bold;'
+            errDiv.textContent = 'Viga õpiväljundite hinnete saatmisel!'
+            container.appendChild(errDiv)
           })
       }, 0)
       return filteredOutput
@@ -2223,7 +2231,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     if (!container) {
       container = domService.createAndInsertElement('div', { id: 'oa-final-grades-results' }, '', button, 'afterend')
     }
-    container.innerHTML = ''
+    container.textContent = ''
     let statusDiv = document.getElementById('oa-sync-lopp-status')
     if (!statusDiv) {
       statusDiv = domService.createAndInsertElement(
@@ -2682,7 +2690,7 @@ class FinalGradesByOvFeature extends BaseFeature {
       })
 
       // Replace cell content with the dropdown
-      cell.innerHTML = ''
+      cell.textContent = ''
       cell.appendChild(select)
     } catch (e) {
       Logger.debug('FinalGradesByOvFeature: Error creating L-grade dropdown', e)
