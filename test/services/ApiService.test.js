@@ -1219,3 +1219,140 @@ describe('_recordCapture PII redaction', () => {
     })
 
 })
+
+describe('_sanitizeHeaders', () => {
+  test('redacts Authorization header', () => {
+    const result = ApiService._sanitizeHeaders({ Authorization: 'Bearer secret123' })
+    expect(result.Authorization).toBe('[REDACTED]')
+  })
+
+  test('redacts x-xsrf-token header (case-insensitive)', () => {
+    const result = ApiService._sanitizeHeaders({ 'X-XSRF-TOKEN': 'token-value' })
+    expect(result['X-XSRF-TOKEN']).toBe('[REDACTED]')
+  })
+
+  test('redacts cookie header', () => {
+    const result = ApiService._sanitizeHeaders({ Cookie: 'session=abc123' })
+    expect(result.Cookie).toBe('[REDACTED]')
+  })
+
+  test('preserves non-sensitive headers', () => {
+    const result = ApiService._sanitizeHeaders({ 'Content-Type': 'application/json', 'X-Custom': 'safe' })
+    expect(result['Content-Type']).toBe('application/json')
+    expect(result['X-Custom']).toBe('safe')
+  })
+
+  test('returns null for null/undefined input', () => {
+    expect(ApiService._sanitizeHeaders(null)).toBeNull()
+    expect(ApiService._sanitizeHeaders(undefined)).toBeNull()
+  })
+})
+
+describe('_isHighPiiEndpoint', () => {
+  test('marks journalStudents as high-PII', () => {
+    expect(ApiService._isHighPiiEndpoint('/journals/123/journalStudents')).toBe(true)
+    expect(ApiService._isHighPiiEndpoint('https://tahvel.edu.ee/hois_back/journals/456/journalStudents')).toBe(true)
+  })
+
+  test('marks students endpoint as high-PII', () => {
+    expect(ApiService._isHighPiiEndpoint('/students')).toBe(true)
+    expect(ApiService._isHighPiiEndpoint('/students/789')).toBe(true)
+  })
+
+  test('marks teachers endpoint as high-PII', () => {
+    expect(ApiService._isHighPiiEndpoint('/teachers')).toBe(true)
+    expect(ApiService._isHighPiiEndpoint('/teachers/123')).toBe(true)
+  })
+
+  test('does not mark journal list as high-PII', () => {
+    expect(ApiService._isHighPiiEndpoint('/journals')).toBe(false)
+    expect(ApiService._isHighPiiEndpoint('/journals/123')).toBe(false)
+  })
+
+  test('does not mark entries as high-PII', () => {
+    expect(ApiService._isHighPiiEndpoint('/journals/123/journalEntriesByDate')).toBe(false)
+  })
+
+  test('returns false for null/undefined', () => {
+    expect(ApiService._isHighPiiEndpoint(null)).toBe(false)
+    expect(ApiService._isHighPiiEndpoint(undefined)).toBe(false)
+  })
+})
+
+describe('_sanitiseForCache', () => {
+  test('strips insertedBy and changedBy from timetable events', () => {
+    const raw = {
+      timetableEvents: [
+        { id: 1, name: 'Lesson', insertedBy: 'Mari Maasikas (39901010001)', changedBy: 'Juhan Jansen (49902020002)' },
+        { id: 2, name: 'Lab', insertedBy: 'Kati Kask (39903030003)' }
+      ]
+    }
+    const result = ApiService._sanitiseForCache('/timetableevents/timetableByTeacher/9', raw)
+    for (const ev of result.timetableEvents) {
+      expect(ev.insertedBy).toBeUndefined()
+      expect(ev.changedBy).toBeUndefined()
+    }
+    expect(result.timetableEvents[0].id).toBe(1)
+    expect(result.timetableEvents[0].name).toBe('Lesson')
+  })
+
+  test('allowlists /user response to school, person, roleCode only', () => {
+    const raw = {
+      school: { id: 9 },
+      person: { id: 227928, idcode: '40000000002' },
+      roleCode: 'ROLL_O',
+      name: '30000000001',
+      email: 'teacher@school.ee'
+    }
+    const result = ApiService._sanitiseForCache('/user', raw)
+    expect(result.school).toEqual({ id: 9 })
+    expect(result.person).toEqual({ id: 227928 })
+    expect(result.roleCode).toBe('ROLL_O')
+    expect(result.name).toBeUndefined()
+    expect(result.email).toBeUndefined()
+    expect(JSON.stringify(result)).not.toContain('40000000002')
+  })
+
+  test('passes through non-PII endpoints unchanged', () => {
+    const raw = { content: [{ id: 1, name: 'Test Journal' }] }
+    const result = ApiService._sanitiseForCache('/journals', raw)
+    expect(result).toEqual(raw)
+  })
+
+  test('returns data unchanged for null url', () => {
+    const raw = { x: 1 }
+    expect(ApiService._sanitiseForCache(null, raw)).toEqual(raw)
+  })
+})
+
+describe('_bodyContainsPII', () => {
+  test('flags Kriit PII endpoints', () => {
+    expect(ApiService._bodyContainsPII('/api/subjects/getDifferences')).toBe(true)
+    expect(ApiService._bodyContainsPII('/api/grades/markSynchronized')).toBe(true)
+    expect(ApiService._bodyContainsPII('/api/outcomes/sync')).toBe(true)
+  })
+
+  test('does not flag non-PII endpoints', () => {
+    expect(ApiService._bodyContainsPII('/api/assignments')).toBe(false)
+    expect(ApiService._bodyContainsPII('/journals/123')).toBe(false)
+  })
+
+  test('returns false for null/undefined', () => {
+    expect(ApiService._bodyContainsPII(null)).toBe(false)
+    expect(ApiService._bodyContainsPII(undefined)).toBe(false)
+  })
+})
+
+describe('_isPiiUrl', () => {
+  test('returns true for all PII classes', () => {
+    expect(ApiService._isPiiUrl('/students/123')).toBe(true)
+    expect(ApiService._isPiiUrl('/api/subjects/getDifferences')).toBe(true)
+    expect(ApiService._isPiiUrl('/user')).toBe(true)
+    expect(ApiService._isPiiUrl('/timetableevents/timetableByTeacher/9')).toBe(true)
+  })
+
+  test('returns false for non-PII endpoints', () => {
+    expect(ApiService._isPiiUrl('/journals/123')).toBe(false)
+    expect(ApiService._isPiiUrl('/journals/123/journalEntriesByDate')).toBe(false)
+  })
+})
