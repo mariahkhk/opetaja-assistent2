@@ -27,9 +27,14 @@
   }
 
   function notify(method, url) {
-    if (!isJournalRelatedUrl(url)) return
-    const journalId = extractJournalId(url)
-    window.postMessage({ type: MESSAGE_TYPE, journalId, method }, window.location.origin)
+    // Cache-invalidation signalling must never break the page's own request.
+    try {
+      if (!isJournalRelatedUrl(url)) return
+      const journalId = extractJournalId(url)
+      window.postMessage({ type: MESSAGE_TYPE, journalId, method }, window.location.origin)
+    } catch {
+      // Swallow: a failure here is non-essential and must not reject Tahvel's fetch/XHR.
+    }
   }
 
   // --- XMLHttpRequest patch ---------------------------------------------------
