@@ -14,6 +14,8 @@ const SCENARIOS = {
   diffs: fileScenario('getDifferences-with-diffs.json'),
   newAssignments: fileScenario('getDifferences-with-new-assignments.json'),
   diffsAndNew: fileScenario('getDifferences-with-diffs-and-new.json'),
+  xss: fileScenario('getDifferences-with-xss.json'),
+  gradeXss: fileScenario('getDifferences-grade-xss.json'),
   bareArray: () => ({ status: 200, body: '[]', contentType: 'application/json' }),
   ok: () => ({ status: 200, body: '{"success":true}', contentType: 'application/json' }),
   500: () => ({ status: 500, body: '{"error":"server"}', contentType: 'application/json' }),

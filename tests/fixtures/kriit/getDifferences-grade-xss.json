@@ -1,0 +1,23 @@
+{
+  "differences": [
+    {
+      "subjectExternalId": "404498",
+      "groupName": "IS25",
+      "assignments": [
+        {
+          "assignmentExternalId": "<img src=x onerror=\"window.__xss=true\">",
+          "assignmentId": 42,
+          "assignmentName": "<img src=x onerror=\"window.__xss=true\">",
+          "assignmentEntryDate": "2026-04-15",
+          "assignmentDueAt": "2026-04-22",
+          "assignmentHours": 2,
+          "assignmentEntryType": "SISSEKANNE_I",
+          "results": [
+            { "studentPersonalCode": "50001010001", "studentName": "Anon1", "grade": "5" }
+          ]
+        }
+      ]
+    }
+  ],
+  "newAssignments": {}
+}

