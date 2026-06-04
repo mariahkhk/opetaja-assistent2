@@ -2,7 +2,7 @@
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
 import { domService } from '../../../services/DomService.js'
-import { extractOutcomeNumbersFromEntryName } from '../../../lib/extractOutcomeNumbersFromEntryName.js'
+import { extractOutcomeNumberFromOutcomeEntryName, extractOutcomeNumbersFromEntryName } from '../../../lib/extractOutcomeNumbersFromEntryName.js'
 import { getNativeJournalHeaderRows } from '../../../lib/journalTableHeaders.js'
 import { injectFinalGradeCSS, markMismatch, clearMismatch } from './FinalGradeHighlighter.js'
 import {
@@ -542,8 +542,7 @@ class FinalGradesByOvFeature extends BaseFeature {
         if (this._lastEntries) {
           for (const entry of this._lastEntries) {
             if (entry.entryType === 'SISSEKANNE_O') {
-              const match = entry.nameEt && entry.nameEt.match(/^([0-9]+)\)/)
-              const ovNum = match && match[1]
+              const ovNum = extractOutcomeNumberFromOutcomeEntryName(entry.nameEt)
               if (ovNum) {
                 const studentOutcomeResults = entry.studentOutcomeResults
                 if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
@@ -1225,8 +1224,7 @@ class FinalGradesByOvFeature extends BaseFeature {
     if (this._lastEntries) {
       for (const entry of this._lastEntries) {
         if (entry.entryType === 'SISSEKANNE_O') {
-          const match = entry.nameEt && entry.nameEt.match(/^([0-9]+)\)/)
-          const ovNum = match && match[1]
+          const ovNum = extractOutcomeNumberFromOutcomeEntryName(entry.nameEt)
           if (ovNum) {
             const studentOutcomeResults = entry.studentOutcomeResults
             if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {

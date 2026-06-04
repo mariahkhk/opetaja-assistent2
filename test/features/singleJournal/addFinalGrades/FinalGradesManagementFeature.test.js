@@ -1,7 +1,7 @@
 import { describe, test, it, expect, beforeEach, mock } from 'bun:test'
 import { restoreGlobalDOM } from '../../../setup.js'
 import FinalGradesByOvFeature from '../../../../src/features/singleJournal/addFinalGrades/FinalGradesManagementFeature.js'
-import { extractOutcomeNumbersFromEntryName } from '../../../../src/lib/extractOutcomeNumbersFromEntryName.js'
+import { extractOutcomeNumberFromOutcomeEntryName, extractOutcomeNumbersFromEntryName } from '../../../../src/lib/extractOutcomeNumbersFromEntryName.js'
 
 function buildHeaderTable(headerSpecs) {
   const table = document.createElement('table')
@@ -525,6 +525,19 @@ describe('extractOutcomeNumbersFromEntryName', () => {
     expect(extractOutcomeNumbersFromEntryName('ÕV2 töö')).toEqual([])
     expect(extractOutcomeNumbersFromEntryName('Foo (ÕV2) lisa')).toEqual([])
     expect(extractOutcomeNumbersFromEntryName('Foo (ÕV2, test)')).toEqual([])
+  })
+})
+
+describe('extractOutcomeNumberFromOutcomeEntryName', () => {
+  test('extracts parenthesized and dotted SISSEKANNE_O prefixes', () => {
+    expect(extractOutcomeNumberFromOutcomeEntryName('1) Outcome')).toBe('1')
+    expect(extractOutcomeNumberFromOutcomeEntryName('04. loob lihtsamaid rakendusi')).toBe('4')
+    expect(extractOutcomeNumberFromOutcomeEntryName('005. järgib praktikaid')).toBe('5')
+  })
+
+  test('returns empty string when no outcome prefix exists', () => {
+    expect(extractOutcomeNumberFromOutcomeEntryName('Outcome 1')).toBe('')
+    expect(extractOutcomeNumberFromOutcomeEntryName('000000000000000000000000000000000000000000x')).toBe('')
   })
 })
 
@@ -2224,6 +2237,26 @@ describe("FinalGradesManagementFeature - integration", () => {
         hasOvTaggedEntries: true,
         // Computed (exercise) grade is numeric, but it must NOT decide the scale.
         output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '1': '4' }, finalGrade: '4', journalStudentId: '5' }]
+      }
+      await feature.showResults(results, button, { autoSync: false })
+      const select = document.getElementById('oa-grading-mode-select')
+      expect(select.value).toBe('mitte')
+    })
+
+    it('selects mitteeristav from dotted recorded A/MA outcome names', async () => {
+      buildJournalTableWithStudent({ studentName: 'Test' })
+      window.location.hash = '#/journal/12345/edit'
+      feature.api.tahvel.get = mock(async () => ({ assessment: 'KUTSEHINDAMISVIIS_E' }))
+      feature._lastEntries = [
+        { entryType: 'SISSEKANNE_O', nameEt: '04. loob lihtsamaid rakendusi', studentOutcomeResults: { 55: { grade: { code: 'KUTSEHINDAMINE_A' } } } }
+      ]
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      const results = {
+        allOvNums: ['4'],
+        ovNumToOutcomeId: { '4': 100 },
+        hasOvTaggedEntries: true,
+        output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '4': '4' }, finalGrade: '4', journalStudentId: '5' }]
       }
       await feature.showResults(results, button, { autoSync: false })
       const select = document.getElementById('oa-grading-mode-select')

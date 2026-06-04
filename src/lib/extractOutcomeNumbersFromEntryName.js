@@ -28,3 +28,19 @@ export function extractOutcomeNumbersFromEntryName(nameEt) {
 
   return [...new Set(ovNums)]
 }
+
+/**
+ * Extract the outcome number prefix from a SISSEKANNE_O entry name like
+ * "1) Outcome" or "04. Outcome". Leading zeroes are normalized away.
+ *
+ * @param {string} nameEt
+ * @returns {string}
+ */
+export function extractOutcomeNumberFromOutcomeEntryName(nameEt) {
+  if (typeof nameEt !== 'string') return ''
+
+  const match = nameEt.match(/^(\d+)[).]/)
+  if (!match) return ''
+
+  return match[1].replace(/^0+/, '') || '0'
+}
