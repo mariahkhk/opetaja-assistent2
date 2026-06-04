@@ -1896,6 +1896,24 @@ describe("FinalGradesManagementFeature - integration", () => {
       expect(filtered.length).toBe(1)
     })
 
+    it('uses journalStudentResults fallback when L entry lacks journalEntryStudents', async () => {
+      feature.api.tahvel.get = mock(async (endpoint) => {
+        if (endpoint === '/journals/12345') return { assessment: 'KUTSEHINDAMISVIIS_E' }
+        return {}
+      })
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      const lastEntries = [
+        { id: 99, entryType: 'SISSEKANNE_L', journalStudentResults: {} }
+      ]
+      const results = { output: [{ studentId: 55, journalStudentId: '5', finalGrade: '4' }] }
+
+      const filtered = await feature.showLGradeResults(results, button, lastEntries, { autoSync: false })
+
+      expect(document.getElementById('oa-grading-mode-select')).toBeTruthy()
+      expect(filtered.length).toBe(1)
+    })
+
     it('skips students with finalGrade null', async () => {
       feature.api.tahvel.get = mock(async (endpoint) => {
         if (endpoint === '/journals/12345') return { assessment: '' }

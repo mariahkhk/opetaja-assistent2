@@ -1987,10 +1987,23 @@ class FinalGradesByOvFeature extends BaseFeature {
       }
       // If we don't have a usable currentEntry (or it lacks journalEntryStudents), fetch fresh from API
       if (!currentEntry || !Array.isArray(currentEntry.journalEntryStudents)) {
-        currentEntry = await this.api.tahvel.get(`/journals/${journalId}/journalEntry/${lEntry.id}`, {}, { cache: false })
-        Logger.debug('✨ FinalGradesLFeature: Fetched current entry from API', currentEntry)
+        const currentEntryFromList = currentEntry
+        const fetchedEntry = await this.api.tahvel.get(`/journals/${journalId}/journalEntry/${lEntry.id}`, {}, { cache: false })
+        currentEntry = fetchedEntry && (Array.isArray(fetchedEntry.journalEntryStudents) || fetchedEntry.journalStudentResults)
+          ? fetchedEntry
+          : currentEntryFromList
+        Logger.debug('✨ FinalGradesLFeature: Fetched current entry from API', fetchedEntry)
       } else {
         Logger.debug('✨ FinalGradesLFeature: Using current entry from lastEntries', currentEntry)
+      }
+      if (currentEntry && !Array.isArray(currentEntry.journalEntryStudents) && currentEntry.journalStudentResults && typeof currentEntry.journalStudentResults === 'object') {
+        currentEntry = {
+          ...currentEntry,
+          journalEntryStudents: Object.entries(currentEntry.journalStudentResults).flatMap(([journalStudent, results]) => {
+            if (!Array.isArray(results)) return []
+            return results.map(result => ({ ...result, journalStudent }))
+          })
+        }
       }
       // Fail closed: if we still couldn't read the recorded final grades (entry missing or a
       // malformed response), do NOT guess a grading scale or sync — that could overwrite correct
