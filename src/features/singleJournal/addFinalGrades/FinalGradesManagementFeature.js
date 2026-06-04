@@ -5,6 +5,12 @@ import { domService } from '../../../services/DomService.js'
 import { extractOutcomeNumbersFromEntryName } from '../../../lib/extractOutcomeNumbersFromEntryName.js'
 import { getNativeJournalHeaderRows } from '../../../lib/journalTableHeaders.js'
 import { injectFinalGradeCSS, markMismatch, clearMismatch } from './FinalGradeHighlighter.js'
+import {
+  applyGradingMode,
+  resolveGradingMode,
+  getRecordedOutcomeGradeTokens,
+  getRecordedFinalGradeTokens
+} from './GradingMode.js'
 
 class FinalGradesByOvFeature extends BaseFeature {
   // Helper to fetch and transform detailed outcome data for SISSEKANNE_O
@@ -288,6 +294,10 @@ class FinalGradesByOvFeature extends BaseFeature {
   }
   constructor() {
     super('finalGradesByOv', () => true, null) // Activate on any page for testing
+    // In-session manual grading-mode override, keyed by journalId. No persistence:
+    // recorded grades in Tahvel are the cross-session memory. Survives re-renders so
+    // the teacher's pick never snaps back. NOT cleared by onJournalDataChanged.
+    this.gradingModeUserPickByJournal = {}
     Logger.debug('✨ FinalGradesByOvFeature: Constructor called - will activate on any page for testing')
   }
 
@@ -970,9 +980,9 @@ class FinalGradesByOvFeature extends BaseFeature {
             }
           })
         } else if (Array.isArray(entry.journalEntryStudents)) {
-          entry.journalEntryStudents.forEach(js => {
-            if (js.grade && js.grade.code && js.journalStudent != null) {
-              collectEntryGrade(String(js.journalStudent), js.grade.code.replace('KUTSEHINDAMINE_', ''))
+          entry.journalEntryStudents.forEach(entryStudent => {
+            if (entryStudent.grade && entryStudent.grade.code && entryStudent.journalStudent != null) {
+              collectEntryGrade(String(entryStudent.journalStudent), entryStudent.grade.code.replace('KUTSEHINDAMINE_', ''))
             }
           })
         }
@@ -1097,119 +1107,108 @@ class FinalGradesByOvFeature extends BaseFeature {
   // - 'mitte' (Mitteeristav hindamine): numeric 3-5 -> A, 2 (and 1) -> MA; final = A if all OV grades are A and none ungraded, otherwise MA
   // - 'eristav' (Eristav hindamine): A -> 5, MA or ungraded -> 2, final = rounded average of all grades
   // Assumptions: grade '1' is treated as worst-case and maps to MA under 'mitte'; unknown tokens treated as ungraded or MA when sensible.
+  // Take a one-time pristine snapshot of the computed output so grading-mode
+  // conversion always derives from the original tokens. This makes mode switching
+  // non-lossy and idempotent (A/MA and `_hasLow` survive a mitte<->eristav toggle).
+  ensureRawOutputSnapshot(results) {
+    if (results && Array.isArray(results.output) && !results.rawOutput) {
+      results.rawOutput = structuredClone(results.output)
+    }
+  }
+
+  // Apply a grading mode to results.output by converting from the pristine snapshot.
+  // Mutates results.output in place so existing references (e.g. the destructured
+  // `output` in showResults) stay valid. See gradingMode.js for the conversion rules.
   applyGradingModeToResults(results, mode) {
     try {
       if (!results || !Array.isArray(results.output)) return
-      const out = results.output
-      out.forEach(student => {
-        if (student.finalGrade === null) return
-        // Ensure ovGrades object exists
-        student.ovGrades = student.ovGrades || {}
-        if (mode === 'mitte') {
-          // Map per-ÕV
-          Object.keys(student.ovGrades).forEach(ov => {
-            const raw = String(student.ovGrades[ov] || '').trim()
-            let token = ''
-            if (!raw) {
-              token = ''
-            } else if (/^MA$/i.test(raw)) {
-              token = 'MA'
-            } else if (/^A$/i.test(raw)) {
-              token = 'A'
-            } else if (raw.includes('_hasLow')) {
-              // This ÕV has individual grades ≤ 2, so force to MA in mitte mode
-              token = 'MA'
-            } else if (/^\d+(?:\.\d+)?$/.test(raw)) {
-              const n = Math.round(Number(raw))
-              if (n >= 3) token = 'A'
-              else token = 'MA'
-            } else {
-              token = raw
-            }
-            student.ovGrades[ov] = token
-          })
-          // Final grade: if there are OV grades, final = A only when all are 'A' and none are ungraded; otherwise MA
-          const ovVals = Object.values(student.ovGrades)
-          if (ovVals.length > 0) {
-            const anyUngraded = ovVals.some(v => !v || String(v).trim() === '')
-            // Treat any token matching 'MA' (case-insensitive) or any numeric value that rounds to 2 (or equals '2') as forcing MA
-            const anyTwoOrMA = ovVals.some(v => {
-              try {
-                if (!v) return false
-                const s = String(v).trim().toUpperCase()
-                if (s === 'MA') return true
-                // numeric check: accept '2', '2.0', '1.9' (rounded), etc. Round to nearest int and check === 2
-                if (/^\d+(?:\.\d+)?$/.test(s)) {
-                  const n = Math.round(Number(s))
-                  return n === 2
-                }
-              } catch (e) {
-                return false
-              }
-              return false
-            })
-            // If any OV is '2' or 'MA', final is MA no matter what
-            if (anyTwoOrMA) {
-              student.finalGrade = 'MA'
-            } else {
-              const allA = ovVals.length > 0 && ovVals.every(v => String(v).toUpperCase() === 'A')
-              student.finalGrade = allA && !anyUngraded ? 'A' : 'MA'
-            }
-          } else {
-            // Fallback: map previously computed finalGrade
-            const rawFg = String(student.finalGrade || '').trim()
-            if (!rawFg) student.finalGrade = ''
-            else if (/^A$/i.test(rawFg)) student.finalGrade = 'A'
-            else if (/^MA$/i.test(rawFg)) student.finalGrade = 'MA'
-            else if (/^\d+(?:\.\d+)?$/.test(rawFg)) {
-              const n = Math.round(Number(rawFg))
-              student.finalGrade = n >= 3 ? 'A' : 'MA'
-            }
-          }
-        } else if (mode === 'eristav') {
-          const numericGrades = []
-          Object.keys(student.ovGrades).forEach(ov => {
-            const raw = String(student.ovGrades[ov] || '').trim()
-            if (!raw) {
-              numericGrades.push(2)
-              student.ovGrades[ov] = '2'
-            } else if (/^A$/i.test(raw)) {
-              numericGrades.push(5)
-              student.ovGrades[ov] = '5'
-            } else if (/^MA$/i.test(raw)) {
-              numericGrades.push(2)
-              student.ovGrades[ov] = '2'
-            } else if (raw.includes('_hasLow')) {
-              // In eristav mode, ignore the low grade flag and use the average
-              const average = parseFloat(raw.split('_')[0])
-              const n = Math.round(average)
-              numericGrades.push(n)
-              student.ovGrades[ov] = String(n)
-            } else if (/^\d+(?:\.\d+)?$/.test(raw)) {
-              const n = Math.round(Number(raw))
-              numericGrades.push(n)
-              student.ovGrades[ov] = String(n)
-            } else {
-              // Unknown token -> treat as MA-equivalent
-              numericGrades.push(2)
-              student.ovGrades[ov] = '2'
-            }
-          })
-          if (numericGrades.length > 0) {
-            const avg = numericGrades.reduce((a, b) => a + b, 0) / numericGrades.length
-            student.finalGrade = String(Math.round(avg))
-          } else {
-            // Fallback mapping of precomputed finalGrade
-            const rawFg = String(student.finalGrade || '').trim()
-            if (!rawFg) student.finalGrade = ''
-            else if (/^A$/i.test(rawFg)) student.finalGrade = '5'
-            else if (/^MA$/i.test(rawFg)) student.finalGrade = '2'
-            else if (/^\d+(?:\.\d+)?$/.test(rawFg)) student.finalGrade = String(Math.round(Number(rawFg)))
-          }
-        }
-      })
+      this.ensureRawOutputSnapshot(results)
+      const converted = applyGradingMode(results.rawOutput, mode)
+      results.output.length = 0
+      results.output.push(...converted)
     } catch (e) {
       Logger.debug('FinalGradesByOvFeature: Error applying grading mode to results', e)
+    }
+  }
+
+  // Fetch the journal's declared assessment type ('KUTSEHINDAMISVIIS_M'/'_E' or '').
+  // Used only as the fallback when no grades are recorded yet. Response is cached by ApiService.
+  async getJournalAssessment() {
+    try {
+      const journalId = this.extractJournalId()
+      if (!journalId) return ''
+      const journal = await this.api.tahvel.get(`/journals/${journalId}`)
+      return journal?.assessment ? String(journal.assessment) : ''
+    } catch (e) {
+      Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment', e)
+      return ''
+    }
+  }
+
+  // Create (or move) the single grading-mode dropdown next to `button`, reflect the
+  // resolved mode, and wire exactly one change handler. Programmatic `.value =` does
+  // not fire 'change', so reflecting the resolved mode never triggers a re-sync loop.
+  ensureGradingModeSelect(button, resolvedMode) {
+    let select = document.getElementById('oa-grading-mode-select')
+    if (!select) {
+      select = document.createElement('select')
+      select.id = 'oa-grading-mode-select'
+      select.setAttribute('aria-label', 'Hindamissüsteem')
+      select.title = 'Vali hindamissüsteem: Mitteeristav või Eristav (mõjutab, kuidas ÕV ja lõpptulemused teisendatakse)'
+      select.style.cssText = 'margin-left:8px;padding:6px 8px;font-size:14px;font-weight:bold;display:inline-block;vertical-align:middle;'
+      const mitteOption = document.createElement('option')
+      mitteOption.value = 'mitte'
+      mitteOption.textContent = 'Mitteeristav hindamine'
+      mitteOption.title = 'Mitteeristav: 3–5 → A; 1–2 või MA → MA; lõpptulemus: A ainult kui kõik ÕV on A, muidu MA'
+      const eristavOption = document.createElement('option')
+      eristavOption.value = 'eristav'
+      eristavOption.textContent = 'Eristav hindamine'
+      eristavOption.title = 'Eristav: A → 5; MA või hindamata → 2; lõpptulemus = hinnete ümardatud keskmine'
+      select.appendChild(mitteOption)
+      select.appendChild(eristavOption)
+      select.addEventListener('change', () => this.handleGradingModeChange())
+    }
+    try {
+      if (button && button.parentNode) {
+        if (button.nextSibling !== select) button.parentNode.insertBefore(select, button.nextSibling)
+        if (button.style) {
+          button.style.display = 'inline-block'
+          button.style.verticalAlign = 'middle'
+          button.style.marginRight = '8px'
+        }
+      } else if (!select.parentNode) {
+        document.body.appendChild(select)
+      }
+    } catch (e) {
+      if (!select.parentNode) {
+        try {
+          document.body.appendChild(select)
+        } catch (appendError) {
+          void appendError
+        }
+      }
+    }
+    if (resolvedMode) select.value = resolvedMode
+    return select
+  }
+
+  // One change handler shared by both flows: record the teacher's in-session pick
+  // for this journal, then re-render the active flow (without auto-syncing).
+  handleGradingModeChange() {
+    try {
+      const select = document.getElementById('oa-grading-mode-select')
+      if (!select) return
+      const journalId = this.extractJournalId()
+      if (journalId != null) this.gradingModeUserPickByJournal[String(journalId)] = select.value
+      const ctx = this.gradingModeChangeContext
+      if (!ctx) return
+      if (ctx.flow === 'l') {
+        this.showLGradeResults(ctx.results, ctx.button, ctx.lastEntries, { autoSync: false })
+      } else {
+        this.showResults(ctx.results, ctx.button, { autoSync: false })
+      }
+    } catch (e) {
+      Logger.debug('FinalGradesByOvFeature: Error handling grading-mode change', e)
     }
   }
 
@@ -1218,6 +1217,9 @@ class FinalGradesByOvFeature extends BaseFeature {
     // Only perform sync logic, do not render a table
 
     const { allOvNums, ovNumToOutcomeId, hasOvTaggedEntries, output } = results
+    // Snapshot pristine computed grades once so mode conversion stays non-lossy/idempotent.
+    this.ensureRawOutputSnapshot(results)
+    const journalId = this.extractJournalId()
     // Build a map of (studentId|ovNum) => existing grade object for updating
     const existingGradesMap = {}
     if (this._lastEntries) {
@@ -1228,7 +1230,6 @@ class FinalGradesByOvFeature extends BaseFeature {
           if (ovNum) {
             const studentOutcomeResults = entry.studentOutcomeResults
             if (!studentOutcomeResults && entry.curriculumModuleOutcomes) {
-              const journalId = this.extractJournalId()
               const map = await this.fetchDetailedOutcomeStudents(journalId, entry.curriculumModuleOutcomes, [], { output: 'existingGradesMap', ovNum })
               Object.assign(existingGradesMap, map)
             } else if (studentOutcomeResults) {
@@ -1244,66 +1245,15 @@ class FinalGradesByOvFeature extends BaseFeature {
         }
       }
     }
-    // Filter output to only show students whose calculated grades differ from existing grades
-    // Ensure grading-mode mapping is applied before computing diffs/sync so that A/MA mappings are used when sending
-    try {
-      const preExistingSelect = document.getElementById('oa-grading-mode-select')
-      let modeToApply = null
-      if (preExistingSelect && preExistingSelect.value) {
-        modeToApply = preExistingSelect.value
-      } else {
-        let journalAssessment = ''
-        try {
-          const journalId = this.extractJournalId()
-          if (journalId) {
-            const j = await this.api.tahvel.get(`/journals/${journalId}`)
-            if (j?.assessment) journalAssessment = String(j.assessment)
-          }
-        } catch (e) {
-          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, will infer', e)
-        }
-        if (journalAssessment === 'KUTSEHINDAMISVIIS_M') modeToApply = 'mitte'
-        else if (journalAssessment === 'KUTSEHINDAMISVIIS_E') modeToApply = 'eristav'
-        else {
-          // Check if any per-ÕV grade suggests 'mitte' mode should be used
-          // (any grade that is 'A', 'MA', or numeric 1-2 suggests mitte mode)
-          const shouldUseMitte = (output || []).some(s => {
-            // Check final grade for A/MA tokens
-            const fg = String(s.finalGrade || '')
-              .trim()
-              .toUpperCase()
-            if (fg === 'A' || fg === 'MA') return true
-
-            // Check per-ÕV grades for A/MA tokens or low numeric values (1-2)
-            if (s.ovGrades) {
-              return Object.values(s.ovGrades).some(ovGrade => {
-                const g = String(ovGrade || '')
-                  .trim()
-                  .toUpperCase()
-                if (g === 'A' || g === 'MA') return true
-                // Check if numeric grade is 1 or 2 (would map to MA in mitte mode)
-                if (/^\d+(?:\.\d+)?$/.test(g)) {
-                  const n = Math.round(Number(g))
-                  return n <= 2
-                }
-                return false
-              })
-            }
-            return false
-          })
-
-          const hasNumeric = (output || []).some(s => {
-            const fg = String(s.finalGrade || '').trim()
-            return /^\d+(?:\.\d+)?$/.test(fg)
-          })
-
-          modeToApply = shouldUseMitte ? 'mitte' : hasNumeric ? 'eristav' : ''
-        }
-      }
-      if (modeToApply) this.applyGradingModeToResults(results, modeToApply)
-    } catch (e) {
-      Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode before computing diffs', e)
-    }
+    // Resolve the grading scale: recorded ÕV-outcome grades are the cross-session
+    // memory; an in-session pick overrides; the journal's declared type is the
+    // fallback when nothing is recorded yet. Then convert grades to that scale
+    // before computing diffs/sync, so A/MA vs 1-5 is consistent end-to-end.
+    const recordedTokens = getRecordedOutcomeGradeTokens(existingGradesMap)
+    const journalAssessment = await this.getJournalAssessment()
+    const userPick = journalId != null ? this.gradingModeUserPickByJournal[String(journalId)] : undefined
+    const gradingMode = resolveGradingMode({ recordedTokens, journalAssessment, userPick })
+    this.applyGradingModeToResults(results, gradingMode)
     const filteredOutput = output.filter(student => {
       if (allOvNums.length > 0) {
         return allOvNums.some(ovNum => {
@@ -1341,239 +1291,9 @@ class FinalGradesByOvFeature extends BaseFeature {
     // If ÕV columns exist, automatically sync grades silently (no status message unless error)
     if (allOvNums.length > 0) {
       container.textContent = ''
-      // Create or update grading-mode dropdown next to the button.
-      try {
-        // Do not change user's selection or when button intentionally disabled
-        const existingSelect = document.getElementById('oa-grading-mode-select')
-        // Determine default mode, preferring journal-level assessment when available.
-        let journalAssessment = ''
-        try {
-          const journalId = this.extractJournalId()
-          if (journalId) {
-            const j = await this.api.tahvel.get(`/journals/${journalId}`)
-            if (j?.assessment) journalAssessment = String(j.assessment)
-          }
-        } catch (e) {
-          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment, falling back to grade-based default', e)
-        }
-        // If journal assessment explicitly indicates a known mode, prefer that
-        let defaultMode = ''
-        if (journalAssessment === 'KUTSEHINDAMISVIIS_M') {
-          defaultMode = 'mitte'
-        } else if (journalAssessment === 'KUTSEHINDAMISVIIS_E') {
-          defaultMode = 'eristav'
-        } else {
-          // Check if any per-ÕV grade suggests 'mitte' mode should be used
-          // (any grade that is 'A', 'MA', or numeric 1-2 suggests mitte mode)
-          const shouldUseMitte = (output || []).some(s => {
-            // Check final grade for A/MA tokens
-            const fg = String(s.finalGrade || '')
-              .trim()
-              .toUpperCase()
-            if (fg === 'A' || fg === 'MA') return true
-
-            // Check per-ÕV grades for A/MA tokens or low numeric values (1-2)
-            if (s.ovGrades) {
-              return Object.values(s.ovGrades).some(ovGrade => {
-                const g = String(ovGrade || '')
-                  .trim()
-                  .toUpperCase()
-                if (g === 'A' || g === 'MA') return true
-                // Check if numeric grade is 1 or 2 (would map to MA in mitte mode)
-                if (/^\d+(?:\.\d+)?$/.test(g)) {
-                  const n = Math.round(Number(g))
-                  return n <= 2
-                }
-                return false
-              })
-            }
-            return false
-          })
-
-          const hasNumeric = (output || []).some(s => {
-            const fg = String(s.finalGrade || '').trim()
-            return /^\d+(?:\.\d+)?$/.test(fg)
-          })
-
-          defaultMode = shouldUseMitte ? 'mitte' : hasNumeric ? 'eristav' : ''
-        }
-
-        if (!existingSelect) {
-          const sel = document.createElement('select')
-          sel.id = 'oa-grading-mode-select'
-          sel.style.marginLeft = '8px'
-          sel.style.padding = '6px 8px'
-          sel.style.fontSize = '14px'
-          sel.setAttribute('aria-label', 'Hindamissüsteem')
-          sel.title = 'Vali hindamissüsteem: Mitteeristav või Eristav (mõjutab, kuidas ÕV ja lõpptulemused teisendatakse)'
-          const optM = document.createElement('option')
-          optM.value = 'mitte'
-          optM.textContent = 'Mitteeristav hindamine'
-          optM.title = 'Mitteeristav: numeric 3–5 → A; 1–2 or MA → MA; final: A only if all ÕV are A and none ungraded; otherwise MA'
-          const optE = document.createElement('option')
-          optE.value = 'eristav'
-          optE.textContent = 'Eristav hindamine'
-          optE.title = 'Eristav: A → 5; MA or ungraded → 2; final = rounded average of all grades'
-          sel.appendChild(optM)
-          sel.appendChild(optE)
-          // If we have a clear default and button is not intentionally disabled, set it
-          const apiProvided = !!(journalAssessment && journalAssessment !== '')
-          // If journal assessment is known from API, mark the corresponding option so we can indicate it
-          try {
-            if (apiProvided) {
-              const opt = sel.querySelector(`option[value="${defaultMode}"]`)
-              if (opt) opt.dataset.apiDefault = 'true'
-            }
-          } catch (e) {
-            void e
-          }
-          if (defaultMode && !(button && button._oaFinalGradesDisabled)) {
-            sel.value = defaultMode
-          }
-          // Mark user selection when changed so we don't overwrite later and reapply grading mode
-          sel.addEventListener('change', () => {
-            try {
-              sel.dataset.userSet = 'true'
-            } catch (e) {
-              void e
-            }
-            try {
-              const selected = sel.value
-              this.applyGradingModeToResults(results, selected)
-              // Re-run showResults to update highlights/UI without auto-sync
-              setTimeout(() => {
-                try {
-                  this.showResults(results, button, { autoSync: false })
-                } catch (e) {
-                  Logger.debug('Failed to re-run showResults after grading mode change', e)
-                }
-              }, 0)
-            } catch (e) {
-              Logger.debug('FinalGradesByOvFeature: Error handling grading-mode change', e)
-            }
-          })
-          // Insert the select. If API provided a default, visually emphasise the select's displayed value by making it bold
-          try {
-            if (button && button.parentNode) {
-              button.parentNode.insertBefore(sel, button.nextSibling)
-              try {
-                // Make button and select inline so they appear on the same line
-                if (button && button.style) {
-                  button.style.display = 'inline-block'
-                  button.style.verticalAlign = 'middle'
-                  button.style.marginRight = '8px'
-                }
-                sel.style.display = 'inline-block'
-                sel.style.verticalAlign = 'middle'
-              } catch (e) {
-                void e
-              }
-            } else {
-              document.body.appendChild(sel)
-            }
-            const applyApiBold = () => {
-              try {
-                if (!apiProvided) {
-                  sel.style.fontWeight = '400'
-                  return
-                }
-                if (defaultMode && sel.value === defaultMode) sel.style.fontWeight = '700'
-                else sel.style.fontWeight = '400'
-              } catch (e) {
-                void e
-              }
-            }
-            // Mark the API-provided option for debugging and potential future styling
-            try {
-              if (apiProvided) {
-                const opt = sel.querySelector(`option[value="${defaultMode}"]`)
-                if (opt) opt.dataset.apiDefault = 'true'
-              }
-            } catch (e) {
-              void e
-            }
-            // Apply initial bold state and keep it in sync with user actions
-            applyApiBold()
-            sel.addEventListener('change', () => {
-              try {
-                sel.dataset.userSet = 'true'
-                applyApiBold()
-              } catch (e) {
-                void e
-              }
-            })
-            // Apply initial grading mode to computed results
-            try {
-              const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
-              if (initialMode) this.applyGradingModeToResults(results, initialMode)
-            } catch (e) {
-              Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode', e)
-            }
-          } catch (e) {
-            // fallback
-            document.body.appendChild(sel)
-          }
-        } else {
-          // existing select - only set default if user hasn't changed it and button not intentionally disabled
-          try {
-            if (!existingSelect.dataset.userSet && defaultMode && !(button && button._oaFinalGradesDisabled)) {
-              existingSelect.value = defaultMode
-            }
-            // If assessment came from API, mark option and bold the select's displayed value when it matches the API default
-            try {
-              const apiProvidedLocal = !!(journalAssessment && journalAssessment !== '')
-              if (apiProvidedLocal) {
-                const opt = existingSelect.querySelector(`option[value="${defaultMode}"]`)
-                if (opt) opt.dataset.apiDefault = 'true'
-                const applyExistingApiBold = () => {
-                  try {
-                    if (defaultMode && existingSelect.value === defaultMode) existingSelect.style.fontWeight = '700'
-                    else existingSelect.style.fontWeight = '400'
-                  } catch (e) {
-                    void e
-                  }
-                }
-                // Ensure select and button sit inline
-                try {
-                  existingSelect.style.display = 'inline-block'
-                  existingSelect.style.verticalAlign = 'middle'
-                  if (button && button.style) {
-                    button.style.display = 'inline-block'
-                    button.style.verticalAlign = 'middle'
-                    button.style.marginRight = '8px'
-                  }
-                } catch (e) {
-                  void e
-                }
-                applyExistingApiBold()
-                existingSelect.addEventListener('change', () => {
-                  try {
-                    existingSelect.dataset.userSet = 'true'
-                    applyExistingApiBold()
-                  } catch (e) {
-                    void e
-                  }
-                })
-                // Apply initial grading mode mapping if user hasn't changed selection
-                try {
-                  const toApply = existingSelect.value || defaultMode
-                  if (toApply) this.applyGradingModeToResults(results, toApply)
-                } catch (e) {
-                  Logger.debug('FinalGradesByOvFeature: Failed to apply grading mode for existing select', e)
-                }
-              } else {
-                existingSelect.style.fontWeight = '400'
-              }
-            } catch (e) {
-              void e
-            }
-          } catch (e) {
-            void e
-          }
-        }
-      } catch (e) {
-        Logger.debug('FinalGradesByOvFeature: Failed to create/update grading-mode select', e)
-      }
+      // Single consolidated grading-mode dropdown next to the button.
+      this.gradingModeChangeContext = { flow: 'ov', results, button }
+      this.ensureGradingModeSelect(button, gradingMode)
       // --- Highlight mismatched cells in the journal table ---
       try {
         // Locate the journal table
@@ -1977,10 +1697,10 @@ class FinalGradesByOvFeature extends BaseFeature {
         // 2. Extract from journalEntryStudents (if present)
         if (Array.isArray(entry.journalEntryStudents)) {
           Logger.debug(`✨ FinalGradesLFeature: Processing ${entry.entryType} entry (journalEntryStudents)`, entry.journalEntryStudents)
-          entry.journalEntryStudents.forEach(js => {
-            if (js.grade && js.grade.code) {
-              const grade = js.grade.code.replace('KUTSEHINDAMINE_', '')
-              const journalStudentId = js.journalStudent
+          entry.journalEntryStudents.forEach(entryStudent => {
+            if (entryStudent.grade && entryStudent.grade.code) {
+              const grade = entryStudent.grade.code.replace('KUTSEHINDAMINE_', '')
+              const journalStudentId = entryStudent.journalStudent
               if (['1', '2', '3', '4', '5'].includes(grade)) {
                 if (entry.entryType === 'SISSEKANNE_T') {
                   if (!gradesT[journalStudentId]) gradesT[journalStudentId] = []
@@ -2244,108 +1964,15 @@ class FinalGradesByOvFeature extends BaseFeature {
     }
     statusDiv.textContent = ''
 
-    // Ensure grade selection dropdowns are available for L-grade entries
+    // Ensure per-cell L-grade selection dropdowns are available in the journal table.
     try {
       this.ensureLGradeDropdowns()
-      // Ensure grading-mode select is present next to the L-button so users can pick 'mitte'/'eristav'
-      try {
-        this.attachGradingModeSelectToButton(button)
-      } catch (e) {
-        Logger.debug('FinalGradesByOvFeature: Failed to attach grading-mode select to L button', e)
-      }
     } catch (e) {
       Logger.debug('FinalGradesByOvFeature: Failed to ensure L-grade dropdowns', e)
     }
-
-    // Apply grading-mode selection defaults and ensure the mode is applied to computed results
-    try {
-      const sel = document.getElementById('oa-grading-mode-select')
-      let journalAssessment = ''
-      if (sel) {
-        try {
-          const journalId = this.extractJournalId()
-          if (journalId) {
-            const j = await this.api.tahvel.get(`/journals/${journalId}`)
-            if (j?.assessment) journalAssessment = String(j.assessment)
-          }
-        } catch (e) {
-          Logger.debug('FinalGradesByOvFeature: Could not fetch journal assessment for L flow, will infer', e)
-        }
-
-        let defaultMode = ''
-        if (journalAssessment === 'KUTSEHINDAMISVIIS_M') defaultMode = 'mitte'
-        else if (journalAssessment === 'KUTSEHINDAMISVIIS_E') defaultMode = 'eristav'
-        else {
-          const shouldUseMitte = (results.output || []).some(s => {
-            const fg = String(s.finalGrade || '')
-              .trim()
-              .toUpperCase()
-            if (fg === 'A' || fg === 'MA') return true
-            if (s.ovGrades) {
-              return Object.values(s.ovGrades).some(ovGrade => {
-                const g = String(ovGrade || '')
-                  .trim()
-                  .toUpperCase()
-                if (g === 'A' || g === 'MA') return true
-                if (/^\d+(?:\.\d+)?$/.test(g)) {
-                  const n = Math.round(Number(g))
-                  return n <= 2
-                }
-                return false
-              })
-            }
-            return false
-          })
-          const hasNumeric = (results.output || []).some(s => {
-            const fg = String(s.finalGrade || '').trim()
-            return /^\d+(?:\.\d+)?$/.test(fg)
-          })
-          defaultMode = shouldUseMitte ? 'mitte' : hasNumeric ? 'eristav' : ''
-        }
-
-        // Only set default if user hasn't selected and button isn't intentionally disabled
-        try {
-          if (!sel.dataset.userSet && defaultMode && !(button && button._oaFinalGradesDisabled)) sel.value = defaultMode
-        } catch (e) {
-          void e
-        }
-
-        // Apply initial grading mode to results so subsequent logic uses mapped finalGrade
-        try {
-          const initialMode = sel.value && sel.value !== '' ? sel.value : defaultMode
-          if (initialMode) this.applyGradingModeToResults(results, initialMode)
-        } catch (e) {
-          Logger.debug('FinalGradesByOvFeature: Failed to apply initial grading mode for L flow', e)
-        }
-
-        // Recompute highlights/UI when user changes selection without auto-syncing
-        try {
-          sel.addEventListener('change', async() => {
-            try {
-              sel.dataset.userSet = 'true'
-            } catch (e) {
-              void e
-            }
-            try {
-              const selected = sel.value
-              this.applyGradingModeToResults(results, selected)
-              // Re-run L show results in non-auto mode to refresh UI/highlights only
-              try {
-                await this.showLGradeResults(results, button, lastEntries, { autoSync: false })
-              } catch (e) {
-                Logger.debug('FinalGradesByOvFeature: Failed to refresh L UI after grading mode change', e)
-              }
-            } catch (e) {
-              Logger.debug('FinalGradesByOvFeature: Error handling grading-mode change in L flow', e)
-            }
-          })
-        } catch (e) {
-          void e
-        }
-      }
-    } catch (e) {
-      Logger.debug('FinalGradesByOvFeature: Error while wiring grading-mode select for L flow', e)
-    }
+    // Snapshot pristine computed grades once so mode conversion stays non-lossy/idempotent.
+    // The grading mode itself is resolved below, after the recorded L grades are fetched.
+    this.ensureRawOutputSnapshot(results)
 
     try {
       const journalId = this.extractJournalId()
@@ -2367,16 +1994,42 @@ class FinalGradesByOvFeature extends BaseFeature {
       } else {
         Logger.debug('✨ FinalGradesLFeature: Using current entry from lastEntries', currentEntry)
       }
-      // Build journalEntryStudents array from our filtered calculated grades
-      const lGrades = {}
-      if (currentEntry && Array.isArray(currentEntry.journalEntryStudents)) {
-        currentEntry.journalEntryStudents.forEach(js => {
-          if (js && js.journalStudent != null && js.grade && js.grade.code) {
-            const code = js.grade.code
-            lGrades[String(js.journalStudent)] = code.replace('KUTSEHINDAMINE_', '').toUpperCase()
-          }
+      // Fail closed: if we still couldn't read the recorded final grades (entry missing or a
+      // malformed response), do NOT guess a grading scale or sync — that could overwrite correct
+      // grades. This is distinct from an entry that simply has no grades yet
+      // (journalEntryStudents === []), which IS readable and is handled normally below.
+      if (!currentEntry || !Array.isArray(currentEntry.journalEntryStudents)) {
+        Logger.error('FinalGradesByOvFeature: Could not read recorded L grades; skipping resolution/sync', {
+          journalId,
+          lEntryId: lEntry.id
         })
+        statusDiv.textContent = 'Ei õnnestunud lõpptulemuse hindeid laadida.'
+        if (button) {
+          button.disabled = true
+          button.style.opacity = '0.6'
+        }
+        return
       }
+      // Build a map of recorded final grades per student (journalStudentId -> token).
+      const lGrades = {}
+      currentEntry.journalEntryStudents.forEach(entryStudent => {
+        if (entryStudent && entryStudent.journalStudent != null && entryStudent.grade && entryStudent.grade.code) {
+          const code = entryStudent.grade.code
+          lGrades[String(entryStudent.journalStudent)] = code.replace('KUTSEHINDAMINE_', '').toUpperCase()
+        }
+      })
+      // Resolve the grading scale from the recorded final (lõpptulemus) grades — the
+      // cross-session memory. Resolve here, AFTER fetching currentEntry, so the recorded
+      // grades are available (lastEntries may arrive without journalEntryStudents). An
+      // in-session pick overrides; the journal's declared type is the fallback when nothing
+      // is recorded yet. Convert results to that scale, then wire the dropdown to it.
+      const recordedTokens = getRecordedFinalGradeTokens(currentEntry.journalEntryStudents)
+      const journalAssessment = await this.getJournalAssessment()
+      const userPick = journalId != null ? this.gradingModeUserPickByJournal[String(journalId)] : undefined
+      const gradingMode = resolveGradingMode({ recordedTokens, journalAssessment, userPick })
+      this.applyGradingModeToResults(results, gradingMode)
+      this.gradingModeChangeContext = { flow: 'l', results, button, lastEntries }
+      this.ensureGradingModeSelect(button, gradingMode)
       const filteredOutput = results.output.filter(r => {
         if (r.finalGrade === null) return false
         const key = String(r.journalStudentId).trim()
@@ -2482,7 +2135,9 @@ class FinalGradesByOvFeature extends BaseFeature {
             })
             return null
           }
-          const existing = (currentEntry.journalEntryStudents || []).find(js => String(js.journalStudent) === String(r.journalStudentId))
+          const existing = (currentEntry.journalEntryStudents || []).find(
+            entryStudent => String(entryStudent.journalStudent) === String(r.journalStudentId)
+          )
           const grade = r.finalGrade
           let code = null,
             value = '',
@@ -2570,12 +2225,12 @@ class FinalGradesByOvFeature extends BaseFeature {
         .filter(Boolean)
       // Deduplicate by journalStudent (last one wins), filter out null/undefined journalStudent
       const seen = new Map()
-      mappedStudents.forEach(js => {
-        if (js && js.journalStudent != null) {
-          seen.set(String(js.journalStudent), js)
+      mappedStudents.forEach(entryStudent => {
+        if (entryStudent && entryStudent.journalStudent != null) {
+          seen.set(String(entryStudent.journalStudent), entryStudent)
         }
       })
-      const journalEntryStudents = Array.from(seen.values()).filter(js => js && js.journalStudent != null)
+      const journalEntryStudents = Array.from(seen.values()).filter(entryStudent => entryStudent && entryStudent.journalStudent != null)
       Logger.debug('✨ FinalGradesByOvFeature: journalEntryStudents to send', journalEntryStudents)
       // Build payload using the current entry from API
       const payload = {
@@ -2697,82 +2352,6 @@ class FinalGradesByOvFeature extends BaseFeature {
     }
   }
 
-  // Ensure the grading-mode select (`oa-grading-mode-select`) exists and is placed next to the provided button.
-  // If it already exists elsewhere on the page we simply move it next to the button to reuse the same control.
-  attachGradingModeSelectToButton(button) {
-    try {
-      if (!button) return
-      const existing = document.getElementById('oa-grading-mode-select')
-      if (existing) {
-        // Move existing select to be immediately after the button if it's not already there
-        try {
-          if (existing.nextSibling !== button.nextSibling || existing.parentElement !== button.parentElement) {
-            button.insertAdjacentElement('afterend', existing)
-          }
-          // ensure moved select appears bold per UI preference
-          try {
-            existing.style.fontWeight = 'bold'
-          } catch (e) {
-            void e
-          }
-        } catch (e) {
-          // fallback: no-op
-        }
-        return
-      }
-
-      // Create a grading-mode select identical to the ÕV select so labels and titles match exactly
-      const sel = document.createElement('select')
-      sel.id = 'oa-grading-mode-select'
-      sel.style.marginLeft = '8px'
-      sel.style.padding = '6px 8px'
-      sel.style.fontSize = '14px'
-      // Make the control visually bold to improve prominence
-      sel.style.fontWeight = 'bold'
-      sel.setAttribute('aria-label', 'Hindamissüsteem')
-      sel.title = 'Vali hindamissüsteem: Mitteeristav või Eristav (mõjutab, kuidas ÕV ja lõpptulemused teisendatakse)'
-      const optM = document.createElement('option')
-      optM.value = 'mitte'
-      optM.textContent = 'Mitteeristav hindamine'
-      optM.title = 'Mitteeristav: numeric 3–5 → A; 1–2 or MA → MA; final: A only if all ÕV are A and none ungraded; otherwise MA'
-      const optE = document.createElement('option')
-      optE.value = 'eristav'
-      optE.textContent = 'Eristav hindamine'
-      optE.title = 'Eristav: A → 5; MA or ungraded → 2; final = rounded average of all grades'
-      sel.appendChild(optM)
-      sel.appendChild(optE)
-
-      // Insert the select after the button. Keep inline styling similar to main flow so appearance matches.
-      try {
-        if (button && button.parentNode) {
-          button.parentNode.insertBefore(sel, button.nextSibling)
-          try {
-            if (button && button.style) {
-              button.style.display = 'inline-block'
-              button.style.verticalAlign = 'middle'
-              button.style.marginRight = '8px'
-            }
-            sel.style.display = 'inline-block'
-            sel.style.verticalAlign = 'middle'
-          } catch (e) {
-            void e
-          }
-        } else {
-          document.body.appendChild(sel)
-        }
-      } catch (e) {
-        // fallback: append to body
-        try {
-          document.body.appendChild(sel)
-        } catch (ee) {
-          void ee
-        }
-      }
-    } catch (e) {
-      Logger.debug('FinalGradesByOvFeature: Error while creating/moving grading-mode select', e)
-    }
-  }
-
   // Extract grade value from text content
   extractGradeFromText(text) {
     if (!text) return ''
@@ -2881,10 +2460,10 @@ class FinalGradesByOvFeature extends BaseFeature {
       if (!entries || !Array.isArray(entries)) return false
       for (const entry of entries) {
         if (entry && entry.entryType === 'SISSEKANNE_L') {
-          const jes = entry.journalEntryStudents
-          if (Array.isArray(jes) && jes.length > 0) {
-            for (const js of jes) {
-              if (js && js.grade && js.grade.code) return true
+          const journalEntryStudents = entry.journalEntryStudents
+          if (Array.isArray(journalEntryStudents) && journalEntryStudents.length > 0) {
+            for (const entryStudent of journalEntryStudents) {
+              if (entryStudent && entryStudent.grade && entryStudent.grade.code) return true
             }
           }
         }

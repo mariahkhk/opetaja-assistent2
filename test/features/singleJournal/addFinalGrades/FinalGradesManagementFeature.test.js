@@ -1211,36 +1211,60 @@ describe("FinalGradesManagementFeature - integration", () => {
     })
   })
 
-  describe('attachGradingModeSelectToButton', () => {
-    it('does nothing when button is null', () => {
-      expect(() => feature.attachGradingModeSelectToButton(null)).not.toThrow()
+  describe('ensureGradingModeSelect', () => {
+    it('does nothing harmful when button is null', () => {
+      expect(() => feature.ensureGradingModeSelect(null, 'mitte')).not.toThrow()
     })
 
     it('creates select element next to button', () => {
       const button = document.createElement('button')
       document.body.appendChild(button)
-      feature.attachGradingModeSelectToButton(button)
+      feature.ensureGradingModeSelect(button, 'mitte')
       expect(document.getElementById('oa-grading-mode-select')).toBeTruthy()
     })
 
     it('reuses existing select if already in DOM', () => {
       const button = document.createElement('button')
       document.body.appendChild(button)
-      feature.attachGradingModeSelectToButton(button)
-      const first = document.getElementById('oa-grading-mode-select')
-      feature.attachGradingModeSelectToButton(button)
-      const second = document.getElementById('oa-grading-mode-select')
+      const first = feature.ensureGradingModeSelect(button, 'mitte')
+      const second = feature.ensureGradingModeSelect(button, 'eristav')
       expect(first).toBe(second)
     })
 
     it('renders both grading mode options', () => {
       const button = document.createElement('button')
       document.body.appendChild(button)
-      feature.attachGradingModeSelectToButton(button)
+      feature.ensureGradingModeSelect(button, 'mitte')
       const select = document.getElementById('oa-grading-mode-select')
       const values = Array.from(select.options).map(o => o.value)
       expect(values).toContain('mitte')
       expect(values).toContain('eristav')
+    })
+
+    it('reflects the resolved mode in the select value', () => {
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      const sel = feature.ensureGradingModeSelect(button, 'eristav')
+      expect(sel.value).toBe('eristav')
+      feature.ensureGradingModeSelect(button, 'mitte')
+      expect(sel.value).toBe('mitte')
+    })
+
+    it('attaches exactly one change handler even across many renders (no listener leak)', () => {
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      let handlerCalls = 0
+      const original = feature.handleGradingModeChange.bind(feature)
+      feature.handleGradingModeChange = () => {
+        handlerCalls += 1
+        return original()
+      }
+      const sel = feature.ensureGradingModeSelect(button, 'mitte')
+      // Re-render the dropdown several times; this must not stack listeners.
+      feature.ensureGradingModeSelect(button, 'mitte')
+      feature.ensureGradingModeSelect(button, 'eristav')
+      sel.dispatchEvent(new Event('change'))
+      expect(handlerCalls).toBe(1)
     })
   })
 
@@ -1938,8 +1962,8 @@ describe("FinalGradesManagementFeature - integration", () => {
     })
   })
 
-  describe('attachGradingModeSelectToButton — placement', () => {
-    it('moves existing select if it is not next to the button', () => {
+  describe('ensureGradingModeSelect — placement', () => {
+    it('moves existing select next to the button (e.g. from the ÕV button to the L button)', () => {
       const button = document.createElement('button')
       document.body.appendChild(button)
       const sel = document.createElement('select')
@@ -1948,7 +1972,7 @@ describe("FinalGradesManagementFeature - integration", () => {
       const elsewhere = document.createElement('div')
       elsewhere.appendChild(sel)
       document.body.appendChild(elsewhere)
-      feature.attachGradingModeSelectToButton(button)
+      feature.ensureGradingModeSelect(button, 'mitte')
       // Should now be moved next to the button
       expect(document.getElementById('oa-grading-mode-select').parentElement).toBe(button.parentElement)
     })
@@ -1956,7 +1980,7 @@ describe("FinalGradesManagementFeature - integration", () => {
     it('falls back to body when button has no parent', () => {
       const button = document.createElement('button')
       // No parent
-      feature.attachGradingModeSelectToButton(button)
+      feature.ensureGradingModeSelect(button, 'mitte')
       expect(document.getElementById('oa-grading-mode-select')).toBeTruthy()
     })
   })
@@ -2184,29 +2208,53 @@ describe("FinalGradesManagementFeature - integration", () => {
       expect(document.getElementById('oa-grading-mode-select')).toBe(sel)
     })
 
-    it('infers mitte mode when output contains MA tokens', async () => {
+    it('selects mitteeristav from recorded A/MA outcome grades even when the journal is declared eristav', async () => {
       buildJournalTableWithStudent({ studentName: 'Test' })
       window.location.hash = '#/journal/12345/edit'
-      feature.api.tahvel.get = mock(async () => ({})) // no assessment
-      feature._lastEntries = []
+      feature.api.tahvel.get = mock(async () => ({ assessment: 'KUTSEHINDAMISVIIS_E' }))
+      // Recorded ÕV outcome grade is A (mitteeristav) — this is the cross-session memory.
+      feature._lastEntries = [
+        { entryType: 'SISSEKANNE_O', nameEt: '1) Outcome', studentOutcomeResults: { 55: { grade: { code: 'KUTSEHINDAMINE_A' } } } }
+      ]
       const button = document.createElement('button')
       document.body.appendChild(button)
       const results = {
         allOvNums: ['1'],
         ovNumToOutcomeId: { '1': 100 },
         hasOvTaggedEntries: true,
-        output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '1': 'MA' }, finalGrade: 'MA', journalStudentId: '5' }]
+        // Computed (exercise) grade is numeric, but it must NOT decide the scale.
+        output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '1': '4' }, finalGrade: '4', journalStudentId: '5' }]
       }
       await feature.showResults(results, button, { autoSync: false })
       const select = document.getElementById('oa-grading-mode-select')
       expect(select.value).toBe('mitte')
     })
 
-    it('infers eristav mode when output contains numeric grades', async () => {
+    it('selects eristav from recorded numeric outcome grades', async () => {
       buildJournalTableWithStudent({ studentName: 'Test' })
       window.location.hash = '#/journal/12345/edit'
       feature.api.tahvel.get = mock(async () => ({})) // no assessment
-      feature._lastEntries = []
+      feature._lastEntries = [
+        { entryType: 'SISSEKANNE_O', nameEt: '1) Outcome', studentOutcomeResults: { 55: { grade: { code: 'KUTSEHINDAMINE_4' } } } }
+      ]
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      const results = {
+        allOvNums: ['1'],
+        ovNumToOutcomeId: { '1': 100 },
+        hasOvTaggedEntries: true,
+        output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '1': '4' }, finalGrade: '4', journalStudentId: '5' }]
+      }
+      await feature.showResults(results, button, { autoSync: false })
+      const select = document.getElementById('oa-grading-mode-select')
+      expect(select.value).toBe('eristav')
+    })
+
+    it('falls back to the journal declared type when no end grades are recorded yet', async () => {
+      buildJournalTableWithStudent({ studentName: 'Test' })
+      window.location.hash = '#/journal/12345/edit'
+      feature.api.tahvel.get = mock(async () => ({ assessment: 'KUTSEHINDAMISVIIS_E' }))
+      feature._lastEntries = [] // nothing recorded
       const button = document.createElement('button')
       document.body.appendChild(button)
       const results = {
@@ -2354,7 +2402,9 @@ describe("FinalGradesManagementFeature - integration", () => {
       global.window = { location: { hash: '#/journal/12345/edit', href: 'https://tahvel.edu.ee/#/journal/12345/edit', reload: () => {} } }
       try {
         feature.api.tahvel.get = mock(async (endpoint) => {
-          if (endpoint === '/journals/12345') return { assessment: '' }
+          // Numeric final grades belong to an eristav-declared journal; with nothing
+          // recorded yet, the scale falls back to that declared type.
+          if (endpoint === '/journals/12345') return { assessment: 'KUTSEHINDAMISVIIS_E' }
           if (endpoint === '/journals/12345/journalEntry/99') {
             return { id: 99, journalEntryStudents: [] }
           }
@@ -2527,6 +2577,68 @@ describe("FinalGradesManagementFeature - integration", () => {
       }
     })
 
+    it('does not flag recorded A grades as wrong in an eristav-declared journal', async () => {
+      // Regression: journal declared eristav but the teacher recorded a pass/fail A grade.
+      // The recorded A must drive mitteeristav so the computed grade matches and nothing
+      // is flagged/overwritten on a later visit.
+      const realWindow = global.window
+      global.window = { location: { hash: '#/journal/12345/edit', href: 'https://tahvel.edu.ee/#/journal/12345/edit', reload: () => {} } }
+      try {
+        let putCalled = false
+        feature.api.tahvel.get = mock(async (endpoint) => {
+          if (endpoint === '/journals/12345') return { assessment: 'KUTSEHINDAMISVIIS_E' }
+          if (endpoint === '/journals/12345/journalEntry/99') {
+            return { id: 99, journalEntryStudents: [{ id: 7, journalStudent: '5', grade: { code: 'KUTSEHINDAMINE_A' } }] }
+          }
+          if (endpoint === '/students/55') return { status: null }
+          return {}
+        })
+        feature.api.tahvel.put = mock(async () => { putCalled = true; return {} })
+        const button = document.createElement('button')
+        document.body.appendChild(button)
+        const lastEntries = [{ id: 99, entryType: 'SISSEKANNE_L' }]
+        // Computed final from exercises is numeric 5, but recorded A drives mitteeristav.
+        const results = { output: [{ studentId: 55, journalStudentId: '5', finalGrade: '5' }] }
+        const filtered = await feature.showLGradeResults(results, button, lastEntries, { autoSync: false })
+        // Recorded A === computed-converted A -> nothing to change, scale shows mitteeristav.
+        expect(filtered).toEqual([])
+        expect(document.getElementById('oa-grading-mode-select').value).toBe('mitte')
+        expect(putCalled).toBe(false)
+      } finally {
+        global.window = realWindow
+      }
+    })
+
+    it('fails closed (no sync, no scale guess) when the L entry cannot be read', async () => {
+      // Regression: a null/malformed journalEntry response must not silently fall back to the
+      // journal's declared scale and overwrite correct grades. journalEntryStudents === [] is a
+      // different, readable case (handled normally); this covers a genuinely unreadable entry.
+      const realWindow = global.window
+      global.window = { location: { hash: '#/journal/12345/edit', href: 'https://tahvel.edu.ee/#/journal/12345/edit', reload: () => {} } }
+      try {
+        let putCalled = false
+        feature.api.tahvel.get = mock(async (endpoint) => {
+          if (endpoint === '/journals/12345') return { assessment: 'KUTSEHINDAMISVIIS_E' }
+          if (endpoint === '/journals/12345/journalEntry/99') return null // unreadable response
+          if (endpoint === '/students/55') return { status: null }
+          return {}
+        })
+        feature.api.tahvel.put = mock(async () => { putCalled = true; return {} })
+        const button = document.createElement('button')
+        document.body.appendChild(button)
+        // lastEntries lacks journalEntryStudents -> forces the fresh fetch, which returns null.
+        const lastEntries = [{ id: 99, entryType: 'SISSEKANNE_L' }]
+        const results = { output: [{ studentId: 55, journalStudentId: '5', finalGrade: '5' }] }
+        await feature.showLGradeResults(results, button, lastEntries, { autoSync: true })
+        expect(putCalled).toBe(false)
+        expect(button.disabled).toBe(true)
+        const statusDiv = document.getElementById('oa-sync-lopp-status')
+        expect(statusDiv.textContent).toContain('Ei õnnestunud')
+      } finally {
+        global.window = realWindow
+      }
+    })
+
     it('writes "Viga saatmisel." to status when PUT fails', async () => {
       // Replace the global window with a stub that has a no-op reload
       const realWindow = global.window
@@ -2577,7 +2689,7 @@ describe("FinalGradesManagementFeature - integration", () => {
       document.body.appendChild(wrapper)
     }
 
-    it('triggers change handler on the grading mode select (no userSet flag yet)', async () => {
+    it('records the in-session pick on change and does not snap back on re-render', async () => {
       buildBasicJournalTable()
       window.location.hash = '#/journal/12345/edit'
       feature.api.tahvel.get = mock(async () => ({ assessment: 'KUTSEHINDAMISVIIS_E' }))
@@ -2593,11 +2705,42 @@ describe("FinalGradesManagementFeature - integration", () => {
       await feature.showResults(results, button, { autoSync: false })
       const sel = document.getElementById('oa-grading-mode-select')
       expect(sel).toBeTruthy()
+      // No recorded grades + journal eristav -> default eristav.
+      expect(sel.value).toBe('eristav')
+      // Teacher overrides to mitteeristav.
       sel.value = 'mitte'
       sel.dispatchEvent(new Event('change'))
-      // dataset.userSet should be set
-      await new Promise(r => setTimeout(r, 5))
-      expect(sel.dataset.userSet).toBe('true')
+      // Pick is recorded in memory, keyed by journalId (no DOM dataset flag, no storage).
+      expect(feature.gradingModeUserPickByJournal['12345']).toBe('mitte')
+      // A re-render must keep the teacher's pick — it must not snap back to the journal default.
+      await feature.showResults(results, button, { autoSync: false })
+      expect(document.getElementById('oa-grading-mode-select').value).toBe('mitte')
+    })
+
+    it('keeps the in-session pick isolated per journal', async () => {
+      buildBasicJournalTable()
+      feature.api.tahvel.get = mock(async () => ({ assessment: 'KUTSEHINDAMISVIIS_E' }))
+      feature._lastEntries = []
+      const button = document.createElement('button')
+      document.body.appendChild(button)
+      const makeResults = () => ({
+        allOvNums: ['1'],
+        ovNumToOutcomeId: { '1': 100 },
+        hasOvTaggedEntries: true,
+        output: [{ name: 'Test', idcode: '123', studentId: 55, ovGrades: { '1': '4' }, finalGrade: '4', journalStudentId: '5' }]
+      })
+      // Pick mitteeristav on journal A.
+      window.location.hash = '#/journal/111/edit'
+      await feature.showResults(makeResults(), button, { autoSync: false })
+      const selA = document.getElementById('oa-grading-mode-select')
+      selA.value = 'mitte'
+      selA.dispatchEvent(new Event('change'))
+      expect(feature.gradingModeUserPickByJournal['111']).toBe('mitte')
+      // Journal B (different id) is unaffected — resolves from its own context (eristav).
+      window.location.hash = '#/journal/222/edit'
+      await feature.showResults(makeResults(), button, { autoSync: false })
+      expect(document.getElementById('oa-grading-mode-select').value).toBe('eristav')
+      expect(feature.gradingModeUserPickByJournal['222']).toBeUndefined()
     })
   })
 
