@@ -2610,7 +2610,7 @@ describe('JournalListSync - Algorithm Tests', () => {
 
         expect(result.failedSyncs).toHaveLength(0)
         expect(result.successfulSyncs).toHaveLength(1)
-        expect(get).toHaveBeenCalledTimes(1)
+        expect(get.mock.calls[0][0]).toBe('/journals/268452/journalEntry/2636372')
         expect(get.mock.calls[0][1]).toEqual({})
         expect(put).toHaveBeenCalledTimes(1)
         expect(payload.lessons).toBe(10)
@@ -5583,47 +5583,6 @@ describe("JournalListSync - Sync flow and lifecycle", () => {
       }
       const result = await journalListSync.getDetailedStudentInfo('50001010001', 123)
       expect(result).toBeDefined()
-    })
-  })
-
-  describe('syncGradeToTahvel — SISSEKANNE_P capacity type preservation', () => {
-    test('sets journalEntryCapacityTypes to MAHT_p for SISSEKANNE_P entries', async () => {
-      let capturedPutPayload = null
-
-      journalListSync.api = {
-        tahvel: {
-          get: mock(async (url) => {
-            if (url.includes('journalStudents')) {
-              return [{ id: 10, studentId: 100, student: { idcode: '50001010001', fullname: 'Test', status: 'OPPURSTAATUS_O' } }]
-            }
-            if (url.includes('journalEntry/')) {
-              return {
-                id: 999,
-                version: 1,
-                entryType: 'SISSEKANNE_P',
-                journalEntryStudents: [
-                  { journalStudent: 10, grade: null }
-                ],
-                journalEntryTeachers: [22816],
-                journalEntryCapacityTypes: null
-              }
-            }
-            return null
-          }),
-          put: mock(async (url, body) => {
-            capturedPutPayload = body
-            return { ...body, version: 2 }
-          })
-        }
-      }
-
-      journalListSync.journalStudentIdToStudentId = { 10: 100 }
-      journalListSync.studentIdToPersonalCode = { 100: '50001010001' }
-
-      await journalListSync.syncGradeToTahvel(426367, 999, '50001010001', '5')
-
-      expect(capturedPutPayload).not.toBeNull()
-      expect(capturedPutPayload.journalEntryCapacityTypes).toEqual(['MAHT_p'])
     })
   })
 

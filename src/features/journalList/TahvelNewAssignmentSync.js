@@ -12,6 +12,8 @@
 
 import { BaseFeature } from '../../core/BaseFeature.js'
 import Logger from '../../services/Logger.js'
+import { bannerService } from '../../services/BannerService.js'
+import { formatFinalGradeUpdateSummary, recalculateFinalGradesForTouchedJournals } from './FinalGradeRecalculation.js'
 
 class TahvelNewAssignmentSyncFeature extends BaseFeature {
   constructor() {
@@ -188,7 +190,8 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
 
       const results = {
         success: [],
-        failed: []
+        failed: [],
+        touchedJournalIds: []
       }
 
       // Process each subject with new assignments
@@ -201,6 +204,7 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
 
           results.success.push(...subjectResults.success)
           results.failed.push(...subjectResults.failed)
+          results.touchedJournalIds.push(...subjectResults.touchedJournalIds)
 
           Logger.debug(`Subject ${subjectExternalId} results:`, subjectResults)
         } catch (error) {
@@ -213,6 +217,12 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
       }
 
       Logger.debug(`🎯 New assignment sync completed: ${results.success.length} success, ${results.failed.length} failed`)
+
+      if (results.touchedJournalIds.length > 0) {
+        const finalGradeUpdates = await recalculateFinalGradesForTouchedJournals(this.api, results.touchedJournalIds)
+        const finalGradeSummary = formatFinalGradeUpdateSummary(finalGradeUpdates)
+        if (finalGradeSummary) bannerService.showSuccessBanner(finalGradeSummary)
+      }
 
       if (results.success.length > 0) {
         Logger.debug('📋 Successful syncs:', results.success)
@@ -239,7 +249,8 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
   async syncAssignmentsForSubject(subjectExternalId, assignments) {
     const results = {
       success: [],
-      failed: []
+      failed: [],
+      touchedJournalIds: []
     }
 
     try {
@@ -275,9 +286,11 @@ class TahvelNewAssignmentSyncFeature extends BaseFeature {
             continue
           }
 
+          results.touchedJournalIds.push(subjectExternalId)
+
           // Step 4: GET again to retrieve the external ID
           Logger.debug(`Step 4: Retrieving external ID for created assignment`)
-          const externalId = await this.getCreatedAssignmentExternalId(journalId, assignment)
+          const externalId = createResult.response?.id || await this.getCreatedAssignmentExternalId(journalId, assignment)
 
           if (externalId) {
             results.success.push({

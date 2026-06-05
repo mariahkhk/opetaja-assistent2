@@ -1001,11 +1001,12 @@ describe("TahvelNewAssignmentSync - integration", () => {
         if (url.includes('/journalEntriesByDate')) return []
         return { journalTeachers: [] }
       })
-      feature.api.tahvel.post = mock(async () => ({ id: 999 }))
+      feature.api.tahvel.post = mock(async () => ({}))
       const result = await feature.syncAssignmentsForSubject('12345', [
         { assignmentName: 'A', createdAssignmentId: 5 }
       ])
       expect(result.failed[0].error).toContain('Could not retrieve')
+      expect(result.touchedJournalIds).toEqual(['12345'])
     })
   })
 
@@ -1028,6 +1029,35 @@ describe("TahvelNewAssignmentSync - integration", () => {
         '12345': [{ assignmentName: 'A', createdAssignmentId: 1 }]
       })
 
+      expect(feature.api.kriit.post).toHaveBeenCalled()
+      expect(feature.isProcessing).toBe(false)
+    })
+
+    it('recalculates final grades before Kriit external ID notification failures can stop the flow', async () => {
+      let postCalled = false
+      const tahvelGets = []
+      feature.api.tahvel.get = mock(async url => {
+        tahvelGets.push(url)
+        if (url.includes('/journalEntriesByDate')) {
+          return postCalled ? [{ id: 10, nameEt: 'A', entryType: 'SISSEKANNE_I' }] : []
+        }
+        if (url.includes('/journalStudents')) return []
+        if (url === '/journals/12345') {
+          return { id: 12345, lessonHours: { capacityHours: [{ capacity: 'MAHT_i', plannedHours: 1, usedHours: 1 }] } }
+        }
+        return { journalTeachers: [] }
+      })
+      feature.api.tahvel.post = mock(async () => {
+        postCalled = true
+        return { id: 10 }
+      })
+      feature.api.kriit.post = mock(async () => { throw new Error('kriit notification failed') })
+
+      await feature.syncNewAssignmentsToTahvel({
+        '12345': [{ assignmentName: 'A', createdAssignmentId: 1 }]
+      })
+
+      expect(tahvelGets).toContain('/journals/12345')
       expect(feature.api.kriit.post).toHaveBeenCalled()
       expect(feature.isProcessing).toBe(false)
     })
