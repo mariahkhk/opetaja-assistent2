@@ -433,6 +433,114 @@ describe('ApiService', () => {
 
       await expect(apiService.put('/users/1', {})).rejects.toThrow('API Error: 500')
     })
+
+    // Regression for Sentry issue 115111046: an expected 412
+    // (changeIsNotAllowedStudentIsNotStudying — student no longer studying) on a
+    // journalEntry PUT must NOT reach Sentry at all. The error still propagates to
+    // the caller, but both leak paths are now closed: put()'s catch emits only a
+    // debug breadcrumb, and request()'s "Parsed error details" log is debug-level
+    // too — so request()'s single error reporter is the only Sentry path, and it
+    // suppresses 412 via the preserved cause chain. Net Sentry captures: zero.
+    test('should not forward an expected 412 PUT error to Sentry', async () => {
+      const tahvelApi = new ApiService({ name: 'tahvel', baseUrl: 'https://tahvel.edu.ee/hois_back' })
+      Object.defineProperty(document, 'cookie', { writable: true, value: 'XSRF-TOKEN=test-csrf-token' })
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 412,
+        statusText: 'Precondition Failed',
+        text: async () =>
+          JSON.stringify({ _errors: [{ code: 'journal.messages.changeIsNotAllowedStudentIsNotStudying' }] })
+      }))
+
+      const originalCaptureMessage = sentryService.captureMessage
+      const originalCaptureException = sentryService.captureException
+      const captureMessage = mock(() => {})
+      const captureException = mock(() => {})
+      sentryService.captureMessage = captureMessage
+      sentryService.captureException = captureException
+
+      try {
+        await expect(
+          tahvelApi.put('/journals/404498/journalEntry/3703525', { journalEntryStudents: [] })
+        ).rejects.toThrow('API Error: 412')
+
+        // No Sentry capture of any kind for an expected 412 — neither put()'s
+        // catch ("PUT request to ... failed") nor request()'s "Parsed error
+        // details" breadcrumb, both now debug-level; request()'s main error log
+        // suppresses 412 via the cause chain.
+        const totalCaptures = captureMessage.mock.calls.length + captureException.mock.calls.length
+        expect(totalCaptures).toBe(0)
+      } finally {
+        sentryService.captureMessage = originalCaptureMessage
+        sentryService.captureException = originalCaptureException
+      }
+    })
+
+    // Genuine unexpected PUT failures (e.g. 500) must still reach Sentry exactly
+    // once — via request(), not double-reported by put()'s catch.
+    test('should forward an unexpected 500 PUT error to Sentry exactly once', async () => {
+      const tahvelApi = new ApiService({ name: 'tahvel', baseUrl: 'https://tahvel.edu.ee/hois_back' })
+      Object.defineProperty(document, 'cookie', { writable: true, value: 'XSRF-TOKEN=test-csrf-token' })
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        text: async () => 'Server error'
+      }))
+
+      const originalCaptureMessage = sentryService.captureMessage
+      const originalCaptureException = sentryService.captureException
+      const captureMessage = mock(() => {})
+      const captureException = mock(() => {})
+      sentryService.captureMessage = captureMessage
+      sentryService.captureException = captureException
+
+      try {
+        await expect(
+          tahvelApi.put('/journals/404498/journalEntry/3703525', { journalEntryStudents: [] })
+        ).rejects.toThrow('API Error: 500')
+
+        const totalCaptures = captureMessage.mock.calls.length + captureException.mock.calls.length
+        expect(totalCaptures).toBe(1)
+      } finally {
+        sentryService.captureMessage = originalCaptureMessage
+        sentryService.captureException = originalCaptureException
+      }
+    })
+
+    // Guards the "Parsed error details" downgrade: an UNEXPECTED Tahvel _errors
+    // response (422 — not in EXPECTED_ERROR_PATTERN) must still reach Sentry, and
+    // exactly once via request()'s main error log — not double-counted by the now
+    // debug-level "Parsed error details" breadcrumb (which previously made it 2).
+    test('should report an unexpected Tahvel _errors response to Sentry exactly once', async () => {
+      const tahvelApi = new ApiService({ name: 'tahvel', baseUrl: 'https://tahvel.edu.ee/hois_back' })
+      Object.defineProperty(document, 'cookie', { writable: true, value: 'XSRF-TOKEN=test-csrf-token' })
+      global.fetch = mock(async () => ({
+        ok: false,
+        status: 422,
+        statusText: 'Unprocessable Entity',
+        text: async () => JSON.stringify({ _errors: [{ code: 'VALIDATION_ERROR' }] })
+      }))
+
+      const originalCaptureMessage = sentryService.captureMessage
+      const originalCaptureException = sentryService.captureException
+      const captureMessage = mock(() => {})
+      const captureException = mock(() => {})
+      sentryService.captureMessage = captureMessage
+      sentryService.captureException = captureException
+
+      try {
+        await expect(
+          tahvelApi.put('/journals/404498/journalEntry/3703525', {})
+        ).rejects.toThrow('API Error: 422')
+
+        const totalCaptures = captureMessage.mock.calls.length + captureException.mock.calls.length
+        expect(totalCaptures).toBe(1)
+      } finally {
+        sentryService.captureMessage = originalCaptureMessage
+        sentryService.captureException = originalCaptureException
+      }
+    })
   })
 
   describe('Request throttling', () => {

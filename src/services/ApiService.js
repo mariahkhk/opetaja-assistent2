@@ -545,8 +545,15 @@ class ApiService {
         }
 
         const safeErrorDetails = piiEndpoint && errorDetails ? '[REDACTED-PII]' : errorDetails
+        // Diagnostic breadcrumb only — keep it debug-level. The catch at the
+        // bottom of request() is the single Sentry reporter (PII-redacted, and
+        // it suppresses expected 401/403/404/412 via the preserved cause chain).
+        // Reporting here with Logger.error both double-reports genuine failures
+        // and leaks expected statuses, because "[name] Parsed error details:"
+        // never matches the ^API Error: anchored EXPECTED_ERROR_PATTERN and falls
+        // through to sentryService.captureMessage.
         if (isTahvelErrorsFormat && !suppressedErrorStatuses.has(response.status)) {
-          Logger.error(`[${this.name}] Parsed error details:`, safeErrorDetails)
+          Logger.debug(`[${this.name}] Parsed error details:`, safeErrorDetails)
         }
 
         // Tahvel reverse proxies could in principle echo a request parameter
@@ -747,7 +754,7 @@ class ApiService {
       headers['X-Requested-With'] = 'XMLHttpRequest'
     }
 
-    if (Logger.isDebugMode()) Logger.debug(`[${this.name}] PUT request to ${endpoint} starting`)
+    Logger.debug(`[${this.name}] PUT request to ${endpoint} starting`)
 
     try {
       const result = await this.request({
@@ -762,10 +769,18 @@ class ApiService {
         ...options
       })
 
-      if (Logger.isDebugMode()) Logger.debug(`[${this.name}] PUT request to ${endpoint} completed successfully`)
+      Logger.debug(`[${this.name}] PUT request to ${endpoint} completed successfully`)
       return result
     } catch (error) {
-      Logger.error(`[${this.name}] PUT request to ${endpoint} failed: ${error.message}`)
+      // request() is the single choke point that reports unexpected errors to
+      // Sentry (with PII redaction) AND suppresses expected statuses (401/403/
+      // 404/412) via the preserved cause chain. Re-reporting here with
+      // Logger.error would both double-report genuine failures and leak
+      // expected statuses: the interpolated string ("[tahvel] PUT request to
+      // ... failed: API Error: 412") never matches the ^API Error: anchored
+      // EXPECTED_ERROR_PATTERN, so it falls through to sentryService. Keep only
+      // a debug breadcrumb (never forwarded to Sentry) and re-throw.
+      Logger.debug(`[${this.name}] PUT request to ${endpoint} failed: ${error.message}`)
       throw error
     }
   }
