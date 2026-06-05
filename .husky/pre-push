@@ -1,3 +1,7 @@
+# Consume Git's pre-push ref list so Bun/Playwright test runners don't inherit
+# pipe input and treat the hook as an interactive/streaming session.
+cat > /dev/null
+
 # Run linting
 echo "Linting..."
 if ! bun run lint > /dev/null 2>&1; then
