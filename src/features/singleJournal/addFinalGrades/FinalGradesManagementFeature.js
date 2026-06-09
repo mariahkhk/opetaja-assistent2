@@ -2188,6 +2188,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             return {
               ...existing,
               journalStudent: String(r.journalStudentId),
+              isMicro: existing.isMicro ?? false,
               grade: {
                 code,
                 gradingSchemaRowId: null,
@@ -2205,6 +2206,7 @@ class FinalGradesByOvFeature extends BaseFeature {
             return {
               id: undefined,
               journalStudent: String(r.journalStudentId),
+              isMicro: false,
               absence: null,
               grade: {
                 code,

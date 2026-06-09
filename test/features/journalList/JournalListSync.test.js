@@ -4952,6 +4952,8 @@ describe("JournalListSync - Sync flow and lifecycle", () => {
       const result = await journalListSync.syncWithKriit()
       expect(result.successfulSyncs.length).toBeGreaterThan(0)
       expect(putMock).toHaveBeenCalled()
+      const [, putPayload] = putMock.mock.calls[0]
+      expect(putPayload.journalEntryStudents[0]).toHaveProperty('isMicro', false)
     })
 
     test('returns early when no entry data (entry data null)', async () => {

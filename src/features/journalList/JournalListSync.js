@@ -3713,7 +3713,7 @@ class JournalListSyncFeature extends BaseFeature {
               let finalStudentEntry = null
               if (studentEntry) {
                 // Update existing student's grade
-                finalStudentEntry = { ...studentEntry }
+                finalStudentEntry = { ...studentEntry, isMicro: studentEntry.isMicro ?? false }
                 if (targetGrade === null) {
                   // Clearing the grade in Tahvel: set grade to null
                   finalStudentEntry.grade = null
@@ -3741,6 +3741,7 @@ class JournalListSyncFeature extends BaseFeature {
                 finalStudentEntry = {
                   id: null,
                   journalStudent: Number(info.journalStudentId),
+                  isMicro: false,
                   absence: null,
                   // If targetGrade is null, request an empty grade (null) so Tahvel clears it.
                   grade:
