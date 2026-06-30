@@ -4877,6 +4877,32 @@ describe("JournalListSync - Sync flow and lifecycle", () => {
       expect(journalListSync.error).toContain('Kõik hinded on juba sünkroonis')
     })
 
+    test('skips graduated students', async () => {
+      journalListSync.isLoading = false
+      journalListSync.isActive = true
+      journalListSync.differences = [
+        {
+          subjectName: 'X',
+          subjectExternalId: 1,
+          assignments: [
+            {
+              assignmentExternalId: 10,
+              results: [
+                { studentPersonalCode: '50001010001', grade: '5', currentGrade: '4', studentIsGraduated: true }
+              ]
+            }
+          ]
+        }
+      ]
+      journalListSync.api = {
+        kriit: { baseUrl: 'https://kriit.example.com/api' },
+        tahvel: { get: mock(async () => ({})), put: mock(async () => ({})) }
+      }
+      const result = await journalListSync.syncWithKriit()
+      // Graduated student skipped; nothing to sync
+      expect(journalListSync.error).toContain('Kõik hinded on juba sünkroonis')
+    })
+
     test('skips when grades are equal (no diff)', async () => {
       journalListSync.isLoading = false
       journalListSync.isActive = true

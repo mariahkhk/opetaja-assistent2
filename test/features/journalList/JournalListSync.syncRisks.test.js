@@ -44,7 +44,7 @@ function makeTahvelApi(getHandler) {
 }
 
 /** Single grade difference for one student in one assignment. */
-function gradeDifference({ studentPersonalCode, currentGrade, grade, studentName, studentIsDeleted }) {
+function gradeDifference({ studentPersonalCode, currentGrade, grade, studentName, studentIsDeleted, studentIsGraduated }) {
   return [
     {
       subjectName: 'Test Subject',
@@ -53,7 +53,7 @@ function gradeDifference({ studentPersonalCode, currentGrade, grade, studentName
         {
           assignmentExternalId: ASSIGNMENT_ID,
           assignmentName: 'Test Assignment',
-          results: [{ studentPersonalCode, currentGrade, grade, studentName, studentIsDeleted }]
+          results: [{ studentPersonalCode, currentGrade, grade, studentName, studentIsDeleted, studentIsGraduated }]
         }
       ]
     }
@@ -365,6 +365,26 @@ describe('JournalListSync — sync data-integrity risks (false data / duplicate 
     await journalListSync.syncWithKriit()
 
     // Assert: the deleted student's grade is skipped at collection; nothing is written.
+    expect(putCalls.length).toBe(0)
+    expect(journalListSync.error).toContain('juba sünkroonis')
+  })
+
+  test('syncWithKriit_doesNotCallPut_whenStudentFlaggedGraduatedInDifferences', async () => {
+    // Arrange: the difference itself flags the student as graduated from the journal.
+    const { api, putCalls } = makeTahvelApi(async () => null)
+    journalListSync.api = api
+    journalListSync.differences = gradeDifference({
+      studentPersonalCode: '39001010001',
+      currentGrade: '4',
+      grade: '5',
+      studentName: 'Graduated Student',
+      studentIsGraduated: true
+    })
+
+    // Act
+    await journalListSync.syncWithKriit()
+
+    // Assert: the graduated student's grade is skipped at collection; nothing is written.
     expect(putCalls.length).toBe(0)
     expect(journalListSync.error).toContain('juba sünkroonis')
   })

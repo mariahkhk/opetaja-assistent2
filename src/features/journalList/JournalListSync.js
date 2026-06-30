@@ -3438,11 +3438,11 @@ class JournalListSyncFeature extends BaseFeature {
               throw new Error(errorMsg)
             }
 
-            // Skip syncing grades for deleted students
-            if (result.studentIsDeleted === true) {
+            // Skip syncing grades for deleted or graduated students
+            if (result.studentIsDeleted === true || result.studentIsGraduated === true) {
               if (Logger.isDebugMode()) {
                 Logger.debug(
-                  `⏭️ Result ${resultIndex + 1}: Skipping grade sync for deleted student: ${result.studentName} (${result.studentPersonalCode})`
+                  `⏭️ Result ${resultIndex + 1}: Skipping grade sync for deleted/graduated student: ${result.studentName} (${result.studentPersonalCode})`
                 )
               }
               return // Do not sync this student's grade
@@ -3878,7 +3878,7 @@ class JournalListSyncFeature extends BaseFeature {
               updateData.journalEntryCapacityTypes = ['MAHT_p']
             }
 
-            // Filter out students with OPPURSTAATUS_K using mapping similar to syncAssignmentNameDifferences
+            // Filter out students with OPPURSTAATUS_K or OPPURSTAATUS_L using mapping similar to syncAssignmentNameDifferences
             if (Array.isArray(updateData.journalEntryStudents)) {
               const studentPromises = updateData.journalEntryStudents.map(async student => {
                 const journalStudentId = student.journalStudent
@@ -3887,7 +3887,7 @@ class JournalListSyncFeature extends BaseFeature {
                 if (!studentId) return student
                 try {
                   const studentDetails = await this.getStudentDetails(studentId)
-                  if (studentDetails && studentDetails.status === 'OPPURSTAATUS_K') return null
+                  if (studentDetails && (studentDetails.status === 'OPPURSTAATUS_K' || studentDetails.status === 'OPPURSTAATUS_L')) return null
                 } catch (err) {
                   Logger.warning(`Failed to get student details for ${studentId}: ${err.message}`)
                 }
