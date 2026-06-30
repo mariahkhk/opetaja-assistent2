@@ -12,12 +12,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.60.0",
+    "@playwright/test": "^1.61.1",
     "@types/bun": "latest",
-    "eslint": "^10.4.0",
+    "eslint": "^10.6.0",
     "eslint-plugin-no-unsanitized": "^4.1.5",
-    "eslint-plugin-security": "^4.0.0",
-    "globals": "^17.6.0",
+    "eslint-plugin-security": "^4.0.1",
+    "globals": "^17.7.0",
     "husky": "^9.1.7",
     "jsdom": "^29.1.1"
   },
@@ -39,5 +39,9 @@
   },
   "dependencies": {
     "sharp": "^0.34.5"
+  },
+  "overrides": {
+    "undici": "^7.28.0"
   }
 }
+
