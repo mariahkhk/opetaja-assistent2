@@ -1564,6 +1564,47 @@ class JournalListSyncFeature extends BaseFeature {
   }
 
   /**
+   * Collect nearby Tahvel timetable events for journals included in Kriit sync.
+   * Timetable failures are deliberately non-fatal to the existing journal sync.
+   * @param {Array<Object>} journalData Journals being synchronized
+   * @returns {Promise<Array<Object>>} Sanitized timetable payload
+   */
+  async collectTimetableEventsForKriit(journalData) {
+    try {
+      const user = await this.api.tahvel.get('/user', {}, { cache: true, cacheExpiration: 60 * 60 * 1000 })
+      const schoolId = user?.school?.id
+      const teacherId = user?.teacher
+      if (!schoolId || !teacherId) return []
+
+      const fromDate = new Date()
+      fromDate.setDate(fromDate.getDate() - 1)
+      fromDate.setHours(0, 0, 0, 0)
+      const thruDate = new Date()
+      thruDate.setDate(thruDate.getDate() + 14)
+      thruDate.setHours(23, 59, 59, 999)
+      const endpoint = `/timetableevents/timetableByTeacher/${schoolId}?from=${fromDate.toISOString()}&lang=ET&teachers=${teacherId}&thru=${thruDate.toISOString()}`
+      const result = await this.api.tahvel.get(endpoint, {}, { cache: false })
+      const journalIds = new Set((journalData || []).map(journal => String(journal.subjectExternalId)))
+
+      return (result?.timetableEvents || [])
+        .filter(event => journalIds.has(String(event.journalId)) && event.date && event.timeStart && event.timeEnd)
+        .map(event => ({
+          id: event.id ?? event.uuid ?? null,
+          journalId: event.journalId,
+          date: String(event.date).split('T')[0],
+          timeStart: event.timeStart,
+          timeEnd: event.timeEnd,
+          roomName: Array.isArray(event.rooms)
+            ? event.rooms.map(room => room.name || room.roomCode || room.code).filter(Boolean).join(', ')
+            : null
+        }))
+    } catch (error) {
+      Logger.warning(`Timetable data was not included in Kriit sync: ${error.message}`)
+      return []
+    }
+  }
+
+  /**
    * Proceed with the actual Kriit API call
    * @param {Array} [providedJournalData] - Optional journal data to use instead of collecting fresh data
    */
@@ -1645,10 +1686,12 @@ class JournalListSyncFeature extends BaseFeature {
       window.journalListSync.tahvelData = journalData
 
       try {
-        // Prepare payload with both journals and inactive students
+        // Include nearby timetable events so Kriit can identify the teacher's current lesson.
+        const timetableEvents = await this.collectTimetableEventsForKriit(journalData)
         const payload = {
           journals: journalData,
-          inactiveStudents: inactiveStudentsArray
+          inactiveStudents: inactiveStudentsArray,
+          timetableEvents
         }
 
         // Log the request data
