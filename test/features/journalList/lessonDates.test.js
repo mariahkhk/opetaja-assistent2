@@ -1,3 +1,10 @@
+// Keep the API fixture aligned with the current academic year.
+function currentStudyYearFixture() {
+  const now = new Date()
+  const start = now.getFullYear() - (now.getMonth() < 8 ? 1 : 0)
+  return String(start) + '/' + String(start + 1)
+}
+
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
 import { restoreChromeMock, restoreGlobalDOM } from '../../setup.js'
 
@@ -6,7 +13,7 @@ function makeMockApi({ timetableEvents = [], planData = null } = {}) {
     tahvel: {
       get: async endpoint => {
         if (endpoint.includes('autocomplete/studyYears')) {
-          return [{ id: 727, nameEt: '2025/2026' }]
+          return [{ id: 727, nameEt: currentStudyYearFixture() }]
         }
         if (endpoint.includes('timetableByTeacher')) {
           return { timetableEvents }

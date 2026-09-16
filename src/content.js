@@ -2,6 +2,7 @@
  * Õpetaja Assistent 2 - Main content script
  */
 import TahvelExtension from './core/Extension.js'
+import { initializeLessonEntry } from './services/LessonEntryForm.js'
 import Logger from './services/Logger.js'
 import { cacheService } from './services/CacheService.js'
 import { cryptoService } from './services/CryptoService.js'
@@ -9,6 +10,7 @@ import { ApiService } from './services/ApiService.js'
 import { sentryService } from './services/SentryService.js'
 
 const VERSION = '6'
+initializeLessonEntry()
 
 // Initialize Sentry error tracking before anything else
 sentryService.init()
@@ -140,4 +142,3 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   return true // Keep the message channel open for async responses
 })
-

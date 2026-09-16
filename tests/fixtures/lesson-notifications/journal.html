@@ -1,0 +1,32 @@
+<!doctype html><html lang="et"><head><meta charset="UTF-8"></head><body>
+<button id="add">LISA UUS SISSEKANNE</button>
+<template id="entry"><form class="tahvel-form">
+  <tahvel-select formcontrolname="entryType"><div class="field">Liik</div><button type="button" class="dropdown-item">Tund</button></tahvel-select>
+  <checkbox formcontrolname="selected"><button type="button">Auditoorne õpe</button></checkbox>
+  <date-picker formcontrolname="entryDate"><input aria-label="Kuupäev"></date-picker>
+  <tahvel-select formcontrolname="startLessonNr"><div class="field">Algustund</div><button type="button" class="dropdown-item">2</button></tahvel-select>
+  <tahvel-input formcontrolname="lessons"><input aria-label="Tundide arv"></tahvel-input>
+  <tahvel-input formcontrolname="entryName"><input aria-label="Nimetus"></tahvel-input>
+  <textarea aria-label="Sisu"></textarea>
+  <table><tbody><tr><td class="student-cell"><span><span>Synthetic Student</span><span>, TEST</span></span></td>
+    <td><checkbox formcontrolname="absenceWithoutReason"><button type="button" aria-label="Puudub">Puudub</button></checkbox></td></tr></tbody></table>
+  <button type="submit" id="save">Salvesta</button>
+</form></template>
+<script>
+window.savedEntries = 0
+window.openedEntries = 0
+document.getElementById('add').onclick = () => {
+  window.openedEntries++
+  document.body.append(document.getElementById('entry').content.cloneNode(true))
+  const form = document.querySelector('form')
+  form.onsubmit = event => { event.preventDefault(); window.savedEntries++ }
+  form.querySelectorAll('checkbox button').forEach(button => {
+    button.onclick = () => { button.classList.toggle('checked'); button.setAttribute('aria-checked', String(button.classList.contains('checked'))) }
+  })
+  form.querySelectorAll('tahvel-select button').forEach(button => {
+    button.onclick = () => { button.parentElement.dataset.selected = button.textContent }
+  })
+  const date = form.querySelector('date-picker input')
+  date.onkeydown = event => { if (event.key === 'Enter') { event.preventDefault(); date.dataset.committed = date.value } }
+}
+</script></body></html>

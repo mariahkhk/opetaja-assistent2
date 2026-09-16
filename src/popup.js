@@ -2,6 +2,8 @@
  * Popup script for Õpetaja Assistent 2
  */
 
+import { initializeLessonNotificationSettings } from './popup/LessonNotificationSettings.js'
+
 // Constants
 const DEBUG_MODE_KEY = 'OA_debug_mode'
 const KRIIT_ENABLED_KEY = 'OA_kriitEnabled'
@@ -39,6 +41,14 @@ document.addEventListener('DOMContentLoaded', function() {
  * Initialize the popup
  */
 function initPopup() {
+  void initializeLessonNotificationSettings()
+  if (document.getElementById('lesson-notification-schedule-status')) chrome.runtime.sendMessage({ action: 'lessonNotificationStatus' }).then(result => {
+    const status = document.getElementById('lesson-notification-schedule-status')
+    if (!status) return
+    status.textContent = result?.error ? `Tunniplaan: ${result.error}` : result?.updatedAt
+      ? `Täna ees: ${result.planned} tunniplokki. ${result.nextAt ? `Järgmine märguanne: ${new Date(result.nextAt).toLocaleTimeString('et-EE')}. ` : ''}Uuendatud ${new Date(result.updatedAt).toLocaleTimeString('et-EE')}.`
+      : 'Automaatsete märguannete ajastamiseks ava Tahvel ja logi sisse.'
+  }).catch(() => {})
   // Get DOM elements
   const debugModeCheckbox = document.getElementById('debug-mode')
   const clearCacheButton = document.getElementById('clear-cache')

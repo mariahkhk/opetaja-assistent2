@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { launchWithExtension } from './helpers/loadExtension.js'
+import { expect } from '@playwright/test'
+import { test, launchWithExtension } from './helpers/loadExtension.js'
 import fs from 'fs'
 
 const manifestVersion = JSON.parse(fs.readFileSync('dist/manifest.json', 'utf8')).version

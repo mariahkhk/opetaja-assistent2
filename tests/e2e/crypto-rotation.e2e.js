@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { launchWithExtension } from './helpers/loadExtension.js'
+import { expect } from '@playwright/test'
+import { test, launchWithExtension } from './helpers/loadExtension.js'
 import { mockTahvel } from './helpers/mockTahvel.js'
 
 test.describe('crypto key rotation across tabs', () => {

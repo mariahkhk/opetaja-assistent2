@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { launchWithExtension } from './helpers/loadExtension.js'
+import { expect } from '@playwright/test'
+import { test, launchWithExtension } from './helpers/loadExtension.js'
 import { mockTahvel } from './helpers/mockTahvel.js'
 
 // Journal 402872 has two SISSEKANNE_O entries in fixtures (outcomeOrderNr 0+1

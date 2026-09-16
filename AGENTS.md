@@ -641,6 +641,8 @@ When asked to change project source code:
 
 ### Issue Creation
 
+All GitHub issue titles and descriptions, including acceptance criteria, must be written in English.
+
 ```bash
 gh issue create --title "Title" --body "Description"
 ```

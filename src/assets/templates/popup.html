@@ -318,6 +318,28 @@
       ></div>
     </div>
 
+    <div class="settings-group">
+      <h2>Tunni märguanded</h2>
+      <p><small>Kui Kriidi ühendus on seadistatud, saadetakse sisse kandmata tunni kohta 10 minuti pärast meil. Kontroll vajab töötavat brauserit ja kehtivat Tahvli sessiooni.</small></p>
+      <p id="lesson-notification-schedule-status" role="status"></p>
+      <form id="lesson-notification-settings" novalidate>
+        <label for="lesson-reference">Tunni</label>
+        <select id="lesson-reference" name="reference">
+          <option value="start">algusest</option>
+          <option value="end" selected>lõpust</option>
+        </select>
+        <label for="lesson-minutes">Minutit</label>
+        <input id="lesson-minutes" name="minutes" type="number" min="0" step="1" value="0" required style="width: 65px" />
+        <label for="lesson-direction">Suund</label>
+        <select id="lesson-direction" name="direction">
+          <option value="before">enne</option>
+          <option value="after" selected>pärast</option>
+        </select>
+        <button type="submit" class="btn primary-btn">Salvesta märguande aeg</button>
+        <p id="lesson-notification-settings-status" role="status" aria-live="polite"></p>
+      </form>
+
+    </div>
     <div class="version">Versioon: <span id="version">0.1.0</span></div>
 
     <script type="module" src="popup.js"></script>

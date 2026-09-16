@@ -1,4 +1,4 @@
-import { chromium } from '@playwright/test'
+import { chromium, test as base } from '@playwright/test'
 import os from 'os'
 import path from 'path'
 import fs from 'fs'
@@ -13,6 +13,19 @@ const EXTENSION_PATH = path.resolve('dist')
 // Tests get an isolated `page` (closed in afterEach) but share the underlying
 // browser. Chrome storage is cleared per-test by the caller (cleanState helper).
 const sharedContexts = new Map() // workerIndex → { context, extensionId, serviceWorker }
+
+/** Own shared persistent browsers explicitly so Playwright can finish worker teardown. */
+export const test = base.extend({
+  extensionLifetime: [async({}, use) => {
+    try { await use() } finally {
+      for (const info of sharedContexts.values()) {
+        await info.dispose()
+        fs.rmSync(info.userDataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 })
+      }
+      sharedContexts.clear()
+    }
+  }, { scope: 'worker', auto: true }]
+})
 
 function getWorkerIndex() {
   // Playwright sets TEST_PARALLEL_INDEX (workers run in separate processes).
@@ -39,7 +52,13 @@ async function createContext() {
   if (!serviceWorker) serviceWorker = await context.waitForEvent('serviceworker')
   const extensionId = serviceWorker.url().split('/')[2]
 
-  return { context, extensionId, serviceWorker, userDataDir }
+  // Page routes mock Tahvel in the existing suites, but do not cover worker fetches.
+  // Never let incidental scheduler refreshes hit real Tahvel or outlive a test.
+  await context.route('https://*.ee/hois_back/**', async route => {
+    if (route.request().serviceWorker()) await route.fulfill({ json: {} })
+    else await route.fallback()
+  })
+  return { context, extensionId, serviceWorker, userDataDir, dispose: context.close.bind(context) }
 }
 
 /**
@@ -93,6 +112,13 @@ export async function closeAllPagesExcept(context, keepPage = null) {
  */
 export async function clearExtensionStorage(serviceWorker) {
   await serviceWorker.evaluate(async() => {
+    for (const alarm of await chrome.alarms.getAll()) {
+      if (alarm.name.startsWith('oa2-lesson:') || alarm.name.startsWith('oa2-lesson-email:')) await chrome.alarms.clear(alarm.name)
+    }
+    await chrome.storage.session.clear()
     await new Promise(resolve => chrome.storage.local.clear(resolve))
+    // Match a fresh install: unrelated feature tests must not be covered by
+    // the update modal just because their settings were reset between tests.
+    await chrome.storage.local.set({ OA_updateBannerDismissed: chrome.runtime.getManifest().version })
   })
 }
