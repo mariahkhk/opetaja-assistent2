@@ -5,8 +5,16 @@
 - Chrome schedules native notifications from the signed-in teacher's timetable. Adjacent periods in the same journal/group/type become one block.
 - Default notification time is the block end. The popup supports a whole-minute offset before/after the block start/end; changing it reschedules unsent notifications, without replaying already sent blocks.
 - The scheduler refreshes every 15 minutes, on startup, on Tahvel navigation and at Tallinn midnight. It fetches adjacent/shifted dates when timing offsets cross midnight.
-- Clicking a notification opens a new entry, prefills type/capacity/date/periods and copies available previous-lesson attendance. Topic/content remain manual. Nothing saves automatically.
+- Clicking a notification opens a new entry, prefills the subject title, factual timetable content, type/capacity/date/periods and copies available previous-lesson attendance. The teacher adds the actual topic/work completed and reviews the draft. Nothing saves automatically.
 - Notification links are retained per tab in extension session storage across sign-in. Email links can reconstruct the lesson from the authenticated teacher's historical timetable without requiring a previously delivered Chrome notification.
+
+## Entry prefill correction (#160)
+
+The subject title comes from authenticated `GET /journals/{id}` (`nameEt`/`name`), falling back to the saved timetable name. Only empty or generic type titles are replaced. Content is a clearly labelled timetable summary (subject, date, time and group), not a claim about what was taught. Nonempty content and teacher-entered titles are preserved. Any trusted user interaction during asynchronous loading stops subsequent automatic changes.
+
+On opening the form, `GET /lessontimes` searches the event date (`from`, `thru`, `page`, `size`). The contract was checked against Tahvel's public `timetable/timetable.lessonTime.list.html` and its list controller: paginated `content` rows have `lessonNr`, `startTime`, `endTime`, weekday flags, `validFrom`, `validThru`, `isDefault` and `buildings`. All pages (bounded at ten) must be available. Exact start/end matches and consecutive non-overlapping periods within one valid building/period plan are required. Conflicting numbering across plans is rejected; no 45-minute division or nearest-time guesses are used. If school lesson-time access is denied/unavailable, existing notification period values are retained with a verification warning; missing values remain empty with a manual-entry explanation. The notification scheduler still uses its existing bundled period table; this correction resolves form fields only.
+
+There is no verified assignment-to-timetable-event relation exposed by the current Kriit API. Assignments are therefore **not** inferred merely from subject/date/deadline or copied through the mutating synchronization endpoint. The teacher adds the actual topic and assignments. Unit/browser fixtures cover exact live-period mapping when bundled numbers are absent, ambiguity, pagination, denied access and preservation of teacher input. They do not prove the teacher's live permissions or live Angular event handling; those still require the manual Tahvel check.
 
 ## Email deployment (#157)
 

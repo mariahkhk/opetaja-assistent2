@@ -18,7 +18,7 @@ test('notification entry reads saved data before refresh and explains a missing 
   } finally { Object.assign(global, original); dom.window.close() }
 })
 
-test('fills current Tahvel controls, leaves topic/content to teacher and never saves', async() => {
+test.each([false, true])('fills factual entry metadata, preserves existing text (%s) and never saves', async(preserve) => {
   const dom = new JSDOM(`<button id="add">LISA UUS SISSEKANNE</button><form class="tahvel-form">
     <tahvel-select formcontrolname="entryType"><div class="field"></div><button type="button" class="dropdown-item">Tund</button></tahvel-select>
     <checkbox formcontrolname="selected"><button type="button"><div class="box"></div>Auditoorne õpe</button></checkbox>
@@ -26,7 +26,7 @@ test('fills current Tahvel controls, leaves topic/content to teacher and never s
     <tahvel-select formcontrolname="startLessonNr"><div class="field"></div><button type="button" class="dropdown-item">5</button></tahvel-select>
     <tahvel-input formcontrolname="lessons"><input></tahvel-input>
     <tahvel-input formcontrolname="entryName"><input></tahvel-input>
-    <textarea></textarea><button id="save">Salvesta</button></form>`, { url: 'https://tahvel.edu.ee/#/journal/8/edit' })
+    <tahvel-textarea formcontrolname="content"><textarea></textarea></tahvel-textarea><button id="save">Salvesta</button></form>`, { url: 'https://tahvel.edu.ee/#/journal/8/edit' })
   const original = { window: global.window, document: global.document, Event: global.Event, KeyboardEvent: global.KeyboardEvent }
   Object.assign(global, { window: dom.window, document: dom.window.document, Event: dom.window.Event, KeyboardEvent: dom.window.KeyboardEvent })
   let saved = false
@@ -40,15 +40,19 @@ test('fills current Tahvel controls, leaves topic/content to teacher and never s
   const dateField = document.querySelector('[formcontrolname="entryDate"] input')
   dateField.onkeydown = event => { if (event.key === 'Enter' && dateInput) { event.preventDefault(); committedDate = dateField.value } }
   dateField.onblur = () => { if (!committedDate) dateField.value = '' }
+  if (preserve) {
+    document.querySelector('[formcontrolname="entryName"] input').value = 'Õpetaja teema'
+    document.querySelector('textarea').value = 'Õpetaja sisu'
+  } else document.querySelector('[formcontrolname="entryName"] input').value = 'Tund'
   try {
-    await openLessonEntry({ journalId: 8, date: '2026-09-14', startLessonNr: 5, lessons: 2, capacityType: 'MAHT_a', groups: [{ id: 1, code: 'A' }] }, async() => { throw new Error('No access') })
-    expect(selected).toBe(true)
+    await openLessonEntry({ journalId: 8, name: 'Tarkvaraprojekt II', date: '2026-09-14', startLessonNr: 5, lessons: 2, capacityType: 'MAHT_a', groups: [{ id: 1, code: 'A' }] }, async() => { throw new Error('No access') })
+    expect(selected).toBe(!preserve)
     expect(dateInput).toBe(true)
     expect(committedDate).toBe('14.09.2026')
     expect(document.querySelector('[formcontrolname="entryDate"] input').value).toBe('14.09.2026')
     expect(document.querySelector('[formcontrolname="lessons"] input').value).toBe('2')
-    expect(document.querySelector('[formcontrolname="entryName"] input').value).toBe('')
-    expect(document.querySelector('textarea').value).toBe('')
+    expect(document.querySelector('[formcontrolname="entryName"] input').value).toBe(preserve ? 'Õpetaja teema' : 'Tarkvaraprojekt II')
+    expect(document.querySelector('textarea').value).toBe(preserve ? 'Õpetaja sisu' : 'Tunniplaani andmed:\nAine: Tarkvaraprojekt II\nKuupäev: 14.09.2026\nÕpperühm: A')
     expect(saved).toBe(false)
     expect(document.querySelector('[role="status"]').textContent).toContain('pole kättesaadav')
   } finally { Object.assign(global, original); dom.window.close() }

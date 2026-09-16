@@ -1,4 +1,5 @@
 import { previousLessonAttendance } from './PreviousLessonAttendance.js'
+import { loadLessonEntryDetails } from './LessonEntryDetails.js'
 
 /** Wait for a rendered field without retaining observers after timeout. */
 async function waitFor(find, timeout = 20000) {
@@ -25,17 +26,21 @@ function status(form, text) {
 }
 
 /** Select a current Tahvel dropdown by its rendered label. */
-async function select(form, name, label) {
+async function select(form, name, label, canEdit = () => true) {
   const field = await waitFor(() => form.querySelector(`tahvel-select[formcontrolname="${name}"]`))
+  if (!canEdit()) return
+  // A pre-existing period selection belongs to the teacher, not the assistant.
+  if (name === 'startLessonNr' && /^\d+$/.test(field.querySelector('.field')?.textContent.trim())) return
   field.querySelector('.field').click()
-  const option = await waitFor(() => [...field.querySelectorAll('button.dropdown-item')].find(b => b.textContent.trim() === label))
-  option.click()
+  const option = await waitFor(() => !canEdit() || [...field.querySelectorAll('button.dropdown-item')].find(b => b.textContent.trim() === label))
+  if (canEdit()) option.click()
 }
 
 /** Fill an Angular control using the same input/change events as manual typing. */
-function input(form, name, value) {
-  const field = form.querySelector(`[formcontrolname="${name}"] input`)
+function input(form, name, value, replace = []) {
+  const field = form.querySelector(`[formcontrolname="${name}"] input, [formcontrolname="${name}"] textarea`)
   if (!field) throw new Error(`Väli ${name} puudub`)
+  if (field.disabled || field.readOnly || (field.value.trim() && !replace.includes(field.value.trim()))) return
   field.value = value
   field.dispatchEvent(new Event('input', { bubbles: true }))
   field.dispatchEvent(new Event('change', { bubbles: true }))
@@ -65,16 +70,32 @@ export async function openLessonEntry(block, get, onOpened = () => {}) {
   let userEdited = false
   const edited = event => { if (event.isTrusted) userEdited = true }
   form.addEventListener('input', edited)
+  form.addEventListener('change', edited)
   form.addEventListener('click', edited)
+  const canEdit = () => {
+    if (form.isConnected && userEdited) status(form, 'Vormi muudeti andmete laadimise ajal. Sinu sisestatud andmeid ei muudetud; täida puuduvad väljad käsitsi.')
+    return form.isConnected && !userEdited
+  }
   status(form, 'ÕA2 täidab tunni andmeid…')
   try {
-    await select(form, 'entryType', block.capacityType === 'MAHT_p' ? 'Praktiline töö' : block.capacityType === 'MAHT_i' ? 'Iseseisev töö' : 'Tund')
+    const details = await loadLessonEntryDetails(get, block)
+    if (!canEdit()) return
+    const defaults = ['Tund', 'Praktiline töö', 'Iseseisev töö']
+    const existingName = form.querySelector('[formcontrolname="entryName"] input')?.value.trim()
+    if (!existingName || defaults.includes(existingName)) {
+      await select(form, 'entryType', block.capacityType === 'MAHT_p' ? 'Praktiline töö' : block.capacityType === 'MAHT_i' ? 'Iseseisev töö' : 'Tund', canEdit)
+    }
+    if (!canEdit()) return
+    if (details.name) input(form, 'entryName', details.name.slice(0, 100), defaults)
+    input(form, 'content', details.content)
+    const periods = details.periods || block
     const capacity = block.capacityType === 'MAHT_p' ? 'Praktiline õpe' : block.capacityType === 'MAHT_i' ? 'Iseseisev õpe' : 'Auditoorne õpe'
     check([...form.querySelectorAll('checkbox[formcontrolname="selected"]')].find(c => c.textContent.trim() === capacity))
     input(form, 'entryDate', block.date.split('-').reverse().join('.'))
-    if (block.startLessonNr != null) await select(form, 'startLessonNr', String(block.startLessonNr))
-    if (block.lessons != null) input(form, 'lessons', String(block.lessons))
-    status(form, 'Tunni andmed on täidetud. Laadin eelmise tunni puudujaid…')
+    if (periods.startLessonNr != null) await select(form, 'startLessonNr', String(periods.startLessonNr), canEdit)
+    if (!canEdit()) return
+    if (periods.lessons != null) input(form, 'lessons', String(periods.lessons))
+    status(form, 'Tunniplaani andmed on lisatud. Laadin eelmise tunni puudujaid…')
     const attendance = await previousLessonAttendance(get, block)
     if (!form.isConnected) return
     if (userEdited) {
@@ -92,9 +113,16 @@ export async function openLessonEntry(block, get, onOpened = () => {}) {
         if (!rows[0].querySelector('checkbox[formcontrolname="absenceExcused"],checkbox[formcontrolname="absencePractice"]')) check(control)
       }
     }
-    status(form, `${attendance.warning || ''} Lisa tunni nimetus ja sisu ning kontrolli andmed enne salvestamist.${block.lessons == null ? ' Algustundi või tundide arvu ei saanud tunniaegade järgi tuvastada.' : ''}`)
+    const missingPeriods = periods.startLessonNr == null || periods.lessons == null
+    status(form, [
+      attendance.warning,
+      'Sisu sisaldab ainult tunniplaani andmeid, mitte tunni teemat ega tehtud tööd. Lisa käsitletud teema ja ülesanded ning kontrolli andmed enne salvestamist.',
+      !details.name && 'Aine nimetus ei ole kättesaadav; sisesta nimetus käsitsi.',
+      missingPeriods ? 'Kooli tunniaegadest ei saanud algustundi ja tundide arvu üheselt tuvastada; vali need käsitsi.' : !details.periods && 'Kooli kehtivaid tunniaegu ei saanud kontrollida; kontrolli algustundi ja tundide arvu.'
+    ].filter(Boolean).join(' '))
   } catch (error) { status(form, `Eeltäitmine jäi pooleli: ${error.message} Kontrolli andmeid ja täida puuduvad väljad käsitsi.`) } finally {
     form.removeEventListener('input', edited)
+    form.removeEventListener('change', edited)
     form.removeEventListener('click', edited)
   }
 }

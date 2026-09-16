@@ -40,6 +40,11 @@ export async function launchLessonHarness() {
     if (url.pathname === '/hois_back/timetableevents') data = { totalPages: 1, content: [
       { journalId: 7, date: '2026-09-14', timeStart: '08:15', timeEnd: '09:00', studentGroups: [{ id: 1 }] }
     ] }
+    else if (url.pathname === '/hois_back/journals/8') data = { nameEt: 'Synthetic subject' }
+    else if (url.pathname === '/hois_back/lessontimes') data = { totalPages: 1, content: [
+      { lessonNr: 2, startTime: '09:10', endTime: '09:55' },
+      { lessonNr: 3, startTime: '09:55', endTime: '10:40' }
+    ].map(row => ({ ...row, validFrom: '2026-09-01', dayMon: true, isDefault: true, buildings: [] })) }
     else if (url.pathname.endsWith('/journalEntriesByDate')) data = [{ id: 1, entryType: 'SISSEKANNE_T', entryDate: '2026-09-14', startLessonNr: 1, lessons: 1 }]
     else if (url.pathname.endsWith('/journalEntry/1')) data = { journalEntryStudents: [{ journalStudent: 1, absence: 'PUUDUMINE_P' }] }
     else if (url.pathname.endsWith('/journalStudents')) data = [{ id: 1, fullname: 'Synthetic Student', studentGroup: 'TEST' }]

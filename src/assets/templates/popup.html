@@ -62,6 +62,104 @@
         color: #333;
       }
 
+      /* Lesson notification settings */
+      .lesson-settings {
+        border-top: 1px solid #e0e0e0;
+        padding-top: 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #374151;
+      }
+      .lesson-settings p {
+        margin: 8px 0 12px;
+      }
+      .lesson-settings fieldset {
+        border: 0;
+        padding: 0;
+        margin: 0;
+        min-width: 0;
+      }
+      .lesson-settings legend {
+        padding: 0;
+        margin-bottom: 10px;
+      }
+      .lesson-timing-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .lesson-timing-row input,
+      .lesson-timing-row select {
+        box-sizing: border-box;
+        height: 36px;
+        padding: 6px 4px;
+        border: 1px solid #b8c2ce;
+        border-radius: 6px;
+        background: #fff;
+        color: #1f2937;
+        font: inherit;
+      }
+      .lesson-timing-row input {
+        width: 50px;
+      }
+      .lesson-settings :is(input, select, button):focus-visible {
+        outline: 2px solid #1565c0;
+        outline-offset: 2px;
+      }
+      .lesson-settings .lesson-timing-preview {
+        padding: 10px 12px;
+        border-radius: 6px;
+        background: #eff6ff;
+        color: #1e4876;
+      }
+      .lesson-settings .btn {
+        min-height: 36px;
+        background: #1565c0;
+      }
+      .lesson-settings .btn:hover:not(:disabled) {
+        background: #104f99;
+      }
+      .lesson-settings :disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+      .lesson-settings .lesson-feedback[data-state='success'] {
+        color: #216436;
+      }
+      .lesson-settings .lesson-feedback[data-state='error'] {
+        color: #b42318;
+      }
+      .lesson-settings .lesson-email-note {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+        color: #596273;
+        font-size: 12px;
+      }
+      .lesson-email-note strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #374151;
+      }
+      #lesson-notification-schedule-status {
+        color: #596273;
+        font-size: 12px;
+      }
+      .lesson-settings p:empty {
+        display: none;
+      }
+      .lesson-sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
       /* Toggle Switch */
       .switch {
         position: relative;
@@ -318,28 +416,36 @@
       ></div>
     </div>
 
-    <div class="settings-group">
-      <h2>Tunni märguanded</h2>
-      <p><small>Kui Kriidi ühendus on seadistatud, saadetakse sisse kandmata tunni kohta 10 minuti pärast meil. Kontroll vajab töötavat brauserit ja kehtivat Tahvli sessiooni.</small></p>
-      <p id="lesson-notification-schedule-status" role="status"></p>
+    <section class="settings-group lesson-settings" aria-labelledby="lesson-settings-title">
+      <h2 id="lesson-settings-title">Tunniteavitused</h2>
+      <p>Vali brauseriteavituse aeg.</p>
       <form id="lesson-notification-settings" novalidate>
-        <label for="lesson-reference">Tunni</label>
-        <select id="lesson-reference" name="reference">
-          <option value="start">algusest</option>
-          <option value="end" selected>lõpust</option>
-        </select>
-        <label for="lesson-minutes">Minutit</label>
-        <input id="lesson-minutes" name="minutes" type="number" min="0" step="1" value="0" required style="width: 65px" />
-        <label for="lesson-direction">Suund</label>
-        <select id="lesson-direction" name="direction">
-          <option value="before">enne</option>
-          <option value="after" selected>pärast</option>
-        </select>
-        <button type="submit" class="btn primary-btn">Salvesta märguande aeg</button>
-        <p id="lesson-notification-settings-status" role="status" aria-live="polite"></p>
+        <fieldset disabled>
+          <legend>Millal soovid teavitust saada?</legend>
+          <div class="lesson-timing-row">
+            <label for="lesson-minutes" class="lesson-sr-only">Minutite arv</label>
+            <input id="lesson-minutes" name="minutes" type="number" min="0" step="1" value="0" required aria-describedby="lesson-timing-preview" />
+            <span>minutit</span>
+            <label for="lesson-direction" class="lesson-sr-only">Enne või pärast</label>
+            <select id="lesson-direction" name="direction" aria-describedby="lesson-timing-preview">
+              <option value="before">enne</option>
+              <option value="after" selected>pärast</option>
+            </select>
+            <span>tunni</span>
+            <label for="lesson-reference" class="lesson-sr-only">Tunni algus või lõpp</label>
+            <select id="lesson-reference" name="reference" aria-describedby="lesson-timing-preview">
+              <option value="start">algust</option>
+              <option value="end" selected>lõppu</option>
+            </select>
+          </div>
+        </fieldset>
+        <p id="lesson-timing-preview" class="lesson-timing-preview" aria-live="polite"></p>
+        <button type="submit" class="btn primary-btn" disabled>Salvesta</button>
+        <p id="lesson-notification-settings-status" class="lesson-feedback" role="status" aria-live="polite"></p>
       </form>
-
-    </div>
+      <p id="lesson-notification-schedule-status" role="status"></p>
+      <p class="lesson-email-note"><strong>Meeldetuletus meilile</strong>Kui Kriidi ühendus on seadistatud ja tund on 10 minutit pärast lõppu endiselt sisse kandmata, saadetakse sulle meil. Ülal valitud teavituse aeg seda ei muuda. Kontrollimiseks peab Chrome töötama ja pead olema Tahvlisse sisse logitud.</p>
+    </section>
     <div class="version">Versioon: <span id="version">0.1.0</span></div>
 
     <script type="module" src="popup.js"></script>

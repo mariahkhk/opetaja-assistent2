@@ -17,7 +17,7 @@ async function scheduled() {
   await expect.poll(() => harness.worker.evaluate(() => lessonHarness.alarms().filter(a => a.name.startsWith('oa2-lesson:')).length)).toBe(1)
 }
 async function assertPrefilled(page) {
-  await expect(page.locator('.oa2-lesson-prefill-status')).toContainText('Lisa tunni nimetus ja sisu')
+  await expect(page.locator('.oa2-lesson-prefill-status')).toContainText('Lisa käsitletud teema ja ülesanded')
   await expect(page.locator('[formcontrolname="entryType"]')).toHaveAttribute('data-selected', 'Tund')
   await expect(page.locator('[formcontrolname="selected"] button')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByLabel('Kuupäev')).toHaveValue('14.09.2026')
@@ -25,8 +25,8 @@ async function assertPrefilled(page) {
   await expect(page.locator('[formcontrolname="startLessonNr"]')).toHaveAttribute('data-selected', '2')
   await expect(page.getByLabel('Tundide arv')).toHaveValue('2')
   await expect(page.getByLabel('Puudub', { exact: true })).toHaveAttribute('aria-checked', 'true')
-  await expect(page.getByLabel('Nimetus')).toHaveValue('')
-  await expect(page.getByLabel('Sisu')).toHaveValue('')
+  await expect(page.getByLabel('Nimetus')).toHaveValue('Synthetic subject')
+  await expect(page.getByLabel('Sisu')).toHaveValue('Tunniplaani andmed:\nAine: Synthetic subject\nKuupäev: 14.09.2026\nKellaaeg: 09:10–10:40\nÕpperühm: TEST')
   expect(await page.evaluate(() => ({ saved: window.savedEntries, opened: window.openedEntries }))).toEqual({ saved: 0, opened: 1 })
 }
 
@@ -50,6 +50,37 @@ test('native Chrome alarm survives closing the Tahvel tab; click opens one prefi
   await assertPrefilled(page)
   await expect(page).toHaveURL('https://tahvel.edu.ee/#/journal/8/edit')
   expect(await harness.worker.evaluate(() => lessonHarness.state.requests.filter(r => r.method !== 'GET'))).toEqual([])
+})
+
+test('current school periods fill a block with no static period mapping', async() => {
+  await harness.open()
+  await scheduled()
+  await harness.worker.evaluate(async() => {
+    const state = await lessonHarness.readState()
+    state.blocks[0].startLessonNr = null
+    state.blocks[0].lessons = null
+    // Keep the original notification key; the form must use live school periods.
+    await lessonHarness.writeState(state)
+  })
+  const page = await harness.open(LINK)
+  await assertPrefilled(page)
+})
+
+test('teacher edits made during metadata loading are not overwritten', async() => {
+  let release
+  const delayed = new Promise(resolve => { release = resolve })
+  await harness.context.route('https://tahvel.edu.ee/hois_back/journals/8', async route => {
+    await delayed
+    await route.fulfill({ json: { nameEt: 'Synthetic subject' } })
+  })
+  const page = await harness.open(LINK)
+  await page.getByLabel('Nimetus').fill('Õpetaja enda teema')
+  await page.getByLabel('Sisu').fill('Õpetaja enda kirjeldus')
+  release()
+  await expect(page.locator('.oa2-lesson-prefill-status')).toContainText('Sinu sisestatud andmeid ei muudetud')
+  await expect(page.getByLabel('Nimetus')).toHaveValue('Õpetaja enda teema')
+  await expect(page.getByLabel('Sisu')).toHaveValue('Õpetaja enda kirjeldus')
+  expect(await page.evaluate(() => window.savedEntries)).toBe(0)
 })
 
 test('expired-session link survives losing query parameters on login and resumes the intended form', async() => {
@@ -80,7 +111,7 @@ test('all timing combinations reschedule the block and survive reopening the pop
       await harness.popup.locator('#lesson-reference').selectOption(reference)
       await harness.popup.locator('#lesson-direction').selectOption(direction)
       await harness.popup.locator('#lesson-minutes').fill('10')
-      await harness.popup.getByRole('button', { name: 'Salvesta märguande aeg' }).click()
+      await harness.popup.locator('#lesson-notification-settings').getByRole('button', { name: 'Salvesta', exact: true }).click()
       await expect(harness.popup.locator('#lesson-notification-settings-status')).toContainText('Salvestatud')
       const expected = (reference === 'end' ? END : Date.parse('2026-09-14T06:10:00Z')) + (direction === 'before' ? -600000 : 600000)
       expect(await harness.worker.evaluate(() => lessonHarness.alarms().filter(a => a.name.startsWith('oa2-lesson:')))).toEqual([
