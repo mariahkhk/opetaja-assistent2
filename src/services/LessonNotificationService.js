@@ -1,4 +1,6 @@
 import Logger from './Logger.js'
+import { subjectChanges } from './SubjectChanges.js'
+import { openNotificationTab } from './NotificationWindow.js'
 import { resolveLessonLink } from './LessonNotificationLink.js'
 import { isLessonRecorded, lessonEmailSettings, sendLessonEmail } from './LessonEmailReminder.js'
 import { LESSON_TIMING_KEY, readLessonTiming, validateLessonTiming, lessonNotificationAt, lessonNotificationDates } from './LessonNotificationTiming.js'
@@ -10,6 +12,7 @@ const REFRESH = 'oa2-lesson-refresh'
 const MIDNIGHT = 'oa2-lesson-midnight'
 const PREFIX = 'oa2-lesson:'
 const EMAIL_PREFIX = 'oa2-lesson-email:'
+const SUBJECT_PREFIX = 'oa2-subject:'
 const ORIGINS = ['https://tahvel.edu.ee', 'https://test.tahvel.eenet.ee']
 let queue = Promise.resolve()
 
@@ -58,6 +61,16 @@ async function reconcile(state, timingChanged = false) {
     const when = lessonNotificationAt(block, timing)
     if (!alarm || alarm.scheduledTime !== when) await chrome.alarms.create(name, { when })
   }
+  const transitions = new Map(subjectChanges(state.blocks || []).filter(change =>
+    !state.subjectSent?.[change.key] && (change.start > now || existing.has(SUBJECT_PREFIX + change.key)))
+    .map(change => [SUBJECT_PREFIX + change.key, change]))
+  for (const alarm of alarms) {
+    if (alarm.name.startsWith(SUBJECT_PREFIX) && !transitions.has(alarm.name)) await chrome.alarms.clear(alarm.name)
+  }
+  for (const [name, change] of transitions) {
+    const alarm = await chrome.alarms.get(name)
+    if (!alarm || alarm.scheduledTime !== change.start) await chrome.alarms.create(name, { when: change.start })
+  }
   const emailEnabled = await lessonEmailSettings()
   const emailBlocks = new Map((state.blocks || []).filter(b => emailEnabled && !state.emailDone?.[b.key] &&
     b.end + 86400000 > now).map(b => [EMAIL_PREFIX + b.key, b]))
@@ -81,6 +94,7 @@ async function refresh(origin) {
   if (state.testClock) {
     state.blocks = []
     state.sent = {}
+    state.subjectSent = {}
     delete state.testClock
     await saveState(state)
     await reconcile(state)
@@ -99,7 +113,9 @@ async function refresh(origin) {
       return
     }
     const owner = `${origin}:${schoolId}:${teacherId}`
-    if (state.owner !== owner) { state.blocks = []; state.sent = {}; state.emailDone = {}; state.testClock = null }
+    if (state.owner !== owner) {
+      state.blocks = []; state.sent = {}; state.subjectSent = {}; state.emailDone = {}; state.testClock = null
+    }
     // Record the identity before fetching the timetable, so a failed fetch after an
     // account switch cannot reuse another teacher's schedule.
     Object.assign(state, { origin, owner, schoolId, teacherId })
@@ -126,6 +142,7 @@ async function refresh(origin) {
     state.emailDone = Object.fromEntries(Object.entries(state.emailDone || {}).filter(([key]) => retainedKeys.has(key)))
     state.sourceDate = sourceDate
     state.sent = Object.fromEntries(Object.entries(state.sent || {}).filter(([, sent]) => (sent.notifiedAt ?? sent.end) + 7 * 86400000 > Date.now()))
+    state.subjectSent = Object.fromEntries(Object.entries(state.subjectSent || {}).filter(([, sent]) => sent.notifiedAt + 7 * 86400000 > Date.now()))
     state.updatedAt = Date.now()
     state.error = null
   } catch (error) {
@@ -153,6 +170,28 @@ requireInteraction: true
   })
   state.sent ||= {}
   state.sent[block.key] = { ...block, notifiedAt: Date.now() }
+  await saveState(state)
+}
+
+/** Revalidate identity and the entire day's transitions immediately before a subject alert. */
+async function notifySubject(name) {
+  const before = await readState()
+  await refresh(before.origin)
+  const state = await readState()
+  if (!state.owner || state.owner !== before.owner || state.error) return
+  const change = subjectChanges(state.blocks || []).find(item => SUBJECT_PREFIX + item.key === name)
+  const now = Date.now()
+  if (!change || state.subjectSent?.[change.key] || now < change.start || now >= change.end || now > change.start + 5 * 60000) return
+  if (await chrome.notifications.getPermissionLevel() !== 'granted') return
+  await chrome.notifications.create(name, {
+    type: 'basic',
+    iconUrl: chrome.runtime.getURL('icon128.png'),
+    title: `Algab uus aine: ${change.name}`,
+    message: `${change.timeStart} · ${change.groups.map(g => g.code).filter(Boolean).join(', ')}. Klõpsa päeviku avamiseks.`,
+    requireInteraction: true
+  })
+  state.subjectSent ||= {}
+  state.subjectSent[change.key] = { ...change, notifiedAt: now }
   await saveState(state)
 }
 
@@ -185,18 +224,21 @@ export function registerLessonNotifications() {
     if (alarm.name === REFRESH || alarm.name === MIDNIGHT) run(serialize(() => refresh()))
     else if (alarm.name.startsWith(PREFIX)) run(serialize(() => notify(alarm.name)))
     else if (alarm.name.startsWith(EMAIL_PREFIX)) run(serialize(() => emailReminder(alarm.name)))
+    else if (alarm.name.startsWith(SUBJECT_PREFIX)) run(serialize(() => notifySubject(alarm.name)))
   })
   chrome.runtime.onStartup.addListener(() => run(serialize(() => refresh())))
   chrome.runtime.onInstalled.addListener(() => run(serialize(() => refresh())))
   chrome.notifications.onClicked.addListener(id => {
-    if (!id.startsWith(PREFIX)) return
+    const subjectAlert = id.startsWith(SUBJECT_PREFIX)
+    if (!id.startsWith(PREFIX) && !subjectAlert) return
     run(serialize(async() => {
       const state = await readState()
-      const block = state.sent?.[id.slice(PREFIX.length)]
+      const block = subjectAlert ? state.subjectSent?.[id.slice(SUBJECT_PREFIX.length)] : state.sent?.[id.slice(PREFIX.length)]
       if (!block) return
       // Use a query parameter before the hash: Tahvel tests its route's suffix
       // to decide whether the journal is editable.
-      await chrome.tabs.create({ url: `${state.origin}/?oa2Lesson=${encodeURIComponent(block.key)}#/journal/${block.journalId}/edit`, active: true })
+      const query = subjectAlert ? '' : `?oa2Lesson=${encodeURIComponent(block.key)}`
+      await openNotificationTab(`${state.origin}/${query}#/journal/${block.journalId}/edit`)
       await chrome.notifications.clear(id)
     }))
   })

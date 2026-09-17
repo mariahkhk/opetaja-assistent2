@@ -46,10 +46,39 @@ test('native Chrome alarm survives closing the Tahvel tab; click opens one prefi
   const page = await opened
   const target = await harness.worker.evaluate(() => lessonHarness.state.openedUrl)
   expect(target).toBe(LINK)
+  await harness.idle()
+  const active = await harness.worker.evaluate(async() => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true })
+    return { windowId: tab.windowId, focused: (await chrome.windows.get(tab.windowId)).focused, updates: lessonHarness.state.windowUpdates }
+  })
+  expect(active.focused).toBe(true)
+  expect(active.updates).toContainEqual({ id: active.windowId, focused: true })
   await page.goto(target)
   await assertPrefilled(page)
   await expect(page).toHaveURL('https://tahvel.edu.ee/#/journal/8/edit')
   expect(await harness.worker.evaluate(() => lessonHarness.state.requests.filter(r => r.method !== 'GET'))).toEqual([])
+})
+
+test('subject changes announce the new subject once and clicking focuses its journal without an entry draft', async() => {
+  await harness.worker.evaluate(() => {
+    lessonHarness.state.events.unshift({ id: 1, journalId: 7, date: '2026-09-14', timeStart: '08:15', timeEnd: '09:00',
+      nameEt: 'Previous subject', studentGroups: [{ id: 1, code: 'TEST' }] })
+  })
+  await harness.open()
+  const alarm = 'oa2-subject:2026-09-14-09:10'
+  await expect.poll(() => harness.worker.evaluate(() => lessonHarness.alarms().filter(a => a.name.startsWith('oa2-subject:')).length)).toBe(1)
+  await harness.fire(alarm, Date.parse('2026-09-14T06:10:00Z'))
+  await harness.fire(alarm)
+  expect(await harness.worker.evaluate(() => lessonHarness.state.notifications.map(n => n.title))).toEqual(['Algab uus aine: Synthetic subject'])
+  const opened = harness.context.waitForEvent('page')
+  await harness.worker.evaluate(id => lessonHarness.click(id), alarm)
+  const page = await opened
+  await harness.idle()
+  const target = await harness.worker.evaluate(() => lessonHarness.state.openedUrl)
+  expect(target).toBe('https://tahvel.edu.ee/#/journal/8/edit')
+  expect(await harness.worker.evaluate(() => lessonHarness.state.windowUpdates.at(-1).focused)).toBe(true)
+  await page.goto(target)
+  expect(await page.evaluate(() => window.openedEntries)).toBe(0)
 })
 
 test('current school periods fill a block with no static period mapping', async() => {

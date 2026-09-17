@@ -4,6 +4,7 @@ const actualFetch = globalThis.fetch.bind(globalThis)
 const actualNow = Date.now.bind(Date)
 const nativeAlarm = chrome.alarms.create.bind(chrome.alarms)
 const nativeTab = chrome.tabs.create.bind(chrome.tabs)
+const nativeWindowUpdate = chrome.windows.update.bind(chrome.windows)
 const alarmListeners = []
 const clickListeners = []
 const addAlarmListener = chrome.alarms.onAlarm.addListener.bind(chrome.alarms.onAlarm)
@@ -11,12 +12,16 @@ const addClickListener = chrome.notifications.onClicked.addListener.bind(chrome.
 const alarms = new Map()
 const state = {
   now: Date.parse('2026-09-14T05:50:00Z'), authenticated: true, recorded: false, cancelled: false,
-  notifications: [], requests: [], emailUrl: null
+  notifications: [], requests: [], windowUpdates: [], emailUrl: null
 }
 Date.now = () => state.now
 // Chromium may navigate extension-created tabs before Playwright can attach its routes.
 // Capture the requested URL and open a real blank tab; the driver performs the routed navigation.
 chrome.tabs.create = options => { state.openedUrl = options.url; return nativeTab({ ...options, url: 'about:blank' }) }
+chrome.windows.update = async(id, options) => {
+  state.windowUpdates.push({ id, ...options })
+  return nativeWindowUpdate(id, options)
+}
 chrome.alarms.create = async(name, options) => { alarms.set(name, { name, scheduledTime: options.when, ...options }) }
 chrome.alarms.get = (name, callback) => callback ? callback(alarms.get(name)) : Promise.resolve(alarms.get(name))
 chrome.alarms.getAll = async() => [...alarms.values()]
@@ -30,6 +35,7 @@ const events = [
   { id: 2, journalId: 8, date: '2026-09-14', timeStart: '09:10', timeEnd: '09:55', nameEt: 'Synthetic subject', studentGroups: [{ id: 1, code: 'TEST' }] },
   { id: 3, journalId: 8, date: '2026-09-14', timeStart: '09:55', timeEnd: '10:40', nameEt: 'Synthetic subject', studentGroups: [{ id: 1, code: 'TEST' }] }
 ]
+state.events = events
 globalThis.fetch = async(input, options = {}) => {
   const url = new URL(typeof input === 'string' ? input : input.url || String(input))
   if (url.protocol === 'chrome-extension:') return actualFetch(input, options)
@@ -38,7 +44,7 @@ globalThis.fetch = async(input, options = {}) => {
   if (url.origin !== 'https://tahvel.edu.ee') throw new Error('Test blocked external network')
   if (!state.authenticated) return new Response('', { status: 401 })
   if (url.pathname === '/hois_back/user') return Response.json({ teacher: 10, school: { id: 9 } })
-  if (url.pathname.includes('/timetableByTeacher/')) return Response.json({ timetableEvents: state.cancelled ? [] : events })
+  if (url.pathname.includes('/timetableByTeacher/')) return Response.json({ timetableEvents: state.cancelled ? [] : state.events })
   if (url.pathname === '/hois_back/journals/8/journalEntriesByDate') return Response.json(state.recorded ? [
     { entryDate: '2026-09-14', entryType: 'SISSEKANNE_T', startLessonNr: 2, lessons: 2 }
   ] : [])
