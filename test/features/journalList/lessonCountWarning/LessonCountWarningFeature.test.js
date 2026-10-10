@@ -11,7 +11,7 @@ describe('LessonCountWarningFeature', () => {
 
   beforeEach(async () => {
     restoreChromeMock()
-    if (!global.window || !global.window.location) {
+    if (!global.window?.location?.hostname) {
       global.window = { location: { hostname: 'tahvel.edu.ee' } }
     }
     await cacheService.clearCache()

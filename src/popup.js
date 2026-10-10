@@ -3,6 +3,7 @@
  */
 
 import { initializeLessonNotificationSettings } from './popup/LessonNotificationSettings.js'
+import { initializeGitHubSettings, initializeGradeSource } from './popup/GitHubSettings.js'
 
 // Constants
 const DEBUG_MODE_KEY = 'OA_debug_mode'
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initPopup() {
   void initializeLessonNotificationSettings()
+  void initializeGitHubSettings().then(() => initializeGradeSource())
   if (document.getElementById('lesson-notification-schedule-status')) chrome.runtime.sendMessage({ action: 'lessonNotificationStatus' }).then(result => {
     const status = document.getElementById('lesson-notification-schedule-status')
     if (!status) return

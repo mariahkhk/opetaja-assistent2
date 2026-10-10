@@ -8,7 +8,7 @@
     "128": "icon128.png"
   },
   "permissions": ["storage", "tabs", "unlimitedStorage", "alarms", "notifications", "background"],
-  "host_permissions": ["https://tahvel.edu.ee/*", "https://test.tahvel.eenet.ee/*"],
+  "host_permissions": ["https://tahvel.edu.ee/*", "https://test.tahvel.eenet.ee/*", "https://api.github.com/*", "https://raw.githubusercontent.com/*"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

@@ -13,7 +13,10 @@ test('popup loads saved timing, rejects invalid input and reports save failures 
   global.document = dom.window.document
   global.chrome = {
     storage: { local: { get: async() => ({ OA_lessonNotificationTiming: { reference: 'start', direction: 'before', minutes: 5 } }) } },
-    runtime: { sendMessage: async message => { sent.push(message); return error ? { error: 'Salvestamine ebaõnnestus.' } : { ok: true } } }
+    runtime: { sendMessage: async message => {
+      // Only record this form's saves; content-script listeners left by other test files may also message
+      if (message?.action === 'saveLessonNotificationTiming') sent.push(message)
+      return error ? { error: 'Salvestamine ebaõnnestus.' } : { ok: true } } }
   }
   try {
     await initializeLessonNotificationSettings()

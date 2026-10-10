@@ -159,6 +159,19 @@ export async function loadFeatures() {
     Logger.error('Error loading FinalGradesManagementFeature:', error)
   }
 
+  // GitHub / Classroom 50 → Tahvel grades: only when chosen in the popup ("Hinnete allikas"), so Kriit users see nothing new
+  const githubEnabled = await new Promise(resolve => {
+    chrome.storage.local.get(['OA_ghEnabled', 'OA_gradeSource'], result =>
+      resolve(['github', 'classroom50'].includes(result['OA_gradeSource']) && result['OA_ghEnabled'] !== false))
+  })
+  if (githubEnabled) try {
+    const GitHubGradesFeature = (await import('../features/singleJournal/githubGrades/GitHubGradesFeature.js')).default
+    allAvailableFeatures.singleJournal.push(new GitHubGradesFeature())
+    Logger.debug('Feature "GitHubGradesFeature" created')
+  } catch (error) {
+    Logger.error('Error loading GitHubGradesFeature:', error)
+  }
+
   // Load attach ÕV to SISSEKANNE_I feature (always enabled)
   try {
     const AttachOvToSissekanneIFeature = (await import('../features/singleJournal/attachOvToSissekanneI/AttachOvToSissekanneIFeature.js')).default

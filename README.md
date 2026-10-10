@@ -46,6 +46,19 @@ effort and ensures data consistency across systems.
 - **Popup Interface**: Provides user settings, debug controls, and cache management.
 - **Testing Suite**: Comprehensive tests for core functionality and edge cases.
 
+
+## GitHub / Classroom 50 → Tahvel
+
+Writes grades, lesson content, homework and due dates from GitHub into the open Tahvel journal. Choose the source in the popup (Kriit, Classroom 50 or GitHub).
+
+- **Classroom 50** — reads `<org>/classroom50/<classroom>/` (`scores.json`, `roster.csv`, `assignments.json`). The org and classroom are detected from the open journal's group code (`IT-24` → `it24-…`).
+- **GitHub** — any repo with a CSV/Markdown grades table (see `doc/naidis-hinded.csv`).
+- **Assignment → entry** — an entry tagged `gh:<assignment>`, else an entry with the same name, else the earliest entry between the assignment's release and due dates. If two assignments land on one entry, the second is offered its own entry.
+- **Lesson text** — assignment name + `Teooria:` line → lesson content, rest of the description → homework, due date → homework due date. The teacher's own text in Tahvel is kept.
+- **Grades** — points → 1–5 or A/MA. Existing grades are kept unless you choose to overwrite them.
+
+Teacher guide (Estonian): [`doc/github-classroom50-tahvel.md`](doc/github-classroom50-tahvel.md). Publishing your own build from a fork: [`doc/releasing-a-fork.md`](doc/releasing-a-fork.md).
+
 ## Project Structure
 
 This extension uses a Feature-Based Module System with Services Layer architecture:
@@ -234,7 +247,7 @@ The build script does **not** install the extension in your browser — to load 
 
 ## Privacy & Security
 
-The extension only reads data already accessible to the signed-in teacher in Tahvel. Nothing is sent to third parties — settings live in `chrome.storage.local` (which never syncs to Google), all persisted cache entries are AES-256-GCM encrypted, and outbound traffic only ever goes to Tahvel and the teacher's configured Kriit server (HTTPS-only, with a `localhost` exception for development).
+The extension only reads data already accessible to the signed-in teacher in Tahvel. Nothing is sent to third parties — settings live in `chrome.storage.local` (which never syncs to Google), all persisted cache entries are AES-256-GCM encrypted, and outbound traffic only ever goes to Tahvel, the teacher's configured Kriit server (HTTPS-only, with a `localhost` exception for development) and — when a GitHub / Classroom 50 source is chosen — GitHub (`api.github.com`, `raw.githubusercontent.com`). GitHub access is read-only, except starting the Classroom 50 `collect-scores` workflow when the teacher clicks that button.
 
 Crash reports go through Sentry with PII filtered out before transmission. Full details are in [`privacy_policy.md`](./privacy_policy.md) (Estonian).
 

@@ -38,6 +38,18 @@
         flex-grow: 1;
         font-size: 14px;
       }
+      /* GitHub / Classroom 50 section: label above the field, full width */
+      #github-settings-container .setting-item {
+        display: block;
+      }
+      #github-settings-container .setting-label {
+        display: block;
+        margin-bottom: 4px;
+      }
+      #github-settings-container .text-input {
+        width: 100%;
+        box-sizing: border-box;
+      }
       .version {
         font-size: 12px;
         color: #666;
@@ -323,7 +335,23 @@
 
     <div class="divider"></div>
 
-    <div class="settings-group">
+    <div class="settings-group" id="grade-source-group">
+      <div class="section-header">
+        <h2>Hinnete allikas</h2>
+      </div>
+      <div class="setting-item">
+        <select id="grade-source" class="text-input">
+          <option value="github">GitHub (hinnete fail repos)</option>
+          <option value="classroom50">Classroom 50</option>
+          <option value="kriit">Kriit</option>
+          <option value="none">Ei kasuta</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="settings-group" id="kriit-group">
       <div class="section-header">
         <h2>Kriit integratsioon</h2>
         <div class="toggle-container">
@@ -365,6 +393,44 @@
           <button id="save-kriit-settings" class="btn primary-btn">Salvesta</button>
           <span id="save-status" style="margin-left: 8px; font-size: 12px; color: green"></span>
         </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="settings-group" id="github-group">
+      <div class="section-header">
+        <h2 id="github-group-title">GitHub integratsioon</h2>
+        <div class="toggle-container">
+          <label class="switch" for="github-enabled">
+            <input type="checkbox" id="github-enabled" />
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+      <div class="setting-item">
+        <small id="github-group-help">Toob hinded GitHubi repos olevast failist Tahvli päevikusse. Päeviku lehel nupp "GitHub".</small>
+      </div>
+
+      <div id="github-settings-container" style="margin-top: 16px; display: none">
+        <div id="github-token-list" class="setting-item"></div>
+        <button type="button" id="github-add-token" class="btn secondary-btn" style="display: none">+ Lisa token</button>
+        <div class="setting-item" id="github-token-form">
+          <label class="setting-label" for="github-token">GitHubi token</label>
+          <input
+            type="password"
+            id="github-token"
+            placeholder="github_pat_…"
+            class="text-input"
+            autocomplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore
+          />
+          <div style="margin-top: 8px">
+            <button id="save-github-settings" class="btn primary-btn">Salvesta</button>
+          </div>
+        </div>
+        <span id="github-save-status" style="font-size: 12px; color: green"></span>
       </div>
     </div>
 

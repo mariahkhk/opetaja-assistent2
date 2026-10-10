@@ -131,6 +131,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle Kriit API requests to bypass mixed content restrictions
+  // GitHub / Classroom 50 grades: fetch from the service worker (host_permissions), read-only hosts only
+  if (message.action === 'githubFetch') {
+    const url = String(message.url || '')
+    if (!/^https:\/\/(api\.github\.com|raw\.githubusercontent\.com)\//.test(url)) {
+      sendResponse({ ok: false, status: 0, text: '', error: 'Host not allowed' })
+      return false
+    }
+    const init = message.init || {}
+    const method = String(init.method || 'GET').toUpperCase()
+    // Read-only, except the one write the teacher asks for: starting the Classroom 50 collect-scores workflow
+    const dispatch = method === 'POST' && /^https:\/\/api\.github\.com\/repos\/[^/]+\/classroom50\/actions\/workflows\/collect-scores\.yaml\/dispatches$/.test(url)
+    if (method !== 'GET' && !dispatch) {
+      sendResponse({ ok: false, status: 0, text: '', error: 'Only read requests are allowed' })
+      return false
+    }
+    fetch(url, { method, headers: init.headers || {}, body: dispatch ? init.body : undefined, cache: 'no-store' })
+      .then(async res => sendResponse({ ok: res.ok, status: res.status, text: await res.text() }))
+      .catch(err => sendResponse({ ok: false, status: 0, text: '', error: err.message }))
+    return true
+  }
+
   if (message.action === 'kriitApiRequest') {
     const { method, url, headers, body } = message
 
