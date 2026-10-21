@@ -60,6 +60,13 @@ describe('Classroom 50 scores.json', () => {
     expect(r.filter(x => x.assignment === 'git-grupp').map(x => x.username)).toEqual(['marimets', 'juhanv'])
   })
 
+  test('latest by datetime, not array order (Classroom 50 order is not guaranteed)', () => {
+    const at = (score, datetime) => sub(score, 100, { datetime })
+    const mixed = { assignments: { 'lab-05': { entries: [{ owner: 'gabriel', submissions: [
+      at(10, '2026-10-08T09:00:00Z'), at(100, '2026-10-21T12:00:00Z'), at(40, '2026-10-14T09:00:00Z')] }] } } }
+    expect(latestScores(mixed)[0].score).toBe(100)
+  })
+
   test('preview with roster names', () => {
     const records = parseGradesFile(JSON.stringify(scores), 'it24/scores.json')
     const p = buildPreview({ records, roster, entries, students })

@@ -209,6 +209,9 @@ auto,
         const journalName = info?.nameEt || info?.name || ''
         const why = []
         const known = /\/scores\.json$/i.test(knownFile || '') ? knownFile : ''
+        // Folders of every org together: the same group can have courses in several orgs
+        // (it24-automatiseerimine in one, it24-monitooring in another), so the journal name must decide across all of them
+        const dirOwner = new Map()
         for (const owner of owners) {
           const repo = `${owner}/classroom50`
           const token = all[`OA_ghToken_${owner}`]
@@ -216,13 +219,15 @@ auto,
             // Classroom already known for this journal (saved earlier): just check which org has it
             if (known && await fetchRepoFile({ repo, path: known, token }).catch(() => null) != null) { result = { repo, file: known }; break }
             const dirs = await listRepoDirs({ repo, token })
-            const dir = pickClassroom(dirs, groups, journalName)
-            if (dir) { result = { repo, file: `${dir}/scores.json` }; break }
-            why.push(`${owner}: ${dirs.error || `classroomi ${groups.join('/') || '?'} jaoks ei leitud (${dirs.join(', ') || 'kaustu pole'})`}`)
+            for (const d of dirs) if (!dirOwner.has(d)) dirOwner.set(d, owner)
+            if (dirs.error) why.push(`${owner}: ${dirs.error}`)
           } catch (e) {
             why.push(`${owner}: ${e.message}`)
           }
         }
+        const dir = result ? null : pickClassroom([...dirOwner.keys()], groups, journalName)
+        if (dir) result = { repo: `${dirOwner.get(dir)}/classroom50`, file: `${dir}/scores.json` }
+        else if (!result) why.push(`classroomi ${groups.join('/') || '?'} "${journalName}" jaoks ei leitud (${[...dirOwner.keys()].join(', ') || 'kaustu pole'})`)
         // Remember the found org/classroom for this journal, so it never has to be detected (or typed) again
         if (result) {
           const cur = (await storageGet([K_JOURNAL(jid)]))[K_JOURNAL(jid)] || {}
@@ -365,7 +370,7 @@ auto,
     )
   }
 
-  async loadPreview() {
+  async loadPreview(retry = true) {
     const jid = this.journalId()
     const { settings, journal, repo, file, mode } = await this.resolveConfig(jid)
     if (!repo || !file) { this.status(this.source === 'classroom50' ? 'Täida org ja classroom.' : 'Täida repo ja hinnete fail.', true); return }
@@ -386,7 +391,15 @@ auto,
         this.api.tahvel.get(`/journals/${jid}/journalStudents`, { allStudents: true }, { cache: false })
       ])
       if (gradesText == null) {
-        this.status(token ? `Faili ${file} ei leitud repos ${repo}.` : `Faili ei leitud. Kui repo on privaatne, lisa token.`, true)
+        // A remembered classroom that does not exist (e.g. a wrong guess saved earlier): detect again once
+        if (retry && journal.repo && /scores\.json$/i.test(file)) {
+          this._auto = null
+          const found = await this.autoDetect(jid)
+          if (found && (found.repo !== repo || found.file !== file)) { await this.loadPreview(false); return }
+        }
+        // Show the settings so the org/classroom can be corrected instead of a dead end
+        await this.renderSettings()
+        this.status(token ? `Faili ${file} ei leitud repos ${repo}. Paranda org/classroom.` : `Faili ei leitud. Kui repo on privaatne, lisa token.`, true)
         return
       }
 

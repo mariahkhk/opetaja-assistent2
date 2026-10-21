@@ -150,7 +150,8 @@ export function latestScores(scores) {
   const assignments = scores && scores.assignments ? scores.assignments : {}
   for (const [slug, bucket] of Object.entries(assignments)) {
     for (const entry of bucket.entries || []) {
-      const latest = (entry.submissions || [])[0]
+      // Classroom 50 does not guarantee array order: pick the newest by datetime (ties/no datetime: keep the earlier one)
+      const latest = (entry.submissions || []).reduce((a, b) => (!a || (b.datetime || '') > (a.datetime || '') ? b : a), null)
       if (!latest) continue
       const members = Array.isArray(entry.member_usernames) && entry.member_usernames.length
         ? entry.member_usernames
