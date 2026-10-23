@@ -51,8 +51,8 @@ test.each([false, true])('fills factual entry metadata, preserves existing text 
     expect(committedDate).toBe('14.09.2026')
     expect(document.querySelector('[formcontrolname="entryDate"] input').value).toBe('14.09.2026')
     expect(document.querySelector('[formcontrolname="lessons"] input').value).toBe('2')
-    expect(document.querySelector('[formcontrolname="entryName"] input').value).toBe(preserve ? 'Õpetaja teema' : 'Tarkvaraprojekt II')
-    expect(document.querySelector('textarea').value).toBe(preserve ? 'Õpetaja sisu' : 'Tunniplaani andmed:\nAine: Tarkvaraprojekt II\nKuupäev: 14.09.2026\nÕpperühm: A')
+    expect(document.querySelector('[formcontrolname="entryName"] input').value).toBe(preserve ? 'Õpetaja teema' : 'Tund')
+    expect(document.querySelector('textarea').value).toBe(preserve ? 'Õpetaja sisu' : '')
     expect(saved).toBe(false)
     expect(document.querySelector('[role="status"]').textContent).toContain('pole kättesaadav')
   } finally { Object.assign(global, original); dom.window.close() }

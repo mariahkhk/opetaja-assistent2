@@ -86,8 +86,7 @@ export async function openLessonEntry(block, get, onOpened = () => {}) {
       await select(form, 'entryType', block.capacityType === 'MAHT_p' ? 'Praktiline töö' : block.capacityType === 'MAHT_i' ? 'Iseseisev töö' : 'Tund', canEdit)
     }
     if (!canEdit()) return
-    if (details.name) input(form, 'entryName', details.name.slice(0, 100), defaults)
-    input(form, 'content', details.content)
+    // Name stays Tahvel's type title ("Tund"); topic and homework come from the Classroom 50 panel
     const periods = details.periods || block
     const capacity = block.capacityType === 'MAHT_p' ? 'Praktiline õpe' : block.capacityType === 'MAHT_i' ? 'Iseseisev õpe' : 'Auditoorne õpe'
     check([...form.querySelectorAll('checkbox[formcontrolname="selected"]')].find(c => c.textContent.trim() === capacity))
@@ -116,8 +115,7 @@ export async function openLessonEntry(block, get, onOpened = () => {}) {
     const missingPeriods = periods.startLessonNr == null || periods.lessons == null
     status(form, [
       attendance.warning,
-      'Sisu sisaldab ainult tunniplaani andmeid, mitte tunni teemat ega tehtud tööd. Lisa käsitletud teema ja ülesanded ning kontrolli andmed enne salvestamist.',
-      !details.name && 'Aine nimetus ei ole kättesaadav; sisesta nimetus käsitsi.',
+      'Sisu ja kodutöö täidab Classroom 50 paneel; kontrolli andmed enne salvestamist.',
       missingPeriods ? 'Kooli tunniaegadest ei saanud algustundi ja tundide arvu üheselt tuvastada; vali need käsitsi.' : !details.periods && 'Kooli kehtivaid tunniaegu ei saanud kontrollida; kontrolli algustundi ja tundide arvu.'
     ].filter(Boolean).join(' '))
   } catch (error) { status(form, `Eeltäitmine jäi pooleli: ${error.message} Kontrolli andmeid ja täida puuduvad väljad käsitsi.`) } finally {

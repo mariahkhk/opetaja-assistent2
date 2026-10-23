@@ -282,6 +282,20 @@ describe('two assignments on the same day share one entry', () => {
   })
 })
 
+describe('lab and homework on one lesson', () => {
+  test('lab keeps the lesson, homework gets its own entry', () => {
+    const meta = assignmentMeta({ assignments: [
+      { slug: 'kodutoo-06-ruuter', name: 'Kodutöö 06 - Minu koduvõrk', description: 'Leia oma IP.', available_from: '2026-10-22T05:30:00Z', due: '2026-10-29T21:59:00Z', tests: [{ name: 'x', points: 1 }] },
+      { slug: 'lab-06b-andra-switch', name: 'Lab 06b - Andra Switch', description: 'Seadista kommutaator.', available_from: '2026-10-22T05:00:00Z', due: '2026-10-29T21:59:00Z', tests: [{ name: 'x', points: 1 }] }
+    ] })
+    const entries = [{ id: 7, nameEt: 'Tund', entryType: 'SISSEKANNE_T', entryDate: '2026-10-22T00:00:00Z' }]
+    const p = findSharedEntries({ entries, meta })
+    expect(p.length).toBe(1)
+    expect(p[0].name).toBe('Kodutöö 06 - Minu koduvõrk')
+    expect(p[0].keptBy).toBe('Lab 06b - Andra Switch')
+  })
+})
+
 describe('two labs on one lesson → separate entry', () => {
   const meta = assignmentMeta({ assignments: [
     { slug: 'lab-03-kommutaator-ruuter', name: 'Lab 03 - Kommutaatori ja ruuteri seadistamine', description: 'Ehita väike kohtvõrk.', available_from: '2026-09-24T05:00:00Z', due: '2026-10-02T20:59:00Z', tests: [{ name: 'x', points: 1 }] },

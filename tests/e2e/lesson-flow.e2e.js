@@ -17,7 +17,7 @@ async function scheduled() {
   await expect.poll(() => harness.worker.evaluate(() => lessonHarness.alarms().filter(a => a.name.startsWith('oa2-lesson:')).length)).toBe(1)
 }
 async function assertPrefilled(page) {
-  await expect(page.locator('.oa2-lesson-prefill-status')).toContainText('Lisa käsitletud teema ja ülesanded')
+  await expect(page.locator('.oa2-lesson-prefill-status')).toContainText('Classroom 50 paneel')
   await expect(page.locator('[formcontrolname="entryType"]')).toHaveAttribute('data-selected', 'Tund')
   await expect(page.locator('[formcontrolname="selected"] button')).toHaveAttribute('aria-checked', 'true')
   await expect(page.getByLabel('Kuupäev')).toHaveValue('14.09.2026')
@@ -25,8 +25,8 @@ async function assertPrefilled(page) {
   await expect(page.locator('[formcontrolname="startLessonNr"]')).toHaveAttribute('data-selected', '2')
   await expect(page.getByLabel('Tundide arv')).toHaveValue('2')
   await expect(page.getByLabel('Puudub', { exact: true })).toHaveAttribute('aria-checked', 'true')
-  await expect(page.getByLabel('Nimetus')).toHaveValue('Synthetic subject')
-  await expect(page.getByLabel('Sisu')).toHaveValue('Tunniplaani andmed:\nAine: Synthetic subject\nKuupäev: 14.09.2026\nKellaaeg: 09:10–10:40\nÕpperühm: TEST')
+  await expect(page.getByLabel('Nimetus')).not.toHaveValue('Synthetic subject')
+  await expect(page.getByLabel('Sisu')).toHaveValue('')
   expect(await page.evaluate(() => ({ saved: window.savedEntries, opened: window.openedEntries }))).toEqual({ saved: 0, opened: 1 })
 }
 

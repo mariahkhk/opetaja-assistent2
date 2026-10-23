@@ -309,7 +309,9 @@ export function findSharedEntries({ entries, meta = new Map(), assignmentMap = {
     if (items.length < 2) continue
     // Same decision in every journal (gr1, gr2 …): autograded lab keeps the lesson, group work moves out, then by name — never by what's in Tahvel now
     const isGroup = it => /grupit[öo]{2}|group/i.test(`${it.slug} ${it.info.name || ''}`)
-    items.sort((x, y) => (y.info.autograded - x.info.autograded) || (isGroup(x) - isGroup(y)) ||
+    // Homework is done at home, so the lab done in class keeps the lesson entry
+    const isHomework = it => /kodut[öo]{2}|homework/i.test(`${it.slug} ${it.info.name || ''}`)
+    items.sort((x, y) => (y.info.autograded - x.info.autograded) || (isHomework(x) - isHomework(y)) || (isGroup(x) - isGroup(y)) ||
       String(x.info.name || x.slug).localeCompare(String(y.info.name || y.slug), 'et'))
     for (const it of items.slice(1)) {
       out.push({
