@@ -670,7 +670,9 @@ export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap
     // Tahvel: "Sisu" = what the lesson was about (lab names + any Teooria: line), "Kodutöö" = the task text itself
     const theory = it => String(it.info.description || '').split('\n').filter(l => /^\s*(teooria|loeng)\s*:/i.test(l)).join('\n')
     // Lab names first, then each different Teooria line once (two labs of the same lesson usually share the theory)
-    const body = [...all.map(it => it.info.name || it.slug), ...new Set(all.flatMap(it => theory(it).split('\n')).filter(Boolean))].join('\n')
+    // Homework is not what the lesson was about: its name stays out of "Sisu" (its Teooria line still counts)
+    const isHomework = it => /kodut[öo]{2}|homework/i.test(`${it.slug} ${it.info.name || ''}`)
+    const body = [...all.filter(it => !isHomework(it)).map(it => it.info.name || it.slug), ...new Set(all.flatMap(it => theory(it).split('\n')).filter(Boolean))].join('\n')
     const text = [body, ...tags].join('\n')
     const dues = items.map(it => it.info.due).filter(Boolean).sort()
     const due = dues.length ? tahvelDueDate(dues[dues.length - 1]) : null
