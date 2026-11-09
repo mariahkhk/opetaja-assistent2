@@ -17,6 +17,7 @@ import {
   buildEntryTextUpdates,
   findSharedEntries,
   buildPreview,
+  tallinnDate,
   fetchRepoFile,
   findJournalConfig,
   listRepoDirs,
@@ -461,7 +462,7 @@ missingGrade: settings.missingGrade || '',
     table.append(el('tr', {}, [th(''), th('Sissekanne'), th('Õpilane'), th('Punktid'), th('Praegu'), th('Uus')]))
     const boxes = []
     for (const r of preview.rows) {
-      const cb = el('input', { type: 'checkbox', checked: r.changed && !r.currentGrade && !r.uncertain, disabled: !r.changed })
+      const cb = el('input', { type: 'checkbox', checked: r.changed && !r.currentGrade && !r.uncertain && !r.beforeDue, disabled: !r.changed })
       cb.dataset.hasCurrent = r.currentGrade ? '1' : ''
       boxes.push([cb, r])
       const points = r.missing ? 'esitamata (tähtaeg möödas)' : r.score != null && r.max != null ? `${r.score}/${r.max} (${r.percent ?? '–'}%)` : '–'
@@ -469,13 +470,13 @@ missingGrade: settings.missingGrade || '',
         el('td', { style: { padding: '4px' } }, cb),
         td(r.conflict ? `${r.entryName} ⚠ ${r.assignment}: mitu ülesannet samal sissekandel` : r.entryName),
         td(r.studentName),
-        td(`${points}${r.late ? ' ⏰ hilinenud' : ''}${r.warning ? ' ⚠' : ''}`),
+        td(`${points}${r.late ? ' ⏰ hilinenud' : ''}${r.warning ? ' ⚠' : ''}${r.beforeDue ? ` ⏳ vahetulemus, tähtaeg ${tallinnDate(r.due).split('-').reverse().join('.')}` : ''}`),
         td(r.currentGrade || '–'),
         td(r.newGrade || '–', { fontWeight: r.changed ? 700 : 400, color: r.changed ? '#0969da' : '#666' })
       ]))
     }
     overwrite.addEventListener('change', () => {
-      for (const [cb, r] of boxes) if (r.changed && cb.dataset.hasCurrent) cb.checked = overwrite.checked
+      for (const [cb, r] of boxes) if (r.changed && !r.beforeDue && cb.dataset.hasCurrent) cb.checked = overwrite.checked
     })
 
     const apply = el('button', {

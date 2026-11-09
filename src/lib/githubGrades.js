@@ -430,6 +430,9 @@ export function buildPreview({ records, roster = [], entries, students, assignme
     const newGrade = r.grade || percentToGrade(percent, mode || entryMode(entry) || '5', thresholds)
     const existingRow = (entry.journalEntryStudents || []).find(js => String(js.journalStudent) === String(student.id))
     const currentGrade = gradeValueOf(existingRow)
+    // Before the due date the score is only an interim result: shown, but not preselected for Tahvel
+    const due = meta.get(r.assignment)?.due
+    const beforeDue = !!due && new Date(due) > now
 
     rows.push({
       assignment: r.assignment,
@@ -443,6 +446,8 @@ export function buildPreview({ records, roster = [], entries, students, assignme
       percent: Number.isFinite(percent) ? Math.round(percent) : null,
       late: r.late,
       warning: r.warning,
+      beforeDue,
+      due: beforeDue ? due : null,
       currentGrade,
       newGrade,
       changed: newGrade != null && newGrade !== currentGrade

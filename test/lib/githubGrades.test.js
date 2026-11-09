@@ -207,6 +207,11 @@ describe('missing work after due date', () => {
     const ama = buildPreview({ records, entries: [e], students, meta, missingGrade: '2', mode: 'AMA', now: new Date('2026-09-28') })
     expect(ama.rows.find(r => r.missing).newGrade).toBe('MA')
   })
+  test('before due: submitted score is an interim result (beforeDue), after due it is not', () => {
+    const early = buildPreview({ records, entries: [e], students, meta, now: new Date('2026-09-20') }).rows[0]
+    expect(early).toMatchObject({ beforeDue: true, due: '2026-09-23T20:59:00Z', newGrade: '5' })
+    expect(buildPreview({ records, entries: [e], students, meta, now: new Date('2026-09-28') }).rows[0].beforeDue).toBe(false)
+  })
 })
 
 describe('missing work: only autograded assignments', () => {
