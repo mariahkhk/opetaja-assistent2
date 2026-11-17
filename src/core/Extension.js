@@ -58,7 +58,8 @@ const tahvelExtension = {
     // Function to add the indicator
     const addIndicator = () => {
       // If we've already added the indicator, don't add it again
-      if (this.indicatorAdded) {
+      // The 500 ms retry can fire after the page (or test environment) is gone
+      if (this.indicatorAdded || typeof document === 'undefined') {
         return
       }
 
