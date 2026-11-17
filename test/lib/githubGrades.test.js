@@ -254,6 +254,7 @@ describe('lesson content + homework from assignments.json', () => {
     const u = buildEntryTextUpdates({ entries: named, meta, journalName: 'Automatiseerimine' })
     expect(u.find(x => x.slug === 'lab-03').changes.nameEt).toBe('Lab 03 - Ansible')
     expect(u.find(x => x.slug === 'lab-04').changes.nameEt).toBe('Lab 04 - Vault')
+    expect(buildEntryTextUpdates({ entries: [{ ...named[0], nameEt: 'Praktiline töö' }], meta })[0].changes.nameEt).toBe('Lab 03 - Ansible')
     const typed = buildEntryTextUpdates({ entries: [{ ...named[0], nameEt: 'Ansible praktikum' }], meta, journalName: 'Automatiseerimine' })
     expect(typed[0].changes.nameEt).toBeUndefined()
   })

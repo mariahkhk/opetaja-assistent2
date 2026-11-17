@@ -655,7 +655,7 @@ export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap
   for (const e of entries || []) { const k = normalizeName(e.nameEt); nameCount.set(k, (nameCount.get(k) || 0) + 1) }
   const isDefaultName = n => {
     const k = normalizeName(n)
-    return k === '' || k === 'tund' || k === journalKey || (k.length >= 5 && journalKey.includes(k)) || nameCount.get(k) >= 3
+    return ['', 'tund', 'praktiline too', 'iseseisev too'].includes(k) || k === journalKey || (k.length >= 5 && journalKey.includes(k)) || nameCount.get(k) >= 3
   }
   // Group assignments by the Tahvel entry they belong to — two labs on the same day share one entry,
   // so their texts are combined instead of the second overwriting the first
