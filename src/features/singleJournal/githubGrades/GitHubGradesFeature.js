@@ -664,10 +664,11 @@ journalEntryTeachers: teachers
    */
   async loadTimetablePeriods(jid, info) {
     const out = new Map()
+    this._periodsWhy = ''
     try {
       const teacherId = info?.journalTeachers?.[0]?.id
       const schoolId = await getSchoolId(this.api, info)
-      if (!teacherId || !schoolId) return out
+      if (!teacherId || !schoolId) { this._periodsWhy = `päeviku õpetaja (${teacherId ?? '-'}) või kool (${schoolId ?? '-'}) puudub`; return out }
       const now = new Date()
       const year = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()
       const from = info.studyYearStartDate ?? new Date(Date.UTC(year, 8, 1)).toISOString()
@@ -683,12 +684,18 @@ journalEntryTeachers: teachers
         if (ev.timeEnd > b.timeEnd) b.timeEnd = ev.timeEnd
         byDay.set(day, b)
       }
+      const all = data?.timetableEvents || []
       const get = (path, params) => this.api.tahvel.get(path, params, { cache: true, cacheExpiration: 864e5 })
+      const failed = []
       for (const [day, block] of byDay) {
         const p = await loadPeriods(get, { ...block, timeStart: block.timeStart.slice(0, 5), timeEnd: block.timeEnd.slice(0, 5) }).catch(() => null)
         if (p) out.set(day, p)
+        else failed.push(`${day} ${block.timeStart.slice(0, 5)}–${block.timeEnd.slice(0, 5)}`)
       }
+      if (!byDay.size) this._periodsWhy = `tunniplaanis ${all.length} sündmust, selle päevikuga (${jid}) seotud 0; näide: ${JSON.stringify(all[0] || {}).slice(0, 160)}`
+      else if (failed.length) this._periodsWhy = `kooli tunniaegadega ei klapi: ${failed.slice(0, 4).join(', ')}`
     } catch (e) {
+      this._periodsWhy = `viga: ${e.message}`
       Logger.warning(`[githubGrades] timetable periods: ${e.message}`)
     }
     return out
@@ -705,6 +712,11 @@ periods: this.ctx.periods
     })
     const box = el('div', { style: { marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #ddd' } })
     box.append(el('div', { text: 'Tunni nimetus, sisu ja kodutöö (Classroom 50 Name, Description + Due date)', style: { fontWeight: 600 } }))
+    const nDays = this.ctx.periods?.size || 0
+    box.append(el('div', {
+      text: `Tunniplaan: ${nDays} päeva algustund leitud${this._periodsWhy ? ` · ${this._periodsWhy}` : ''}`,
+      style: { color: '#555', fontSize: '12px', marginTop: '2px' }
+    }))
     if (!updates.length) {
       box.append(el('div', { text: 'Kõik seotud sissekanded on juba ajakohased.', style: { color: '#555', marginTop: '4px' } }))
       return box
