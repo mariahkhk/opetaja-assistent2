@@ -293,11 +293,13 @@ describe('lab and homework on one lesson', () => {
       { slug: 'kodutoo-06-ruuter', name: 'Kodutöö 06 - Minu koduvõrk', description: 'Leia oma IP.', available_from: '2026-10-22T05:30:00Z', due: '2026-10-29T21:59:00Z', tests: [{ name: 'x', points: 1 }] },
       { slug: 'lab-06b-andra-switch', name: 'Lab 06b - Andra Switch', description: 'Seadista kommutaator.', available_from: '2026-10-22T05:00:00Z', due: '2026-10-29T21:59:00Z', tests: [{ name: 'x', points: 1 }] }
     ] })
-    const entries = [{ id: 7, nameEt: 'Tund', entryType: 'SISSEKANNE_T', entryDate: '2026-10-22T00:00:00Z' }]
+    const entries = [{ id: 7, nameEt: 'Tund', entryType: 'SISSEKANNE_T', entryDate: '2026-10-22T00:00:00Z', startLessonNr: 3, lessons: 4 }]
     const p = findSharedEntries({ entries, meta })
     expect(p.length).toBe(1)
     expect(p[0].name).toBe('Kodutöö 06 - Minu koduvõrk')
     expect(p[0].keptBy).toBe('Lab 06b - Andra Switch')
+    // Same lesson time as the lesson entry, not Tahvel's default lesson 1
+    expect(p[0]).toMatchObject({ startLessonNr: 3, lessons: 4 })
   })
 })
 

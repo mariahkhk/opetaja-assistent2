@@ -628,8 +628,8 @@ el('strong', { text: `${n.entryDate.split('-').reverse().join('.')} Iseseisev t√
         this.status(`Loon sissekandeid‚Ä¶ ${done}/${list.length}`)
         // Same payload shape as TahvelNewAssignmentSync (Kriit) uses for new independent-work entries
         await this.api.tahvel.post(`/journals/${jid}/journalEntry`, {
-          startLessonNr: null,
-lessons: null,
+          startLessonNr: n.startLessonNr ?? null,
+lessons: n.lessons ?? null,
 entryType: 'SISSEKANNE_I',
 nameEt: n.name,
 studyPeriodEvent: null,

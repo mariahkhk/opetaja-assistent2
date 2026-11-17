@@ -346,3 +346,14 @@ describe('Classroom 50 auto-detect', () => {
     expect(feature._autoWhy).toContain('its25-devops')
   })
 })
+
+describe('creating separate entries', () => {
+  test('a new independent-work entry gets the lesson time of the lesson it was split from', async() => {
+    const feature = createFeature()
+    feature.ctx = { jid: JID }
+    feature.panel = document.createElement('div')
+    await feature.createEntries([{ name: 'Kodutöö 06', entryDate: '2026-10-22', startLessonNr: 3, lessons: 4, homework: 'Leia oma IP.', homeworkDuedate: '2026-10-29T21:59:00.000Z' }])
+    expect(api.calls.post).toHaveLength(1)
+    expect(api.calls.post[0].body).toMatchObject({ entryType: 'SISSEKANNE_I', nameEt: 'Kodutöö 06', startLessonNr: 3, lessons: 4, journalEntryTeachers: ['5'] })
+  })
+})

@@ -319,6 +319,9 @@ export function findSharedEntries({ entries, meta = new Map(), assignmentMap = {
 name: it.info.name || it.slug,
 keptBy: items[0].info.name || items[0].slug,
         entryDate: (entry.entryDate || '').slice(0, 10) || tallinnDate(it.info.available_from),
+        // Same lesson time as the entry it is split from, so Tahvel does not put it in lesson 1
+        startLessonNr: entry.startLessonNr ?? null,
+        lessons: entry.lessons ?? null,
         homework: homeworkPart(it.info.description),
         homeworkDuedate: it.info.due ? tahvelDueDate(it.info.due) : null
       })
