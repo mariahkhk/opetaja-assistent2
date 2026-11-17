@@ -246,6 +246,17 @@ describe('lesson content + homework from assignments.json', () => {
     expect(l3.changes).toEqual({ content: 'Lab 03 - Ansible', homework: 'Ehita playbook.', homeworkDuedate: '2026-09-23T23:59:59.000Z' })
     expect(u.find(x => x.slug === 'lab-04').changes.content).toBe('Oma tekst\n\nLab 04 - Vault')
   })
+  test('default entry name (subject name or "Tund") becomes the lab name, a typed name stays', () => {
+    const named = [
+      { id: 1, nameEt: 'Automatiseerimine', entryDate: '2026-09-17T00:00:00Z', content: '', homework: null },
+      { id: 2, nameEt: 'Tund', entryDate: '2026-09-24T00:00:00Z', content: '', homework: null }
+    ]
+    const u = buildEntryTextUpdates({ entries: named, meta, journalName: 'Automatiseerimine' })
+    expect(u.find(x => x.slug === 'lab-03').changes.nameEt).toBe('Lab 03 - Ansible')
+    expect(u.find(x => x.slug === 'lab-04').changes.nameEt).toBe('Lab 04 - Vault')
+    const typed = buildEntryTextUpdates({ entries: [{ ...named[0], nameEt: 'Ansible praktikum' }], meta, journalName: 'Automatiseerimine' })
+    expect(typed[0].changes.nameEt).toBeUndefined()
+  })
   test('nothing to do when Tahvel already matches', () => {
     const same = [{ ...entries[0], content: 'Ehita playbook.', homework: 'Ehita playbook.', homeworkDuedate: '2026-09-23T23:59:59.000Z' }]
     expect(buildEntryTextUpdates({ entries: same.map(e => ({ ...e, content: 'Ansible' })), meta: assignmentMeta({ assignments: [{ slug: 'lab-03', name: 'Ansible', description: 'Ehita playbook.', due: '2026-09-23T20:59:00Z', available_from: '2026-09-16T20:00:00Z' }] }) })).toEqual([])
@@ -367,6 +378,7 @@ describe('teacher text is kept', () => {
     entries[0].content = u[0].changes.content
     entries[0].homework = u[0].changes.homework
     entries[0].homeworkDuedate = u[0].changes.homeworkDuedate
+    entries[0].nameEt = u[0].changes.nameEt
     expect(buildEntryTextUpdates({ entries, meta }).length).toBe(0)
   })
 })
@@ -412,6 +424,7 @@ describe('written text is not offered again', () => {
     entries[0].content = u.changes.content.replace(/\n/g, '\r\n') + ' '
     entries[0].homework = u.changes.homework.replace(/\n/g, '\r\n')
     entries[0].homeworkDuedate = u.changes.homeworkDuedate
+    entries[0].nameEt = u.changes.nameEt
     expect(buildEntryTextUpdates({ entries, meta })).toEqual([])
   })
 })

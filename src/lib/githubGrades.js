@@ -646,7 +646,10 @@ export function tahvelDueDate(iso) {
  * For every assignment linked to an entry: content (sisu) = description, homework = description, homeworkDuedate = due.
  * `selected` defaults to true only where Tahvel is still empty or already identical — existing texts are not overwritten silently.
  */
-export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap = {} }) {
+export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap = {}, journalName = '' }) {
+  // Tahvel names a new entry after the subject (or "Tund"); such a name says nothing, the lab name replaces it.
+  // A name the teacher typed is never touched.
+  const defaultNames = new Set(['', 'tund', normalizeName(journalName)])
   // Group assignments by the Tahvel entry they belong to — two labs on the same day share one entry,
   // so their texts are combined instead of the second overwriting the first
   const byEntry = new Map()
@@ -722,6 +725,9 @@ export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap
       cur.content.split('\n').some(l => names.has(l.trim().toLowerCase()))
     const newHomework = hw ? (hwOurs ? hw : [cur.homework, hw].join('\n\n')) : cur.homework
     const changes = {}
+    const labNames = items.filter(it => !isHomework(it)).map(it => it.info.name || it.slug)
+    const newName = (labNames.length ? labNames : items.map(it => it.info.name || it.slug)).join(' + ').slice(0, 100)
+    if (newName && defaultNames.has(normalizeName(entry.nameEt)) && normalizeName(newName) !== normalizeName(entry.nameEt)) changes.nameEt = newName
     if (cur.content !== newContent) changes.content = newContent
     if (cur.homework !== newHomework) changes.homework = newHomework
     // A due date without any homework text makes no sense in Tahvel — only set it when there is (or will be) homework

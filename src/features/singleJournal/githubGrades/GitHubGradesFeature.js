@@ -413,8 +413,11 @@ auto,
         }
       })
 
+      // Journal (subject) name: Tahvel's default entry name, replaced by the lab name in renderTextSection
+      const journalInfo = await this.api.tahvel.get(`/journals/${jid}`, {}, { cache: true, cacheExpiration: 36e5 }).catch(() => ({}))
       this.ctx = {
         jid,
+        journalName: journalInfo?.nameEt || journalInfo?.name || '',
 repo,
 file,
 entries,
@@ -654,9 +657,11 @@ journalEntryTeachers: teachers
 
   /** Lesson content + homework + due date from Classroom 50 assignments.json (metadata-only PUT, like JournalListSync). */
   renderTextSection() {
-    const updates = buildEntryTextUpdates({ entries: this.ctx.entries, meta: this.ctx.meta, assignmentMap: this.ctx.journal.assignmentMap || {} })
+    const updates = buildEntryTextUpdates({
+      entries: this.ctx.entries, meta: this.ctx.meta, assignmentMap: this.ctx.journal.assignmentMap || {}, journalName: this.ctx.journalName
+    })
     const box = el('div', { style: { marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #ddd' } })
-    box.append(el('div', { text: 'Tunni sisu ja kodutöö (Classroom 50 Description + Due date)', style: { fontWeight: 600 } }))
+    box.append(el('div', { text: 'Tunni nimetus, sisu ja kodutöö (Classroom 50 Name, Description + Due date)', style: { fontWeight: 600 } }))
     if (!updates.length) {
       box.append(el('div', { text: 'Kõik seotud sissekanded on juba ajakohased.', style: { color: '#555', marginTop: '4px' } }))
       return box
@@ -667,6 +672,7 @@ journalEntryTeachers: teachers
       const cb = el('input', { type: 'checkbox', checked: u.selected })
       checks.push([cb, u])
       const what = [
+        u.changes.nameEt ? `nimetus: ${u.changes.nameEt}` : null,
         u.changes.content ? `sisu: ${short(u.changes.content)}` : null,
         u.changes.homeworkDuedate ? `tähtaeg: ${u.changes.homeworkDuedate.slice(0, 10).split('-').reverse().join('.')}` : null
       ].filter(Boolean).join(' · ')
@@ -679,7 +685,7 @@ el('strong', { text: u.entryName }),
       ]))
     }
     box.append(el('button', {
-      text: 'Kirjuta sisu ja kodutööd Tahvlisse',
+      text: 'Kirjuta nimetus, sisu ja kodutöö Tahvlisse',
       style: { marginTop: '6px', padding: '6px 12px', fontWeight: 600 },
       onclick: () => this.applyTexts(checks.filter(([cb]) => cb.checked).map(([, u]) => u))
     }))
