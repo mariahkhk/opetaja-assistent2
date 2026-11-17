@@ -688,7 +688,7 @@ journalEntryTeachers: teachers
       const get = (path, params) => this.api.tahvel.get(path, params, { cache: true, cacheExpiration: 864e5 })
       const failed = []
       for (const [day, block] of byDay) {
-        const p = await loadPeriods(get, { ...block, timeStart: block.timeStart.slice(0, 5), timeEnd: block.timeEnd.slice(0, 5) }).catch(() => null)
+        const p = await loadPeriods(get, { ...block, timeStart: block.timeStart.slice(0, 5), timeEnd: block.timeEnd.slice(0, 5) }, true).catch(() => null)
         if (p) out.set(day, p)
         else failed.push(`${day} ${block.timeStart.slice(0, 5)}–${block.timeEnd.slice(0, 5)}`)
       }
