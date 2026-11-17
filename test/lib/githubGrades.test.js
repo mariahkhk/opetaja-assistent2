@@ -267,6 +267,14 @@ describe('lesson content + homework from assignments.json', () => {
     const many = [...named, { id: 3, nameEt: 'Automatiseerimine', entryDate: '2026-10-01T00:00:00Z' }]
     expect(buildEntryTextUpdates({ entries: many, meta }).find(x => x.slug === 'lab-04').changes.nameEt).toBe('Lab 04 - Vault')
   })
+  test('start lesson and lesson count come from the timetable of that day', () => {
+    const one = [{ id: 1, nameEt: 'Lab 03 - Ansible', entryDate: '2026-09-17T00:00:00Z', startLessonNr: 1, lessons: 2, content: '', homework: null }]
+    const periods = new Map([['2026-09-17', { startLessonNr: 6, lessons: 2 }]])
+    const [u] = buildEntryTextUpdates({ entries: one, meta, periods })
+    expect(u.changes).toMatchObject({ startLessonNr: 6, lessons: 2 })
+    const right = [{ ...one[0], startLessonNr: 6 }]
+    expect(buildEntryTextUpdates({ entries: right, meta, periods })[0].changes.startLessonNr).toBeUndefined()
+  })
   test('nothing to do when Tahvel already matches', () => {
     const same = [{ ...entries[0], content: 'Ehita playbook.', homework: 'Ehita playbook.', homeworkDuedate: '2026-09-23T23:59:59.000Z' }]
     expect(buildEntryTextUpdates({ entries: same.map(e => ({ ...e, content: 'Ansible' })), meta: assignmentMeta({ assignments: [{ slug: 'lab-03', name: 'Ansible', description: 'Ehita playbook.', due: '2026-09-23T20:59:00Z', available_from: '2026-09-16T20:00:00Z' }] }) })).toEqual([])

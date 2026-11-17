@@ -646,7 +646,7 @@ export function tahvelDueDate(iso) {
  * For every assignment linked to an entry: content (sisu) = description, homework = description, homeworkDuedate = due.
  * `selected` defaults to true only where Tahvel is still empty or already identical — existing texts are not overwritten silently.
  */
-export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap = {}, journalName = '' }) {
+export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap = {}, journalName = '', periods = new Map() }) {
   // Tahvel names a new entry after the subject (or "Tund"); such a name says nothing, the lab name replaces it.
   // A name the teacher typed is never touched.
   const journalKey = normalizeName(journalName)
@@ -735,6 +735,12 @@ export function buildEntryTextUpdates({ entries, meta = new Map(), assignmentMap
     const labNames = items.filter(it => !isHomework(it)).map(it => it.info.name || it.slug)
     const newName = (labNames.length ? labNames : items.map(it => it.info.name || it.slug)).join(' + ').slice(0, 100)
     if (newName && isDefaultName(entry.nameEt) && normalizeName(newName) !== normalizeName(entry.nameEt)) changes.nameEt = newName
+    // Start lesson and lesson count from the timetable of that day (Tahvel leaves 1 when an entry is made by hand)
+    const p = periods.get((entry.entryDate || '').slice(0, 10))
+    if (p && (Number(entry.startLessonNr) !== p.startLessonNr || Number(entry.lessons) !== p.lessons)) {
+      changes.startLessonNr = p.startLessonNr
+      changes.lessons = p.lessons
+    }
     if (cur.content !== newContent) changes.content = newContent
     if (cur.homework !== newHomework) changes.homework = newHomework
     // A due date without any homework text makes no sense in Tahvel — only set it when there is (or will be) homework

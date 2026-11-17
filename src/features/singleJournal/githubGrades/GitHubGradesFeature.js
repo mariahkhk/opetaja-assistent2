@@ -10,6 +10,8 @@
  */
 import { BaseFeature } from '../../../core/BaseFeature.js'
 import Logger from '../../../services/Logger.js'
+import { loadPeriods } from '../../../services/LessonEntryDetails.js'
+import { getSchoolId } from '../../../lib/schoolId.js'
 import {
   ADDON_VERSION,
   DEFAULT_THRESHOLDS,
@@ -433,6 +435,7 @@ settings: { ...settings, mode }
         this.status('Failist ei leitud ühtegi rida. Vajalikud tulbad: Ülesanne, Õpilane või GitHub, Hinne või Punktid + Max.', true)
         return
       }
+      this.ctx.periods = await this.loadTimetablePeriods(jid, journalInfo)
       await this.loadEntryTexts()
       if (!this.panel) return
       this.renderPreview()
@@ -655,10 +658,50 @@ journalEntryTeachers: teachers
     }
   }
 
+  /**
+   * Timetable of this journal → Map(date → { startLessonNr, lessons }) from the school's lesson times.
+   * Days whose periods cannot be resolved exactly are left out, so nothing is guessed.
+   */
+  async loadTimetablePeriods(jid, info) {
+    const out = new Map()
+    try {
+      const teacherId = info?.journalTeachers?.[0]?.id
+      const schoolId = await getSchoolId(this.api, info)
+      if (!teacherId || !schoolId) return out
+      const now = new Date()
+      const year = now.getMonth() < 8 ? now.getFullYear() - 1 : now.getFullYear()
+      const from = info.studyYearStartDate ?? new Date(Date.UTC(year, 8, 1)).toISOString()
+      const thru = info.studyYearEndDate ?? new Date(Date.UTC(year + 1, 7, 31)).toISOString()
+      const data = await this.api.tahvel.get(`/timetableevents/timetableByTeacher/${schoolId}?from=${from}&lang=ET&teachers=${teacherId}&thru=${thru}`,
+        {}, { cache: true, cacheExpiration: 864e5 })
+      const byDay = new Map()
+      for (const ev of data?.timetableEvents || []) {
+        if (String(ev.journalId) !== String(jid) || !ev.date || !ev.timeStart || !ev.timeEnd) continue
+        const day = String(ev.date).slice(0, 10)
+        const b = byDay.get(day) || { date: day, timeStart: ev.timeStart, timeEnd: ev.timeEnd }
+        if (ev.timeStart < b.timeStart) b.timeStart = ev.timeStart
+        if (ev.timeEnd > b.timeEnd) b.timeEnd = ev.timeEnd
+        byDay.set(day, b)
+      }
+      const get = (path, params) => this.api.tahvel.get(path, params, { cache: true, cacheExpiration: 864e5 })
+      for (const [day, block] of byDay) {
+        const p = await loadPeriods(get, { ...block, timeStart: block.timeStart.slice(0, 5), timeEnd: block.timeEnd.slice(0, 5) }).catch(() => null)
+        if (p) out.set(day, p)
+      }
+    } catch (e) {
+      Logger.warning(`[githubGrades] timetable periods: ${e.message}`)
+    }
+    return out
+  }
+
   /** Lesson content + homework + due date from Classroom 50 assignments.json (metadata-only PUT, like JournalListSync). */
   renderTextSection() {
     const updates = buildEntryTextUpdates({
-      entries: this.ctx.entries, meta: this.ctx.meta, assignmentMap: this.ctx.journal.assignmentMap || {}, journalName: this.ctx.journalName
+      entries: this.ctx.entries,
+meta: this.ctx.meta,
+assignmentMap: this.ctx.journal.assignmentMap || {},
+      journalName: this.ctx.journalName,
+periods: this.ctx.periods
     })
     const box = el('div', { style: { marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #ddd' } })
     box.append(el('div', { text: 'Tunni nimetus, sisu ja kodutöö (Classroom 50 Name, Description + Due date)', style: { fontWeight: 600 } }))
@@ -673,6 +716,7 @@ journalEntryTeachers: teachers
       checks.push([cb, u])
       const what = [
         u.changes.nameEt ? `nimetus: ${u.changes.nameEt}` : null,
+        u.changes.startLessonNr ? `algustund: ${u.changes.startLessonNr}. (${u.changes.lessons} t, tunniplaanist)` : null,
         u.changes.content ? `sisu: ${short(u.changes.content)}` : null,
         u.changes.homeworkDuedate ? `tähtaeg: ${u.changes.homeworkDuedate.slice(0, 10).split('-').reverse().join('.')}` : null
       ].filter(Boolean).join(' · ')

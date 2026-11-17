@@ -40,7 +40,7 @@ export function resolveEntryPeriods(rows, block) {
  * @param {object} block Timetable block whose date determines valid lesson times.
  * @returns {Promise<object|null>} Exact period mapping, or null when unavailable.
  */
-async function loadPeriods(get, block) {
+export async function loadPeriods(get, block) {
   if (!block.timeStart || !block.timeEnd) return null
   const rows = []
   for (let page = 0; page < 10; page++) {
