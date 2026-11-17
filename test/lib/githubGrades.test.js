@@ -257,6 +257,16 @@ describe('lesson content + homework from assignments.json', () => {
     const typed = buildEntryTextUpdates({ entries: [{ ...named[0], nameEt: 'Ansible praktikum' }], meta, journalName: 'Automatiseerimine' })
     expect(typed[0].changes.nameEt).toBeUndefined()
   })
+  test('subject name inside a longer journal name, or repeated on many lessons, is a default name too', () => {
+    const named = [
+      { id: 1, nameEt: 'Automatiseerimine', entryDate: '2026-09-17T00:00:00Z', content: '', homework: null },
+      { id: 2, nameEt: 'Automatiseerimine', entryDate: '2026-09-24T00:00:00Z', content: '', homework: null }
+    ]
+    const long = buildEntryTextUpdates({ entries: named, meta, journalName: 'Automatiseerimine IT-24 (TAK-5)' })
+    expect(long.find(x => x.slug === 'lab-03').changes.nameEt).toBe('Lab 03 - Ansible')
+    const many = [...named, { id: 3, nameEt: 'Automatiseerimine', entryDate: '2026-10-01T00:00:00Z' }]
+    expect(buildEntryTextUpdates({ entries: many, meta }).find(x => x.slug === 'lab-04').changes.nameEt).toBe('Lab 04 - Vault')
+  })
   test('nothing to do when Tahvel already matches', () => {
     const same = [{ ...entries[0], content: 'Ehita playbook.', homework: 'Ehita playbook.', homeworkDuedate: '2026-09-23T23:59:59.000Z' }]
     expect(buildEntryTextUpdates({ entries: same.map(e => ({ ...e, content: 'Ansible' })), meta: assignmentMeta({ assignments: [{ slug: 'lab-03', name: 'Ansible', description: 'Ehita playbook.', due: '2026-09-23T20:59:00Z', available_from: '2026-09-16T20:00:00Z' }] }) })).toEqual([])
