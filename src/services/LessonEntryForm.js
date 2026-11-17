@@ -29,8 +29,8 @@ function status(form, text) {
 async function select(form, name, label, canEdit = () => true) {
   const field = await waitFor(() => form.querySelector(`tahvel-select[formcontrolname="${name}"]`))
   if (!canEdit()) return
-  // A pre-existing period selection belongs to the teacher, not the assistant.
-  if (name === 'startLessonNr' && /^\d+$/.test(field.querySelector('.field')?.textContent.trim())) return
+  // The form was just opened by the assistant, so a number here is Tahvel's default "1", not the teacher's choice.
+  // The teacher's own edits are protected by canEdit().
   field.querySelector('.field').click()
   const option = await waitFor(() => !canEdit() || [...field.querySelectorAll('button.dropdown-item')].find(b => b.textContent.trim() === label))
   if (canEdit()) option.click()
