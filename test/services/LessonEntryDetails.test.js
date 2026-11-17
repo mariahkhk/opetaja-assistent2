@@ -57,3 +57,15 @@ test('does not invent a subject or a lesson topic when metadata is missing', asy
   expect(result.content).not.toContain('Aine:')
   expect(result.content).not.toContain('ülesanne')
 })
+
+test('entry form takes the nearest period when the timetable block does not sit on the school bell', async() => {
+  const bell = [
+    { lessonNr: 6, startTime: '12:30', endTime: '13:15' },
+    { lessonNr: 7, startTime: '13:25', endTime: '14:10' },
+    { lessonNr: 8, startTime: '14:20', endTime: '15:05' },
+    { lessonNr: 9, startTime: '15:15', endTime: '16:00' }
+  ].map(r => ({ ...r, validFrom: '2026-09-01', validThru: null, dayThu: true, isDefault: true, buildings: [] }))
+  const thursday = { ...block, date: '2026-11-19', timeStart: '14:15', timeEnd: '15:45' }
+  const result = await loadLessonEntryDetails(async path => (path === '/lessontimes' ? { content: bell, totalPages: 1 } : null), thursday)
+  expect(result.periods).toEqual({ startLessonNr: 8, lessons: 2 })
+})

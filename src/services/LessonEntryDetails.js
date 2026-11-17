@@ -101,7 +101,7 @@ export async function loadPeriods(get, block, nearest = false) {
 export async function loadLessonEntryDetails(get, block) {
   const [journal, periods] = await Promise.all([
     get(`/journals/${block.journalId}`).catch(() => null),
-    loadPeriods(get, block).catch(() => null)
+    loadPeriods(get, block, true).catch(() => null)
   ])
   const name = [journal?.nameEt, journal?.name, block.name].find(value => typeof value === 'string' && value.trim() && value.trim() !== 'Tund')?.trim() || ''
   const groups = (block.groups || []).map(g => g.code).filter(Boolean).join(', ')
