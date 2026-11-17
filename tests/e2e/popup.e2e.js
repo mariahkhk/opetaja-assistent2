@@ -70,15 +70,15 @@ test.describe('popup', () => {
   test('Kriit toggle reveals settings container; off hides it', async() => {
     await expect(popup.locator('#kriit-settings-container')).toBeHidden()
 
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     await expect(popup.locator('#kriit-settings-container')).toBeVisible()
 
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('github')
     await expect(popup.locator('#kriit-settings-container')).toBeHidden()
   })
 
   test('Kriit toggle persists across re-open', async() => {
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     await expect(popup.locator('#kriit-enabled')).toBeChecked()
 
     await popup.close()
@@ -89,7 +89,7 @@ test.describe('popup', () => {
   })
 
   test('API key Näita/Peida button toggles input type', async() => {
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     const input = popup.locator('#kriit-api-key')
     const toggle = popup.locator('#toggle-api-key-visibility')
 
@@ -107,7 +107,7 @@ test.describe('popup', () => {
   })
 
   test('Saving Kriit settings persists URL and shows saved indicator; delete clears it', async() => {
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     await popup.locator('#kriit-api-url').fill('https://example.test/api')
     await popup.locator('#kriit-api-key').fill('test-key-12345')
     await popup.locator('#save-kriit-settings').click()
@@ -127,7 +127,7 @@ test.describe('popup', () => {
   })
 
   test('Saving non-HTTPS URL is rejected with alert and nothing persisted', async() => {
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     let alertMessage = ''
     popup.on('dialog', async dialog => {
       alertMessage = dialog.message()
@@ -191,7 +191,7 @@ test.describe('popup', () => {
   })
 
   test('Save status auto-clears after STATUS_CLEAR_DELAY_MS', async() => {
-    await popup.locator('label[for="kriit-enabled"]').click()
+    await popup.locator('#grade-source').selectOption('kriit')
     await popup.locator('#kriit-api-url').fill('https://example.test/api')
     await popup.locator('#kriit-api-key').fill('test-key-12345')
     await popup.locator('#save-kriit-settings').click()

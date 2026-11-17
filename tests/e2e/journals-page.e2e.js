@@ -5,7 +5,9 @@ import { mockTahvel } from './helpers/mockTahvel.js'
 async function enableKriit(context, extensionId) {
   const popup = await context.newPage()
   await popup.goto(`chrome-extension://${extensionId}/popup.html`)
-  await popup.locator('label[for="kriit-enabled"]').click()
+  await popup.locator('#grade-source').selectOption('kriit')
+  // show() runs after the storage write, so a visible Kriit section means it was saved
+  await popup.locator('#kriit-settings-container').waitFor({ state: 'visible' })
   await popup.close()
 }
 

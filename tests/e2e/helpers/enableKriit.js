@@ -1,5 +1,5 @@
 /**
- * Configure Kriit via the extension popup: toggle on, set API URL + key,
+ * Configure Kriit via the extension popup: pick Kriit as grade source, set API URL + key,
  * click Salvesta. Persists across the BrowserContext via chrome.storage.
  *
  * @param {import('@playwright/test').BrowserContext} context
@@ -14,7 +14,7 @@ export async function enableKriitFully(context, extensionId, opts = {}) {
   await popup.goto(`chrome-extension://${extensionId}/popup.html`)
   await popup.waitForLoadState('domcontentloaded')
 
-  await popup.locator('label[for="kriit-enabled"]').click()
+  await popup.locator('#grade-source').selectOption('kriit')
   await popup.locator('#kriit-api-url').fill(apiUrl)
   await popup.locator('#kriit-api-key').fill(apiKey)
   await popup.locator('#save-kriit-settings').click()
