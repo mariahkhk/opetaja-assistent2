@@ -77,7 +77,7 @@ export function resolveNearestPeriods(rows, block) {
  * @param {object} block Timetable block whose date determines valid lesson times.
  * @returns {Promise<object|null>} Exact period mapping, or null when unavailable.
  */
-export async function loadPeriods(get, block, nearest = false) {
+export async function loadPeriods(get, block, nearest = true) {
   if (!block.timeStart || !block.timeEnd) return null
   const rows = []
   for (let page = 0; page < 10; page++) {
